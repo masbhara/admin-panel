@@ -1,143 +1,216 @@
 <template>
-  <div class="min-h-screen bg-background-primary">
-    <!-- Navigation -->
-    <nav class="bg-background-primary shadow border-b border-border-light">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 justify-between">
-          <!-- Logo and Navigation Links -->
+  <div class="min-h-screen bg-gray-100">
+    <!-- Navigation Bar -->
+    <nav class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <!-- Logo & Navigation Links -->
           <div class="flex">
-            <div class="flex flex-shrink-0 items-center">
+            <div class="flex-shrink-0 flex items-center">
               <Link :href="route('dashboard')">
-                <img class="h-8 w-auto" src="/logo.svg" alt="Your Company" />
+                <ApplicationLogo class="block h-9 w-auto" />
               </Link>
             </div>
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
-                v-for="item in navigation"
-                :key="item.name"
-                :href="item.href"
+                :href="route('dashboard')"
+                class="inline-flex items-center px-1 pt-1 border-b-2"
                 :class="[
-                  route().current(item.routeName)
-                    ? 'border-primary-500 text-text-primary'
-                    : 'border-transparent text-text-secondary hover:border-secondary-300 hover:text-text-primary',
-                  'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
+                  route().current('dashboard')
+                    ? 'border-indigo-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 ]"
               >
-                {{ item.name }}
+                Dashboard
+              </Link>
+              <Link
+                :href="route('activities')"
+                class="inline-flex items-center px-1 pt-1 border-b-2"
+                :class="[
+                  route().current('activities')
+                    ? 'border-indigo-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                ]"
+              >
+                Aktivitas
+              </Link>
+              <Link
+                :href="route('notifications')"
+                class="inline-flex items-center px-1 pt-1 border-b-2"
+                :class="[
+                  route().current('notifications')
+                    ? 'border-indigo-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                ]"
+              >
+                Notifikasi
               </Link>
             </div>
           </div>
 
-          <!-- Search -->
-          <div class="flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-end">
-            <div class="w-full max-w-lg lg:max-w-xs">
-              <SearchInput />
+          <!-- Right Side Menu -->
+          <div v-if="user" class="hidden sm:ml-6 sm:flex sm:items-center">
+            <!-- Profile Dropdown -->
+            <div class="ml-3 relative">
+              <Dropdown align="right" width="48">
+                <template #trigger>
+                  <button
+                    class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition"
+                  >
+                    <img
+                      class="h-8 w-8 rounded-full object-cover"
+                      :src="user.profile_photo_url"
+                      :alt="user.name"
+                    />
+                  </button>
+                </template>
+
+                <template #content>
+                  <DropdownLink :href="route('profile.edit')">
+                    Profil Saya
+                  </DropdownLink>
+                  <DropdownLink :href="route('profile.show', user.id)">
+                    Lihat Profil
+                  </DropdownLink>
+                  <div class="border-t border-gray-200" />
+                  <form @submit.prevent="logout">
+                    <DropdownLink as="button">
+                      Keluar
+                    </DropdownLink>
+                  </form>
+                </template>
+              </Dropdown>
             </div>
           </div>
 
-          <!-- Right Navigation -->
-          <div class="flex items-center">
-            <NotificationDropdown class="ml-4" />
-            
-            <!-- Theme Toggle -->
-            <div class="flex items-center ml-4">
-              <ThemeToggleSimple />
-            </div>
-
-            <!-- Profile dropdown -->
-            <Menu as="div" class="relative ml-4">
-              <div>
-                <MenuButton class="flex rounded-full bg-background-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
-                  <span class="sr-only">Open user menu</span>
-                  <img
-                    class="h-8 w-8 rounded-full"
-                    :src="$page.props.auth.user.avatar_url"
-                    :alt="$page.props.auth.user.name"
-                  />
-                </MenuButton>
-              </div>
-              <transition
-                enter-active-class="transition ease-out duration-200"
-                enter-from-class="transform opacity-0 scale-95"
-                enter-to-class="transform opacity-100 scale-100"
-                leave-active-class="transition ease-in duration-75"
-                leave-from-class="transform opacity-100 scale-100"
-                leave-to-class="transform opacity-0 scale-95"
+          <!-- Mobile menu button -->
+          <div class="-mr-2 flex items-center sm:hidden">
+            <button
+              @click="showingNavigationDropdown = !showingNavigationDropdown"
+              class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition"
+            >
+              <span class="sr-only">Open main menu</span>
+              <svg
+                class="h-6 w-6"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 24 24"
               >
-                <MenuItems class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-background-primary py-1 shadow-lg ring-1 ring-border-light focus:outline-none">
-                  <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
-                    <Link
-                      :href="item.href"
-                      :method="item.method"
-                      :as="item.as"
-                      :class="[
-                        active ? 'bg-background-secondary' : '',
-                        'block px-4 py-2 text-sm text-text-primary'
-                      ]"
-                    >
-                      {{ item.name }}
-                    </Link>
-                  </MenuItem>
-                </MenuItems>
-              </transition>
-            </Menu>
+                <path
+                  :class="{ hidden: showingNavigationDropdown, 'inline-flex': !showingNavigationDropdown }"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+                <path
+                  :class="{ hidden: !showingNavigationDropdown, 'inline-flex': showingNavigationDropdown }"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Mobile menu -->
-      <Disclosure as="nav" class="sm:hidden" v-slot="{ open }">
-        <DisclosureButton class="inline-flex items-center justify-center rounded-md p-2 text-text-secondary hover:bg-background-secondary hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
-          <span class="sr-only">Open main menu</span>
-          <Bars3Icon v-if="!open" class="block h-6 w-6" aria-hidden="true" />
-          <XMarkIcon v-else class="block h-6 w-6" aria-hidden="true" />
-        </DisclosureButton>
-        <DisclosurePanel class="sm:hidden">
-          <div class="space-y-1 pb-3 pt-2">
-            <Link
-              v-for="item in navigation"
-              :key="item.name"
-              :href="item.href"
-              :class="[
-                route().current(item.routeName)
-                  ? 'bg-primary-50 border-primary-500 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
-                  : 'border-transparent text-text-secondary hover:bg-background-secondary hover:border-border-light hover:text-text-primary',
-                'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
-              ]"
-            >
-              {{ item.name }}
-            </Link>
+      <!-- Mobile Navigation Menu -->
+      <div
+        :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }"
+        class="sm:hidden"
+      >
+        <div class="pt-2 pb-3 space-y-1">
+          <ResponsiveNavLink
+            :href="route('dashboard')"
+            :active="route().current('dashboard')"
+          >
+            Dashboard
+          </ResponsiveNavLink>
+          <ResponsiveNavLink
+            :href="route('activities')"
+            :active="route().current('activities')"
+          >
+            Aktivitas
+          </ResponsiveNavLink>
+          <ResponsiveNavLink
+            :href="route('notifications')"
+            :active="route().current('notifications')"
+          >
+            Notifikasi
+          </ResponsiveNavLink>
+        </div>
+
+        <!-- Responsive Settings Options -->
+        <div v-if="user" class="pt-4 pb-1 border-t border-gray-200">
+          <div class="flex items-center px-4">
+            <div class="flex-shrink-0">
+              <img
+                class="h-10 w-10 rounded-full object-cover"
+                :src="user.profile_photo_url"
+                :alt="user.name"
+              />
+            </div>
+            <div class="ml-3">
+              <div class="font-medium text-base text-gray-800">
+                {{ user.name }}
+              </div>
+              <div class="font-medium text-sm text-gray-500">
+                {{ user.email }}
+              </div>
+            </div>
           </div>
-        </DisclosurePanel>
-      </Disclosure>
+
+          <div class="mt-3 space-y-1">
+            <ResponsiveNavLink :href="route('profile.edit')">
+              Profil Saya
+            </ResponsiveNavLink>
+            <ResponsiveNavLink :href="route('profile.show', user.id)">
+              Lihat Profil
+            </ResponsiveNavLink>
+            <form method="POST" @submit.prevent="logout">
+              <ResponsiveNavLink as="button">
+                Keluar
+              </ResponsiveNavLink>
+            </form>
+          </div>
+        </div>
+      </div>
     </nav>
+
+    <!-- Page Heading -->
+    <header class="bg-white shadow" v-if="$slots.header">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <slot name="header" />
+      </div>
+    </header>
 
     <!-- Page Content -->
     <main>
-      <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <slot />
+      <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <slot />
+        </div>
       </div>
     </main>
   </div>
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3'
-import { Menu, MenuButton, MenuItem, MenuItems, Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
-import SearchInput from '@/Components/SearchInput.vue'
-import NotificationDropdown from '@/Components/NotificationDropdown.vue'
-import ThemeToggleSimple from '@/Components/ThemeToggleSimple.vue'
+import { ref, computed } from 'vue'
+import { Link, router, usePage } from '@inertiajs/vue3'
+import ApplicationLogo from '@/Components/ApplicationLogo.vue'
+import Dropdown from '@/Components/Dropdown.vue'
+import DropdownLink from '@/Components/DropdownLink.vue'
+import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
 
-const navigation = [
-  { name: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
-  { name: 'Profile', href: route('profile.edit'), routeName: 'profile.edit' },
-  { name: 'Settings', href: route('user.settings.index'), routeName: 'user.settings.index' },
-]
+const page = usePage()
+const showingNavigationDropdown = ref(false)
 
-const userNavigation = [
-  { name: 'Your Profile', href: route('profile.edit') },
-  { name: 'Settings', href: route('user.settings.index') },
-  { name: 'Sign out', href: route('logout'), method: 'post', as: 'button' },
-]
+const user = computed(() => page.props.auth?.user)
+
+const logout = () => {
+  router.post(route('logout'))
+}
 </script>

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\ActivityController;
+use App\Http\Controllers\Admin\ActivityController as AdminActivityController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
@@ -13,6 +13,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\User\SettingController as UserSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UnifiedProfileController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\User\ActivityController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -97,6 +99,15 @@ Route::middleware(['auth'])->group(function () {
             // User routes
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
             
+            // Activities route
+            Route::get('/activities', [ActivityController::class, 'index'])->name('activities');
+            
+            // Notifications routes
+            Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
+            Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+            Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+            Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+            
             // Users resource routes
             Route::resource('users', UserController::class);
             
@@ -120,6 +131,9 @@ Route::middleware(['auth'])->group(function () {
             // Admin routes
             Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
                 Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+                
+                // Activities routes
+                Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
                 // Components demo page
                 Route::get('/components-demo', function () {
@@ -197,8 +211,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::middleware('permission:delete permissions')->group(function () {
                     Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
                 });
-                
-                Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');
                 
                 // Impersonation routes
                 Route::get('impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('impersonate');

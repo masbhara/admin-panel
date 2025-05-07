@@ -1,8 +1,8 @@
 <template>
-  <AdminLayout>
+  <UserLayout>
     <template #header>
       <h2 class="text-xl font-semibold leading-tight text-gray-800">
-        Aktivitas Sistem
+        Riwayat Aktivitas
       </h2>
     </template>
 
@@ -22,15 +22,8 @@
             <div class="flex-grow">
               <div class="flex items-center justify-between">
                 <div class="flex flex-col">
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm font-medium text-gray-900">
-                      {{ activity.causer?.name || 'System' }}
-                    </span>
-                    <span class="text-sm text-gray-500">
-                      {{ activity.description }}
-                    </span>
-                  </div>
-                  <span class="text-xs text-gray-500">{{ activity.date }}</span>
+                  <p class="text-sm text-gray-600">{{ activity.description }}</p>
+                  <span class="text-xs text-gray-500">{{ activity.created_at }}</span>
                 </div>
               </div>
               <div v-if="activity.properties && Object.keys(activity.properties).length > 0" class="mt-2">
@@ -53,12 +46,12 @@
       <!-- Pagination -->
       <Pagination :links="activities.links" />
     </div>
-  </AdminLayout>
+  </UserLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import AdminLayout from '@/Layouts/AdminLayout.vue'
+import UserLayout from '@/Layouts/UserLayout.vue'
 import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
@@ -91,4 +84,4 @@ const formatProperties = (properties) => {
   }
   return JSON.stringify(formatted, null, 2)
 }
-</script>
+</script> 

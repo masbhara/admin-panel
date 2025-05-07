@@ -1,80 +1,114 @@
 <template>
-  <DashboardLayout>
+  <UserLayout>
     <template #header>
-      Statistiques et Analyses
-    </template>
-    
-    <template #actions>
-      <HeaderActions />
+      <h2 class="text-xl font-semibold leading-tight text-gray-800">
+        Dashboard Saya
+      </h2>
     </template>
 
     <div class="space-y-6">
-      <!-- Description -->
-      <div class="text-sm text-gray-600">
-        Visualisez et analysez les données de votre exploitation en Guadeloupe
+      <!-- Profile Overview -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex items-center space-x-4">
+          <div class="flex-shrink-0">
+            <img 
+              :src="user.profile_photo_url" 
+              :alt="user.name"
+              class="h-16 w-16 rounded-full object-cover"
+            >
+          </div>
+          <div>
+            <h2 class="text-xl font-semibold text-gray-800">{{ user.name }}</h2>
+            <p class="text-sm text-gray-600">{{ user.email }}</p>
+          </div>
+        </div>
       </div>
 
-      <!-- Indicators Table -->
-      <DataTable
-        title="Indicateurs de performance agricole en Guadeloupe"
-        :headers="[
-          { key: 'indicateur', label: 'Indicateur' },
-          { key: 'valeur_actuelle', label: 'Valeur actuelle' },
-          { key: 'objectif', label: 'Objectif' },
-          { key: 'unite', label: 'Unité' }
-        ]"
-        :data="indicators"
-        @add="addIndicator"
-        @delete="deleteIndicator"
-      />
+      <!-- Quick Actions -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Profil Saya</h3>
+            <Link 
+              :href="route('profile.edit')"
+              class="text-indigo-600 hover:text-indigo-900"
+            >
+              Edit
+            </Link>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">
+            Kelola informasi profil dan preferensi akun Anda
+          </p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Keamanan</h3>
+            <Link 
+              :href="route('profile.edit')"
+              class="text-indigo-600 hover:text-indigo-900"
+            >
+              Pengaturan
+            </Link>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">
+            Atur password dan pengaturan keamanan akun
+          </p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Notifikasi</h3>
+            <Link 
+              :href="route('notifications')"
+              class="text-indigo-600 hover:text-indigo-900"
+            >
+              Lihat Semua
+            </Link>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">
+            {{ unreadNotifications }} notifikasi belum dibaca
+          </p>
+        </div>
+      </div>
+
+      <!-- Recent Activities -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900">Aktivitas Terbaru</h3>
+          <Link 
+            :href="route('activities')"
+            class="text-sm text-indigo-600 hover:text-indigo-900"
+          >
+            Lihat Semua
+          </Link>
+        </div>
+        <div class="space-y-4">
+          <div v-for="activity in recentActivities" :key="activity.id" class="flex items-start space-x-3">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                <icon :name="activity.icon" class="w-4 h-4 text-indigo-600" />
+              </div>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">{{ activity.description }}</p>
+              <p class="text-xs text-gray-500">{{ activity.created_at }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </DashboardLayout>
+  </UserLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import DashboardLayout from '@/Layouts/DashboardLayout.vue'
-import HeaderActions from '@/Components/Dashboard/HeaderActions.vue'
-import DataTable from '@/Components/Dashboard/DataTable.vue'
+import { Link } from '@inertiajs/vue3'
+import UserLayout from '@/Layouts/UserLayout.vue'
 
-const indicators = ref([
-  {
-    indicateur: 'Rendement Canne à Sucre',
-    valeur_actuelle: '75',
-    objectif: '85',
-    unite: 't/ha'
-  },
-  {
-    indicateur: 'Qualité Banane Export',
-    valeur_actuelle: '88',
-    objectif: '95',
-    unite: '%'
-  },
-  {
-    indicateur: 'Rentabilité Ananas',
-    valeur_actuelle: '70',
-    objectif: '80',
-    unite: '%'
-  },
-  {
-    indicateur: 'Certification Bio',
-    valeur_actuelle: '75',
-    objectif: '90',
-    unite: '%'
-  },
-  {
-    indicateur: 'Innovation Igname',
-    valeur_actuelle: '65',
-    objectif: '75',
-    unite: '%'
-  }
-])
-
-const addIndicator = () => {
-  // Implementasi logika penambahan indikator
-}
-
-const deleteIndicator = (indicator) => {
-  // Implementasi logika penghapusan indikator
-}
+const props = defineProps({
+  user: Object,
+  unreadNotifications: Number,
+  recentActivities: Array
+})
 </script>
