@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Toggle Tema</title>
+    <style>
+        :root {
+            --bg-light: #ffffff;
+            --text-light: #0f172a;
+            --bg-dark: #0f172a;
+            --text-dark: #f8fafc;
+            --primary-light: #0ea5e9;
+            --primary-dark: #7dd3fc;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            padding: 2rem;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+        
+        .dark body {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .toggle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: #e2e8f0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .dark .toggle {
+            background-color: #334155;
+        }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 26px;
+            height: 26px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        
+        .dark .toggle::after {
+            transform: translateX(30px);
+        }
+        
+        .status {
+            font-weight: bold;
+        }
+        
+        .card {
+            background-color: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .dark .card {
+            background-color: #1e293b;
+        }
+        
+        button {
+            background-color: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .dark button {
+            background-color: var(--primary-dark);
+            color: #0f172a;
+        }
+    </style>
+    <script>
+        // Initialize theme from localStorage (if available)
+        (function() {
+            const storedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Toggle Tema</h1>
+        
+        <div class="toggle-container">
+            <div class="toggle" id="themeToggle" role="switch" aria-checked="false" tabindex="0"></div>
+            <p class="status">Tema saat ini: <span id="themeStatus">Light Mode</span></p>
+        </div>
+        
+        <div class="card">
+            <h2>Tentang Toggle Tema</h2>
+            <p>Halaman ini adalah alat untuk menguji fungsi toggle tema light/dark mode. Jika toggle berfungsi dengan benar, halaman akan berubah dari terang ke gelap (atau sebaliknya) dengan transisi yang mulus.</p>
+            <p>Preferensi tema juga akan disimpan di browser Anda, sehingga saat Anda membuka kembali halaman ini, tema yang sama akan diterapkan.</p>
+        </div>
+        
+        <button id="resetButton">Reset Preferensi Tema</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('themeToggle');
+            const status = document.getElementById('themeStatus');
+            const resetButton = document.getElementById('resetButton');
+            
+            // Set initial status
+            updateStatus();
+            
+            // Toggle theme on click
+            toggle.addEventListener('click', toggleTheme);
+            
+            // Also toggle on space or enter key (for accessibility)
+            toggle.addEventListener('keydown', function(e) {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+            });
+            
+            // Reset button clears localStorage
+            resetButton.addEventListener('click', function() {
+                localStorage.removeItem('theme');
+                // Apply system preference
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.toggle('dark', prefersDark);
+                updateStatus();
+                alert('Preferensi tema telah direset ke default sistem');
+            });
+            
+            function toggleTheme() {
+                const isDark = document.documentElement.classList.contains('dark');
+                const newTheme = isDark ? 'light' : 'dark';
+                
+                // Toggle class
+                document.documentElement.classList.toggle('dark');
+                
+                // Save preference
+                localStorage.setItem('theme', newTheme);
+                
+                // Update UI
+                updateStatus();
+                toggle.setAttribute('aria-checked', !isDark);
+            }
+            
+            function updateStatus() {
+                const isDark = document.documentElement.classList.contains('dark');
+                status.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+                toggle.setAttribute('aria-checked', isDark);
+            }
+        });
+    </script>
+</body>
+</html> 

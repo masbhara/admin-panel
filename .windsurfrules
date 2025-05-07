@@ -1,0 +1,87 @@
+# RULES !
+- Selalu respon dalam Bahasa Indonesia
+- Berpikir dan bertindak sebagai Software Engineer Profesional dan Fullstack Developer
+- Hanya menggunakan stack Laravel 12, Vue, Vite, Tailwind CSS,
+- Gunakan spatie/laravel-medialibrary untuk mengelola media
+- Gunakan spatie untuk permission
+- Gunakan spatie/laravel-activitylog untuk logging
+- TIDAK BOLEH merusak struktur project, UI, atau fitur yang sudah berjalan, kecuali developer meminta
+- Gunakan pendekatan BEST Practices, SOLID Principles, dan Clean Code
+- Jangan perubahan tanpa sepengetahuan developer
+- TIDAK MENGGUNAKAN react!
+- Hanya Menggunakan Tailwind CSS style
+- Hanya menggunakan Vue.js untuk frontend
+- Struktur arsitektur harus sesuai dengan project MONOLITH
+- Saat membuat fitur baru, pastikan fitur tersebut sesuai dengan project MONOLITH
+- Sebelum membuat atau mengeksekusi instruksi developer, wajib menganalisis permintaan, analisis struktur kode, berpikir fundamental
+- Project dikerjakan harus sesuai dengan standar modern development
+- Gunakan style component untuk UI, sehingga UI dapat diubah dengan mudah hanya dengan mengganti komponen
+- Buat skema warna untuk UI yang mudah diatur di Tailwind CSS config
+- Semua fitur CRUD wajib mengimplementasikan file Index.vue, Create.vue, Edit.vue, Show.vue (harus membuat semua file itu)
+
+
+# STRUCTURE Project
+project-root/
+├── app/
+│   ├── Actions/          # Single-purpose action classes
+│   ├── Console/          # Artisan commands
+│   ├── Events/           # Application events
+│   ├── Exceptions/       # Exception handling
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/     # Admin-specific controllers
+│   │   │   ├── Auth/      # Authentication controllers
+│   │   ├── Middleware/    # Custom middlewares
+│   │   ├── Requests/      # Form Request Validation
+│   │   └── Resources/     # API resource transformers
+│   ├── Listeners/         # Event listeners
+│   ├── Models/            # Eloquent models
+│   ├── Policies/          # Authorization policies
+│   ├── Providers/         # Service providers
+│   ├── Services/          # Custom services (eg: NotificationService, BackupService)
+│   ├── Traits/            # Shared traits
+│   └── Helpers/           # (optional) Global helpers
+│
+├── bootstrap/
+│   └── app.php            # Bootstrap file
+│
+├── config/                # Configuration files
+│
+├── database/
+│   ├── factories/         # Model factories
+│   ├── migrations/        # Database migrations
+│   ├── seeders/           # Seeder files
+│
+├── lang/                  # Language files (localization)
+│
+├── public/                # Public files (index.php, assets)
+│
+├── resources/
+│   ├── js/
+│   │   ├── Components/    # Vue components
+│   │   ├── Layouts/       # Vue layouts (eg: AdminLayout, AuthLayout)
+│   │   ├── Pages/         # Vue pages (based on Inertia routes)
+│   │   ├── Composables/   # Vue composables (eg: useAuth.js, useSettings.js)
+│   │   ├── Stores/        # (optional) Pinia/Vuex stores
+│   │   ├── utils/         # JS utilities (formatters, validators)
+│   │   └── app.js         # Main Inertia app file
+│   ├── sass/              # TailwindCSS or Sass (if you use it)
+│   └── views/             # Blade fallback views (eg: welcome.blade.php)
+│
+├── routes/
+│   ├── web.php            # Web routes
+│   ├── api.php            # API routes (optional)
+│   ├── admin.php          # Admin panel routes (optional separate)
+│   └── auth.php           # Authentication routes
+│
+├── storage/               # Storage (logs, cache, etc)
+│
+├── tests/
+│   ├── Feature/           # Feature tests
+│   └── Unit/              # Unit tests
+│
+├── vite.config.js         # Vite config
+├── package.json           # NodeJS dependencies
+├── tailwind.config.js     # TailwindCSS config
+├── composer.json          # PHP dependencies
+└── README.md              # Project documentation
