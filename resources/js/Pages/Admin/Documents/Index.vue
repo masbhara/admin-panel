@@ -62,6 +62,14 @@
               </div>
             </div>
 
+            <!-- Flash Messages -->
+            <div v-if="$page.props.flash?.success" class="mb-4 p-4 bg-green-100 border border-green-200 text-green-800 rounded-lg">
+              {{ $page.props.flash.success }}
+            </div>
+            <div v-if="$page.props.errors?.file" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-lg">
+              {{ $page.props.errors.file }}
+            </div>
+
             <!-- Tabel dokumen -->
             <div v-if="documents.data.length > 0" class="overflow-x-auto rounded-lg border border-border-light relative">
               <table class="min-w-full divide-y divide-border-light">
@@ -176,7 +184,7 @@
                               class="flex items-center px-4 py-2 text-sm text-text-primary hover:bg-background-secondary transition-colors"
                             >
                               <svg class="mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4" />
                               </svg>
                               <span>Download</span>
                             </a>
@@ -382,7 +390,7 @@
       <div class="p-6 bg-background-primary">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium leading-6 text-text-primary">
-            Import Dokumen
+            Import Dokumen CSV
           </h3>
           <button @click="showImportModal = false" class="text-text-tertiary hover:text-text-secondary transition-colors">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -391,13 +399,13 @@
           </button>
         </div>
         <p class="text-sm text-text-secondary mb-4">
-          Unggah file CSV atau Excel untuk mengimpor daftar dokumen. Pastikan formatnya sesuai dengan template.
+          Unggah file CSV untuk mengimpor daftar dokumen. Format CSV memberikan performa import yang lebih cepat dan efisien.
         </p>
         
         <form @submit.prevent="submitImport" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-text-primary mb-1">
-              File CSV/Excel
+              File CSV
             </label>
             <div 
               class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-border-light rounded-md"
@@ -419,22 +427,30 @@
                       name="file-upload" 
                       type="file" 
                       class="sr-only" 
-                      accept=".csv,.xlsx,.xls"
+                      accept=".csv"
                       @change="handleImportFileSelect"
                     />
                   </label>
                   <p class="pl-1">atau seret dan letakkan</p>
                 </div>
                 <p class="text-xs text-text-tertiary">
-                  Format yang didukung: CSV, Excel (.xlsx, .xls)
+                  Format yang didukung: CSV (.csv)
+                </p>
+                <p class="text-xs text-text-tertiary mt-1">
+                  File CSV dapat dibuat dari Excel dengan Save As > CSV
                 </p>
                 <div v-if="importFile" class="mt-2 text-sm text-text-primary">
                   <span class="font-medium">{{ importFile.name }}</span> ({{ formatFileSize(importFile.size) }})
                 </div>
               </div>
             </div>
-            <div v-if="importError" class="mt-2 text-sm text-red-600">
-              {{ importError }}
+            <div v-if="importError" class="mt-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ importError }}
+              </div>
             </div>
           </div>
           
@@ -476,6 +492,10 @@
             </div>
           </div>
         </form>
+        <div v-if="importProcessing" class="mt-3 text-xs text-text-secondary">
+          <p>Mohon tunggu, proses import sedang berjalan. Untuk file besar mungkin membutuhkan waktu lebih lama.</p>
+          <p>Halaman akan refresh otomatis setelah proses selesai.</p>
+        </div>
       </div>
     </modal-dialog>
   </AdminLayout>
@@ -747,12 +767,12 @@ const handleImportFileDrop = (event) => {
 const validateImportFile = (file) => {
   importError.value = null;
   
-  // Validasi tipe file
-  const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+  // Validasi tipe file - hanya CSV
+  const validTypes = ['text/csv'];
   const fileExtension = file.name.split('.').pop().toLowerCase();
   
-  if (!validTypes.includes(file.type) && !['csv', 'xlsx', 'xls'].includes(fileExtension)) {
-    importError.value = 'Format file tidak valid. Gunakan CSV atau Excel (.xlsx, .xls)';
+  if (!validTypes.includes(file.type) && !['csv'].includes(fileExtension)) {
+    importError.value = 'Format file tidak valid. Hanya file CSV (.csv) yang didukung untuk performa terbaik';
     importFile.value = null;
     return;
   }
@@ -777,33 +797,35 @@ const submitImport = () => {
   importProcessing.value = true;
   importError.value = null;
   
-  const formData = new FormData();
-  formData.append('file', importFile.value);
+  // Gunakan Inertia.js router yang lebih aman dan sudah menangani CSRF token
+  const form = new FormData();
+  form.append('file', importFile.value);
   
-  // Kirim file ke server untuk diproses
-  fetch(route('admin.documents.import'), {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-    },
-  })
-  .then(response => response.json())
-  .then(data => {
-    importProcessing.value = false;
-    
-    if (data.success) {
-      // Tutup modal dan refresh data
+  router.post(route('admin.documents.import'), form, {
+    preserveScroll: true,
+    onSuccess: () => {
+      importProcessing.value = false;
       showImportModal.value = false;
+      
+      // Gunakan optional chaining saat mengakses flash message
+      const successMessage = usePage().props.flash?.success;
+      if (successMessage) {
+        // Tampilkan pesan sukses jika ada
+        console.log('Import berhasil:', successMessage);
+      }
+      
+      // Refresh data dokumen
       router.reload({ only: ['documents'] });
-    } else {
-      importError.value = data.error || 'Terjadi kesalahan saat mengimpor data';
+    },
+    onError: (errors) => {
+      importProcessing.value = false;
+      // Gunakan optional chaining dan fallback untuk error handling
+      importError.value = errors?.file || 'Terjadi kesalahan saat mengimpor data';
+      console.error('Import errors:', errors);
+    },
+    onFinish: () => {
+      importProcessing.value = false;
     }
-  })
-  .catch(error => {
-    console.error('Import error:', error);
-    importProcessing.value = false;
-    importError.value = 'Terjadi kesalahan saat mengunggah file. Silakan coba lagi.';
   });
 };
 
@@ -812,7 +834,7 @@ const downloadTemplate = () => {
   window.location.href = route('admin.documents.template');
 };
 
-// Export data dokumen ke Excel
+// Export data dokumen ke CSV
 const exportToExcel = () => {
   // Gunakan search query saat ini jika sedang melakukan pencarian
   const params = search.value ? `?search=${encodeURIComponent(search.value)}` : '';

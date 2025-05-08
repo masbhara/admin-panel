@@ -213,7 +213,10 @@ class DocumentController extends Controller
     public function export(Request $request)
     {
         try {
-            // Ambil dokumen berdasarkan filter pencarian jika ada
+            // Set batas waktu eksekusi yang lebih lama untuk export besar
+            set_time_limit(300);
+            
+            // Query berdasarkan filter pencarian jika ada
             $query = Document::query()
                 ->when($request->search, function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -221,156 +224,39 @@ class DocumentController extends Controller
                 })
                 ->with('user');
                 
-            $documents = $query->latest()->get();
+            // Untuk export yang lebih efisien, batasi jumlah records
+            $count = $query->count();
+            if ($count > 10000) {
+                return back()->with('error', 'Jumlah data terlalu banyak (lebih dari 10.000 records). Silakan gunakan filter pencarian untuk mempersempit data export.');
+            }
+            
+            // Ambil data
+            $documents = $query->get();
             
             // Buat spreadsheet baru
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             
-            // Set judul kolom
-            $sheet->setCellValue('A1', 'No.');
-            $sheet->setCellValue('B1', 'Nama Dokumen');
-            $sheet->setCellValue('C1', 'Nama File');
-            $sheet->setCellValue('D1', 'Pengirim');
-            $sheet->setCellValue('E1', 'WhatsApp');
-            $sheet->setCellValue('F1', 'Asal Kota');
-            $sheet->setCellValue('G1', 'Deskripsi');
-            $sheet->setCellValue('H1', 'Status');
-            $sheet->setCellValue('I1', 'Tanggal Upload');
-            $sheet->setCellValue('J1', 'Ukuran File');
-            
-            // Style header
+            // Format header
             $headerStyle = [
                 'font' => [
                     'bold' => true,
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                ],
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                    ],
+                    'color' => ['rgb' => '000000'],
                 ],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => [
-                        'rgb' => 'E6E6FA',
+                    'startColor' => ['rgb' => 'EFEFEF'],
+                ],
+                'borders' => [
+                    'outline' => [
+                        'borderStyle' => Border::BORDER_THIN,
                     ],
                 ],
             ];
             
-            $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
             
-            // Isi data
-            $row = 2;
-            foreach ($documents as $index => $document) {
-                $sheet->setCellValue('A' . $row, $index + 1);
-                $sheet->setCellValue('B' . $row, $document->name);
-                $sheet->setCellValue('C' . $row, $document->file_name);
-                
-                // Pengirim
-                $pengirim = $document->user ? $document->user->name : 'Pengunjung';
-                if (isset($document->metadata['pengirim'])) {
-                    $pengirim = $document->metadata['pengirim'];
-                } elseif (isset($document->metadata['name'])) {
-                    $pengirim = $document->metadata['name'];
-                } elseif ($document->description && str_contains($document->description, 'Dari pengunjung:')) {
-                    $pengirim = trim(str_replace('Dari pengunjung:', '', $document->description));
-                }
-                
-                $sheet->setCellValue('D' . $row, $pengirim);
-                
-                // WhatsApp dan Kota
-                $whatsapp = isset($document->metadata['whatsapp']) ? $document->metadata['whatsapp'] : '-';
-                $city = isset($document->metadata['city']) ? $document->metadata['city'] : '-';
-                
-                $sheet->setCellValue('E' . $row, $whatsapp);
-                $sheet->setCellValue('F' . $row, $city);
-                $sheet->setCellValue('G' . $row, $document->description);
-                
-                // Status
-                $statusLabels = [
-                    'pending' => 'Menunggu',
-                    'approved' => 'Disetujui',
-                    'rejected' => 'Ditolak'
-                ];
-                $status = $statusLabels[$document->status] ?? $document->status;
-                
-                $sheet->setCellValue('H' . $row, $status);
-                $sheet->setCellValue('I' . $row, Carbon::parse($document->uploaded_at)->format('d-m-Y H:i:s'));
-                
-                // Format ukuran file
-                $fileSize = $document->file_size;
-                $sizeLabel = $fileSize . ' Bytes';
-                
-                if ($fileSize >= 1024) {
-                    $fileSize = round($fileSize / 1024, 2);
-                    $sizeLabel = $fileSize . ' KB';
-                }
-                
-                if ($fileSize >= 1024) {
-                    $fileSize = round($fileSize / 1024, 2);
-                    $sizeLabel = $fileSize . ' MB';
-                }
-                
-                $sheet->setCellValue('J' . $row, $sizeLabel);
-                
-                $row++;
-            }
-            
-            // Auto-size kolom
-            foreach (range('A', 'J') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-            
-            // Border untuk semua data
-            $lastRow = $row - 1;
-            if ($lastRow >= 2) {
-                $sheet->getStyle('A2:J' . $lastRow)->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
-                        ],
-                    ],
-                ]);
-            }
-            
-            // Simpan ke file excel
-            $writer = new Xlsx($spreadsheet);
-            $fileName = 'dokumen_' . date('Ymd_His') . '.xlsx';
-            $tempPath = storage_path('app/public/temp/' . $fileName);
-            
-            // Pastikan direktori ada
-            if (!file_exists(storage_path('app/public/temp'))) {
-                mkdir(storage_path('app/public/temp'), 0777, true);
-            }
-            
-            $writer->save($tempPath);
-            
-            // Log aktivitas
-            activity()
-                ->causedBy(auth()->user())
-                ->log('exported documents');
-            
-            // Header untuk download
-            return Response::download($tempPath, $fileName, [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            ])->deleteFileAfterSend(true);
-        } catch (\Exception $e) {
-            Log::error('Error exporting documents: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengekspor data: ' . $e->getMessage());
-        }
-    }
-    
-    public function template()
-    {
-        try {
-            // Buat spreadsheet untuk template
-            $spreadsheet = new Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
-            
-            // Set judul kolom
+            // Set header kolom
             $sheet->setCellValue('A1', 'Nama Dokumen');
             $sheet->setCellValue('B1', 'Deskripsi');
             $sheet->setCellValue('C1', 'Pengirim');
@@ -378,28 +264,121 @@ class DocumentController extends Controller
             $sheet->setCellValue('E1', 'Asal Kota');
             $sheet->setCellValue('F1', 'Status');
             
-            // Style header
+            // Sesuaikan lebar kolom
+            $sheet->getColumnDimension('A')->setWidth(40);
+            $sheet->getColumnDimension('B')->setWidth(50);
+            $sheet->getColumnDimension('C')->setWidth(25);
+            $sheet->getColumnDimension('D')->setWidth(15);
+            $sheet->getColumnDimension('E')->setWidth(20);
+            $sheet->getColumnDimension('F')->setWidth(15);
+            
+            // Isi data
+            $row = 2;
+            foreach ($documents as $document) {
+                // Ambil data metadata dengan safe navigation
+                $pengirim = $document->metadata['pengirim'] ?? '';
+                $whatsapp = $document->metadata['whatsapp'] ?? '';
+                $city = $document->metadata['city'] ?? '';
+                
+                // Jika pengirim tidak ada di metadata, coba ambil dari format lain
+                if (empty($pengirim)) {
+                    if (!empty($document->metadata['name'])) {
+                        $pengirim = $document->metadata['name'];
+                    } elseif (!empty($document->description) && strpos($document->description, 'pengunjung:') !== false) {
+                        $pengirim = trim(str_replace('Dari pengunjung:', '', $document->description));
+                    } elseif (!empty($document->user) && $document->user->name) {
+                        $pengirim = $document->user->name;
+                    }
+                }
+                
+                // Set nilai sel
+                $sheet->setCellValue('A' . $row, $document->name);
+                $sheet->setCellValue('B' . $row, $document->description);
+                $sheet->setCellValue('C' . $row, $pengirim);
+                $sheet->setCellValue('D' . $row, $whatsapp);
+                $sheet->setCellValue('E' . $row, $city);
+                $sheet->setCellValue('F' . $row, $document->status);
+                
+                $row++;
+            }
+            
+            // Simpan sebagai file CSV untuk performa yang lebih baik
+            $filename = 'dokumen_export_' . date('Y-m-d_H-i-s') . '.csv';
+            
+            // Buat direktori temporary jika belum ada
+            $tempDir = storage_path('app/public/temp');
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0777, true);
+            }
+            
+            $filePath = $tempDir . '/' . $filename;
+            
+            // Gunakan writer CSV
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Csv($spreadsheet);
+            $writer->setDelimiter(',');
+            $writer->setEnclosure('"');
+            $writer->setLineEnding("\r\n");
+            $writer->setSheetIndex(0);
+            $writer->save($filePath);
+            
+            // Log aktivitas
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties(['count' => count($documents)])
+                ->log('exported documents to CSV');
+            
+            // Return file untuk download
+            return Response::download($filePath, $filename, [
+                'Content-Type' => 'text/csv',
+            ])->deleteFileAfterSend(true);
+        } 
+        catch (\Exception $e) {
+            Log::error('Error exporting documents: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat mengekspor data: ' . $e->getMessage());
+        }
+    }
+    
+    public function template()
+    {
+        try {
+            // Buat spreadsheet dasar
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Sesuaikan lebar kolom
+            $sheet->getColumnDimension('A')->setWidth(25);
+            $sheet->getColumnDimension('B')->setWidth(35);
+            $sheet->getColumnDimension('C')->setWidth(20);
+            $sheet->getColumnDimension('D')->setWidth(15);
+            $sheet->getColumnDimension('E')->setWidth(15);
+            $sheet->getColumnDimension('F')->setWidth(10);
+            
+            // Format header
             $headerStyle = [
                 'font' => [
                     'bold' => true,
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                ],
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                    ],
+                    'color' => ['rgb' => '000000'],
                 ],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => [
-                        'rgb' => 'E6E6FA',
+                    'startColor' => ['rgb' => 'EFEFEF'],
+                ],
+                'borders' => [
+                    'outline' => [
+                        'borderStyle' => Border::BORDER_THIN,
                     ],
                 ],
             ];
             
             $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+            
+            // Tambahkan header
+            $sheet->setCellValue('A1', 'Nama Dokumen');
+            $sheet->setCellValue('B1', 'Deskripsi');
+            $sheet->setCellValue('C1', 'Pengirim');
+            $sheet->setCellValue('D1', 'WhatsApp');
+            $sheet->setCellValue('E1', 'Asal Kota');
+            $sheet->setCellValue('F1', 'Status');
             
             // Tambahkan contoh data
             $sheet->setCellValue('A2', 'Contoh Dokumen 1');
@@ -416,23 +395,14 @@ class DocumentController extends Controller
             $sheet->setCellValue('E3', 'Surabaya');
             $sheet->setCellValue('F3', 'approved');
             
-            // Auto-size kolom
-            foreach (range('A', 'F') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-            
-            // Border untuk semua data
-            $sheet->getStyle('A2:F3')->applyFromArray([
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                    ],
-                ],
-            ]);
-            
-            // Simpan ke file excel
-            $writer = new Xlsx($spreadsheet);
-            $fileName = 'template_import_dokumen.xlsx';
+            // Simpan sebagai CSV untuk performa yang lebih baik
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Csv($spreadsheet);
+            $writer->setDelimiter(',');
+            $writer->setEnclosure('"');
+            $writer->setLineEnding("\r\n");
+            $writer->setSheetIndex(0);
+
+            $fileName = 'template_import_dokumen.csv';
             $tempPath = storage_path('app/public/temp/' . $fileName);
             
             // Pastikan direktori ada
@@ -442,9 +412,14 @@ class DocumentController extends Controller
             
             $writer->save($tempPath);
             
+            // Log aktivitas
+            activity()
+                ->causedBy(auth()->user())
+                ->log('downloaded csv template');
+            
             // Header untuk download
             return Response::download($tempPath, $fileName, [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Type' => 'text/csv',
             ])->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             Log::error('Error generating template: ' . $e->getMessage());
@@ -455,24 +430,202 @@ class DocumentController extends Controller
     public function import(Request $request)
     {
         try {
+            // Validasi - hanya terima file CSV
             $request->validate([
-                'file' => 'required|file|mimes:csv,xlsx,xls|max:5120', // Max 5MB
+                'file' => 'required|file|mimes:csv,txt|max:5120', // Max 5MB, menerima file CSV atau TXT
             ]);
             
             $file = $request->file('file');
             $filePath = $file->getRealPath();
             
-            // Baca file Excel
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+            // Set batas waktu eksekusi yang lebih lama untuk file besar
+            set_time_limit(600); // 10 menit
+            
+            // Untuk file CSV sangat besar, gunakan streaming parser
+            if ($file->getSize() > 1 * 1024 * 1024) { // Jika lebih dari 1MB
+                return $this->importLargeCSV($file);
+            }
+            
+            // Gunakan pembacaan CSV yang lebih efisien
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Csv');
+            $reader->setDelimiter(',');
+            $reader->setEnclosure('"');
+            $reader->setSheetIndex(0);
+            $reader->setReadDataOnly(true); // Hanya baca data, abaikan formatting
+            
+            $spreadsheet = $reader->load($filePath);
             $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray();
+            $rows = $worksheet->toArray(null, true, false, true);
             
             // Header ada di baris pertama
             $header = array_shift($rows);
             
             // Mapping kolom dengan header
             $columnMap = [];
+            foreach ($header as $column => $columnName) {
+                if (empty($columnName)) continue;
+                
+                $columnName = strtolower(trim($columnName));
+                
+                if (in_array($columnName, ['nama dokumen', 'nama', 'judul'])) {
+                    $columnMap['name'] = $column;
+                } elseif (in_array($columnName, ['deskripsi', 'keterangan'])) {
+                    $columnMap['description'] = $column;
+                } elseif (in_array($columnName, ['pengirim', 'nama pengirim'])) {
+                    $columnMap['pengirim'] = $column;
+                } elseif (in_array($columnName, ['whatsapp', 'no whatsapp', 'nomor whatsapp', 'telepon', 'hp'])) {
+                    $columnMap['whatsapp'] = $column;
+                } elseif (in_array($columnName, ['asal kota', 'kota', 'kota asal'])) {
+                    $columnMap['city'] = $column;
+                } elseif (in_array($columnName, ['status'])) {
+                    $columnMap['status'] = $column;
+                }
+            }
+            
+            // Validasi header minimal harus ada kolom nama
+            if (!isset($columnMap['name'])) {
+                return back()->withErrors(['file' => 'Format file tidak valid. Kolom Nama Dokumen wajib ada.']);
+            }
+            
+            // Gunakan transaksi database untuk efisiensi
+            \DB::beginTransaction();
+            
+            try {
+                $imported = 0;
+                $errors = [];
+                $documentBatch = [];
+                
+                // Siapkan batch untuk insert yang lebih efisien
+                $batchSize = 100;
+                $batch = [];
+                
+                foreach ($rows as $rowIndex => $row) {
+                    $rowNum = $rowIndex + 1; // +1 karena array dimulai dari indexing alfanumerik dalam Excel
+                    
+                    // Skip baris kosong
+                    if (empty(array_filter($row))) {
+                        continue;
+                    }
+                    
+                    $name = isset($columnMap['name']) && isset($row[$columnMap['name']]) ? 
+                            trim($row[$columnMap['name']]) : null;
+                    
+                    // Validasi nama tidak boleh kosong
+                    if (empty($name)) {
+                        $errors[] = "Baris {$rowNum}: Nama dokumen tidak boleh kosong.";
+                        continue;
+                    }
+                    
+                    // Siapkan metadata
+                    $metadata = [];
+                    
+                    // Tambahkan metadata pengirim jika ada
+                    if (isset($columnMap['pengirim']) && !empty($row[$columnMap['pengirim']])) {
+                        $metadata['pengirim'] = trim($row[$columnMap['pengirim']]);
+                    }
+                    
+                    // Tambahkan metadata whatsapp jika ada
+                    if (isset($columnMap['whatsapp']) && !empty($row[$columnMap['whatsapp']])) {
+                        $metadata['whatsapp'] = trim($row[$columnMap['whatsapp']]);
+                    }
+                    
+                    // Tambahkan metadata kota jika ada
+                    if (isset($columnMap['city']) && !empty($row[$columnMap['city']])) {
+                        $metadata['city'] = trim($row[$columnMap['city']]);
+                    }
+                    
+                    // Tentukan status (default: pending)
+                    $status = 'pending';
+                    if (isset($columnMap['status']) && !empty($row[$columnMap['status']])) {
+                        $statusValue = strtolower(trim($row[$columnMap['status']]));
+                        if (in_array($statusValue, ['pending', 'approved', 'rejected'])) {
+                            $status = $statusValue;
+                        }
+                    }
+                    
+                    // Siapkan data dokumen
+                    $documentData = [
+                        'name' => $name,
+                        'description' => isset($columnMap['description']) && isset($row[$columnMap['description']]) ? 
+                                        trim($row[$columnMap['description']]) : null,
+                        'user_id' => auth()->id(),
+                        'file_path' => null, // Placeholder untuk dokumen tanpa file
+                        'file_name' => null,
+                        'file_size' => 0,
+                        'file_type' => null,
+                        'uploaded_at' => Carbon::now(),
+                        'status' => $status,
+                        'metadata' => $metadata,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    
+                    // Tambahkan ke batch
+                    $batch[] = $documentData;
+                    $imported++;
+                    
+                    // Jika batch sudah mencapai ukuran tertentu, insert ke database
+                    if (count($batch) >= $batchSize) {
+                        Document::insert($batch);
+                        $batch = [];
+                    }
+                }
+                
+                // Insert sisa data yang belum di-batch
+                if (!empty($batch)) {
+                    Document::insert($batch);
+                }
+                
+                \DB::commit();
+                
+                // Log aktivitas
+                activity()
+                    ->causedBy(auth()->user())
+                    ->withProperties(['imported_count' => $imported])
+                    ->log('imported documents from CSV');
+                
+                $message = "Berhasil mengimpor {$imported} dokumen.";
+                if (count($errors) > 0) {
+                    $message .= " Dengan " . count($errors) . " error.";
+                }
+                
+                return redirect()->back()->with('success', $message);
+                
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error importing documents: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Import file CSV yang sangat besar dengan metode streaming
+     */
+    private function importLargeCSV($file)
+    {
+        try {
+            $filePath = $file->getRealPath();
+            
+            // Buka file untuk dibaca baris per baris
+            $handle = fopen($filePath, 'r');
+            if ($handle === false) {
+                throw new \Exception('Tidak dapat membuka file');
+            }
+            
+            // Baca baris header
+            $header = fgetcsv($handle, 0, ',', '"');
+            if ($header === false) {
+                throw new \Exception('File CSV kosong atau rusak');
+            }
+            
+            // Mapping kolom dengan header
+            $columnMap = [];
             foreach ($header as $index => $columnName) {
+                if (empty($columnName)) continue;
+                
                 $columnName = strtolower(trim($columnName));
                 
                 if (in_array($columnName, ['nama dokumen', 'nama', 'judul'])) {
@@ -492,21 +645,31 @@ class DocumentController extends Controller
             
             // Validasi header minimal harus ada kolom nama
             if (!isset($columnMap['name'])) {
-                return response()->json(['success' => false, 'error' => 'Format file tidak valid. Kolom Nama Dokumen wajib ada.']);
+                fclose($handle);
+                return back()->withErrors(['file' => 'Format file tidak valid. Kolom Nama Dokumen wajib ada.']);
             }
+            
+            // Mulai transaksi database
+            \DB::beginTransaction();
             
             $imported = 0;
             $errors = [];
+            $rowNum = 1;
+            $batchSize = 500;
+            $batch = [];
             
-            foreach ($rows as $rowIndex => $row) {
-                $rowNum = $rowIndex + 2; // +2 karena baris pertama adalah header dan array dimulai dari 0
+            // Proses data baris per baris untuk menghemat memori
+            while (($row = fgetcsv($handle, 0, ',', '"')) !== false) {
+                $rowNum++;
                 
                 // Skip baris kosong
                 if (empty(array_filter($row))) {
                     continue;
                 }
                 
-                $name = $row[$columnMap['name']] ?? null;
+                // Ambil nama dokumen
+                $name = isset($columnMap['name']) && isset($row[$columnMap['name']]) ? 
+                        trim($row[$columnMap['name']]) : null;
                 
                 // Validasi nama tidak boleh kosong
                 if (empty($name)) {
@@ -514,56 +677,93 @@ class DocumentController extends Controller
                     continue;
                 }
                 
-                // Siapkan data
-                $documentData = [
-                    'name' => $name,
-                    'description' => $row[$columnMap['description']] ?? null,
-                    'user_id' => auth()->id(),
-                    'uploaded_at' => Carbon::now(),
-                    'status' => 'pending',
-                    'metadata' => [],
-                ];
+                // Siapkan metadata
+                $metadata = [];
                 
-                // Status jika ada
-                if (isset($columnMap['status']) && !empty($row[$columnMap['status']])) {
-                    $status = strtolower(trim($row[$columnMap['status']]));
-                    if (in_array($status, ['pending', 'approved', 'rejected'])) {
-                        $documentData['status'] = $status;
+                // Tambahkan metadata pengirim jika ada
+                if (isset($columnMap['pengirim']) && isset($row[$columnMap['pengirim']]) && !empty($row[$columnMap['pengirim']])) {
+                    $metadata['pengirim'] = trim($row[$columnMap['pengirim']]);
+                }
+                
+                // Tambahkan metadata whatsapp jika ada
+                if (isset($columnMap['whatsapp']) && isset($row[$columnMap['whatsapp']]) && !empty($row[$columnMap['whatsapp']])) {
+                    $metadata['whatsapp'] = trim($row[$columnMap['whatsapp']]);
+                }
+                
+                // Tambahkan metadata kota jika ada
+                if (isset($columnMap['city']) && isset($row[$columnMap['city']]) && !empty($row[$columnMap['city']])) {
+                    $metadata['city'] = trim($row[$columnMap['city']]);
+                }
+                
+                // Tentukan status (default: pending)
+                $status = 'pending';
+                if (isset($columnMap['status']) && isset($row[$columnMap['status']]) && !empty($row[$columnMap['status']])) {
+                    $statusValue = strtolower(trim($row[$columnMap['status']]));
+                    if (in_array($statusValue, ['pending', 'approved', 'rejected'])) {
+                        $status = $statusValue;
                     }
                 }
                 
-                // Tambahkan metadata
-                if (isset($columnMap['pengirim']) && !empty($row[$columnMap['pengirim']])) {
-                    $documentData['metadata']['pengirim'] = $row[$columnMap['pengirim']];
-                }
+                // Siapkan data dokumen
+                $documentData = [
+                    'name' => $name,
+                    'description' => isset($columnMap['description']) && isset($row[$columnMap['description']]) ? 
+                                     trim($row[$columnMap['description']]) : null,
+                    'user_id' => auth()->id(),
+                    'file_path' => null, // Placeholder untuk dokumen tanpa file
+                    'file_name' => null,
+                    'file_size' => 0,
+                    'file_type' => null,
+                    'uploaded_at' => Carbon::now(),
+                    'status' => $status,
+                    'metadata' => $metadata,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
                 
-                if (isset($columnMap['whatsapp']) && !empty($row[$columnMap['whatsapp']])) {
-                    $documentData['metadata']['whatsapp'] = $row[$columnMap['whatsapp']];
-                }
-                
-                if (isset($columnMap['city']) && !empty($row[$columnMap['city']])) {
-                    $documentData['metadata']['city'] = $row[$columnMap['city']];
-                }
-                
-                // Buat dokumen tanpa file (file harus diupload manual kemudian)
-                Document::create($documentData);
+                // Tambahkan ke batch
+                $batch[] = $documentData;
                 $imported++;
+                
+                // Jika batch sudah mencapai ukuran tertentu, insert ke database
+                if (count($batch) >= $batchSize) {
+                    Document::insert($batch);
+                    $batch = [];
+                }
             }
+            
+            // Insert sisa data yang belum di-batch
+            if (!empty($batch)) {
+                Document::insert($batch);
+            }
+            
+            // Tutup file
+            fclose($handle);
+            
+            \DB::commit();
             
             // Log aktivitas
             activity()
                 ->causedBy(auth()->user())
                 ->withProperties(['imported_count' => $imported])
-                ->log('imported documents');
+                ->log('imported large CSV file with documents');
             
-            return response()->json([
-                'success' => true,
-                'message' => "Berhasil mengimpor {$imported} dokumen." . (count($errors) > 0 ? " Dengan " . count($errors) . " error." : ""),
-                'errors' => $errors,
-            ]);
+            $message = "Berhasil mengimpor {$imported} dokumen.";
+            if (count($errors) > 0) {
+                $message .= " Dengan " . count($errors) . " error.";
+            }
+            
+            return redirect()->back()->with('success', $message);
+            
         } catch (\Exception $e) {
-            Log::error('Error importing documents: ' . $e->getMessage());
-            return response()->json(['success' => false, 'error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            if (isset($handle) && is_resource($handle)) {
+                fclose($handle);
+            }
+            
+            \DB::rollBack();
+            
+            Log::error('Error importing large CSV: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan saat mengimpor file besar: ' . $e->getMessage()]);
         }
     }
 } 
