@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use App\Models\Document;
 use Carbon\Carbon;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Log;
 
 class DocumentController extends Controller
 {
@@ -53,7 +54,12 @@ class DocumentController extends Controller
 
             $file = $request->file('file');
             $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('documents', $fileName, 'public');
+            
+            // Pastikan file disimpan di public/documents, bukan documents
+            $filePath = $file->storeAs('public/documents', $fileName);
+            
+            // Log untuk debugging
+            Log::info('Storing new document: ' . $fileName . ' at path: ' . $filePath);
 
             $document = Document::create([
                 'name' => $request->name,
@@ -77,6 +83,7 @@ class DocumentController extends Controller
 
             return redirect()->route('admin.documents.index')->with('success', 'Dokumen berhasil ditambahkan.');
         } catch (\Exception $e) {
+            Log::error('Error storing document: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);

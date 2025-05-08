@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class DocumentController extends Controller
 {
@@ -47,30 +48,42 @@ class DocumentController extends Controller
 
             $file = $request->file('file');
             $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('documents', $fileName, 'public');
+            
+            // Menyimpan file di public/documents untuk konsistensi
+            $filePath = $file->storeAs('public/documents', $fileName);
+            
+            // Log penyimpanan file untuk debugging
+            Log::info('Public dokumen stored: ' . $fileName . ' at path: ' . $filePath);
 
+            // Simpan dokumen ke database
             $document = Document::create([
                 'name' => $request->name,
-                'description' => 'Dokumen dari pengunjung: ' . $request->name,
+                'description' => 'Dari pengunjung: ' . ($request->name ?: 'Tidak disebutkan'),
                 'file_path' => $filePath,
                 'file_name' => $file->getClientOriginalName(),
                 'file_size' => $file->getSize(),
                 'file_type' => $file->getClientMimeType(),
-                'user_id' => 1, // Default admin user ID
-                'uploaded_at' => now(),
-                'status' => 'pending',
+                'user_id' => auth()->check() ? auth()->id() : null,
                 'metadata' => [
                     'whatsapp' => $request->whatsapp,
                     'city' => $request->city,
-                    'submitted_by' => 'guest'
                 ],
+                'uploaded_at' => now(),
+                'status' => 'pending',
             ]);
 
-            return redirect()->back()->with('success', 'Dokumen berhasil dikirim! Kami akan menghubungi Anda segera.');
+            // Log aktivitas
+            activity()
+                ->performedOn($document)
+                ->log('uploaded by guest');
+
+            // Redirect dengan sukses
+            return redirect()->back()->with('success', 'Dokumen berhasil diunggah! Terima kasih.');
         } catch (\Exception $e) {
+            Log::error('Error uploading public document: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Terjadi kesalahan saat mengunggah dokumen. Silakan coba lagi.']);
         }
     }
 

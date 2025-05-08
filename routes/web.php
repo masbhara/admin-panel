@@ -22,6 +22,10 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentPreviewController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Document;
+use Illuminate\Support\Facades\Activity;
+use Illuminate\Support\Facades\Log;
 
 // Public routes
 Route::get('/', function () {
@@ -263,27 +267,75 @@ Route::get('/documents/{document}/download', [DocumentPreviewController::class, 
 
 // Route download paling sederhana
 Route::get('/document-direct/{document}', function(\App\Models\Document $document) {
-    $file = scandir(storage_path('app/public/documents'))[2] ?? null;
-    
-    if (!$file) {
-        return back()->with('error', 'File tidak ditemukan');
+    try {
+        // Pastikan file ada
+        Log::info('Direct download for document: ' . $document->id . ', Path: ' . $document->file_path);
+        
+        // Cek apakah file path kosong
+        if (empty($document->file_path)) {
+            Log::error('Document has empty file_path: ' . $document->id);
+            return back()->with('error', 'File path tidak valid');
+        }
+        
+        // Cek keberadaan file dengan multiple path possibility
+        $possiblePaths = [
+            $document->file_path,
+            'public/' . $document->file_path,
+            ltrim($document->file_path, 'public/'),
+            str_replace('//', '/', $document->file_path)
+        ];
+        
+        $filePath = null;
+        foreach ($possiblePaths as $path) {
+            if (Storage::exists($path)) {
+                Log::info('Found valid file path: ' . $path);
+                $filePath = $path;
+                break;
+            }
+        }
+        
+        // Jika file storage link tidak bekerja, coba cek secara langsung di disk
+        if (!$filePath) {
+            $basePath = storage_path('app/public');
+            $strippedPath = ltrim($document->file_path, 'public/');
+            
+            if (file_exists($basePath . '/' . $strippedPath)) {
+                $filePath = 'public/' . $strippedPath;
+                Log::info('Found file directly in disk: ' . $filePath);
+            }
+        }
+        
+        if (!$filePath) {
+            Log::error('File does not exist in any location: ' . $document->file_path);
+            return back()->with('error', 'File tidak ditemukan di server');
+        }
+        
+        $fullPath = storage_path('app/' . $filePath);
+        
+        // Gunakan nama file asli jika ada, jika tidak gunakan nama dokumen
+        $fileName = $document->file_name ?? $document->name;
+        
+        // Tambahkan ekstensi jika tidak ada
+        if (!pathinfo($fileName, PATHINFO_EXTENSION)) {
+            $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+            $fileName = $fileName . '.' . $extension;
+        }
+        
+        Log::info('Serving file from: ' . $fullPath . ' as ' . $fileName);
+        
+        // Log aktivitas jika user login
+        if (auth()->check()) {
+            activity()
+                ->performedOn($document)
+                ->causedBy(auth()->user())
+                ->log('downloaded document');
+        }
+        
+        // Tambahkan header yang tepat untuk download
+        return response()->download($fullPath, $fileName);
+    } catch (\Exception $e) {
+        Log::error('Document direct download error: ' . $e->getMessage());
+        return back()->with('error', 'Terjadi kesalahan saat mengunduh dokumen: ' . $e->getMessage());
     }
-    
-    $filePath = storage_path('app/public/documents/' . $file);
-    $fileName = $document->name . '.' . pathinfo($file, PATHINFO_EXTENSION);
-    $fileSize = filesize($filePath);
-    
-    // Set header untuk download
-    header('Content-Description: File Transfer');
-    header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename="' . $fileName . '"');
-    header('Content-Length: ' . $fileSize);
-    header('Cache-Control: must-revalidate');
-    header('Pragma: public');
-    header('Expires: 0');
-    
-    ob_clean();
-    flush();
-    readfile($filePath);
-    exit;
 })->name('document.direct');
+

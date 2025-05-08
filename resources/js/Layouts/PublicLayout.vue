@@ -72,15 +72,7 @@
           <router-link :to="{ name: 'public.home' }" class="block text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-base font-medium" @click="isOpen = false">
             Beranda
           </router-link>
-          <router-link :to="{ name: 'public.about' }" class="block text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-base font-medium" @click="isOpen = false">
-            Tentang Kami
-          </router-link>
-          <router-link :to="{ name: 'public.services' }" class="block text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-base font-medium" @click="isOpen = false">
-            Layanan
-          </router-link>
-          <router-link :to="{ name: 'public.contact' }" class="block text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-base font-medium" @click="isOpen = false">
-            Kontak
-          </router-link>
+
           <a href="/login" class="block text-white bg-primary-600 hover:bg-primary-700 px-3 py-2 rounded-md text-base font-medium mt-4" @click="isOpen = false">
             Login
           </a>
@@ -94,7 +86,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-100 dark:bg-gray-800 py-8">
+    <footer class="bg-gray-100 dark:bg-gray-800 py-8 bottom-0">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          
           <div class=" text-center text-gray-500 dark:text-gray-400">

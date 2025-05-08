@@ -1,61 +1,63 @@
 <template>
   <AdminLayout title="Manajemen Dokumen">
     <template #header>
-      <h2 class="text-xl font-semibold leading-tight text-gray-800">
+      <h2 class="text-xl font-semibold leading-tight text-text-primary">
         Manajemen Dokumen
       </h2>
     </template>
 
-    <div class="py-12">
+    <div class="py-6">
       <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-          <div class="p-6 bg-white border-b border-gray-200">
+        <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
+          <div class="p-6 bg-background-primary">
             <!-- Filter dan pencarian -->
-            <div class="pb-4 mb-4 border-b border-gray-200">
-              <div class="flex items-center justify-between">
-                <div class="flex-1">
-                  <label for="search" class="sr-only">Cari</label>
-                  <div class="relative">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                      </svg>
-                    </div>
-                    <input 
-                      id="search" 
-                      v-model="search" 
-                      name="search" 
-                      type="text" 
-                      class="block w-full py-2 pl-10 pr-3 text-sm border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500" 
-                      placeholder="Cari dokumen..." 
-                      @keyup.enter="handleSearch"
-                    />
-                  </div>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div class="relative flex-1 max-w-md">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg class="w-5 h-5 text-text-tertiary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                  </svg>
                 </div>
+                <input 
+                  id="search" 
+                  v-model="search" 
+                  name="search" 
+                  type="text" 
+                  class="block w-full py-2 pl-10 pr-3 text-sm bg-background-tertiary border-border-light rounded-lg focus:ring-primary-500 focus:border-primary-500" 
+                  placeholder="Cari dokumen..." 
+                  @keyup.enter="handleSearch"
+                />
               </div>
+
+              <Link 
+                :href="route('admin.documents.create')" 
+                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+              >
+                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Tambah Dokumen Baru
+              </Link>
             </div>
 
             <!-- Tabel dokumen -->
-            <div v-if="documents.data.length > 0" class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <div v-if="documents.data.length > 0" class="overflow-x-auto rounded-lg border border-border-light">
+              <table class="min-w-full divide-y divide-border-light">
+                <thead class="bg-background-secondary">
                   <tr>
-                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
                       Nama Dokumen
                     </th>
-                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      Diupload Oleh
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
+                      Pengirim
                     </th>
-                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      Tipe
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
                       Ukuran
                     </th>
-                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
                       Status
                     </th>
-                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
                       Tanggal Upload
                     </th>
                     <th scope="col" class="relative px-6 py-3">
@@ -63,59 +65,74 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="document in documents.data" :key="document.id">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ document?.name || 'Tanpa Nama' }}
-                      </div>
-                      <div class="text-sm text-gray-500" v-if="document?.description">
-                        {{ truncate(document?.description, 50) }}
+                <tbody class="bg-background-primary divide-y divide-border-light">
+                  <tr v-for="document in documents.data" :key="document.id" class="hover:bg-background-secondary transition-colors">
+                    <td class="px-6 py-4">
+                      <div class="text-sm font-medium text-text-primary">
+                        {{ document?.file_name || document?.name || 'Tanpa Nama' }}
                       </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900">
-                        {{ document?.user?.name || 'Tidak Ada User' }}
+                    <td class="px-6 py-4">
+                      <div class="text-sm text-text-secondary">
+                        {{ getPengirimName(document) }}
                       </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900">
-                        {{ document?.file_type || 'Tidak Ada' }}
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900">
+                    <td class="px-6 py-4">
+                      <div class="text-sm text-text-primary">
                         {{ formatFileSize(document?.file_size || 0) }}
                       </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4">
                       <span 
-                        class="inline-flex px-2 text-xs font-semibold leading-5 rounded-full"
+                        class="inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full"
                         :class="{
-                          'bg-yellow-100 text-yellow-800': document?.status === 'pending',
-                          'bg-green-100 text-green-800': document?.status === 'approved',
-                          'bg-red-100 text-red-800': document?.status === 'rejected',
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': document?.status === 'pending',
+                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': document?.status === 'approved',
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': document?.status === 'rejected',
                         }"
                       >
                         {{ statusLabel(document?.status || 'pending') }}
                       </span>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                    <td class="px-6 py-4 text-sm text-text-secondary">
                       {{ formatDate(document?.uploaded_at || new Date()) }}
                     </td>
-                    <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
-                      <div class="flex items-center space-x-2">
-                        <Link :href="route('admin.documents.show', document.id)" class="text-indigo-600 hover:text-indigo-900">
-                          Detail
+                    <td class="px-6 py-4 text-sm font-medium text-right">
+                      <div class="flex items-center justify-end space-x-2">
+                        <Link :href="route('admin.documents.show', document.id)" class="p-1.5 rounded-md text-blue-600 hover:text-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Detail">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
                         </Link>
-                        <button @click="openPreviewModal(document)" class="text-blue-600 hover:text-blue-900">
-                          Preview
+                        <button
+                          @click="openPreviewModal(document)"
+                          class="p-1.5 rounded-md text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                          title="Preview"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
                         </button>
-                        <Link :href="route('documents.download', document.id)" target="_blank" class="text-green-600 hover:text-green-900">
-                          Download
+                        <a 
+                          :href="route('document.direct', document.id)" 
+                          target="_blank" 
+                          class="p-1.5 rounded-md text-green-600 hover:text-green-900 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                          title="Download"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                        </a>
+                        <Link :href="route('admin.documents.edit', document.id)" class="p-1.5 rounded-md text-amber-600 hover:text-amber-900 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors" title="Edit">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
                         </Link>
-                        <button @click="confirmDelete(document)" class="text-red-600 hover:text-red-900">
-                          Hapus
+                        <button @click="confirmDelete(document)" class="p-1.5 rounded-md text-red-600 hover:text-red-900 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Hapus">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </div>
                     </td>
@@ -123,9 +140,9 @@
                 </tbody>
               </table>
             </div>
-            <div v-else class="py-10 text-center">
+            <div v-else class="flex flex-col items-center justify-center py-12 bg-background-tertiary rounded-lg border border-border-light">
               <svg 
-                class="w-12 h-12 mx-auto text-gray-400" 
+                class="w-16 h-16 text-text-tertiary" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24" 
@@ -138,14 +155,23 @@
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 ></path>
               </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada dokumen</h3>
-              <p class="mt-1 text-sm text-gray-500">
+              <h3 class="mt-4 text-lg font-medium text-text-primary">Tidak ada dokumen</h3>
+              <p class="mt-1 text-sm text-text-secondary">
                 Belum ada dokumen yang diupload.
               </p>
+              <Link 
+                :href="route('admin.documents.create')" 
+                class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+              >
+                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Tambah Dokumen Baru
+              </Link>
             </div>
 
             <!-- Pagination -->
-            <div v-if="documents.data.length > 0" class="mt-4">
+            <div v-if="documents.data.length > 0" class="mt-6">
               <Pagination :links="documents.links" />
             </div>
           </div>
@@ -155,39 +181,43 @@
 
     <!-- Preview Modal -->
     <modal-dialog :show="showPreviewModal" @close="showPreviewModal = false" max-width="4xl">
-      <div class="p-6">
+      <div class="p-6 bg-background-primary">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium leading-6 text-gray-900">
-            Preview Dokumen: {{ previewDocument?.name }}
+          <h3 class="text-lg font-medium leading-6 text-text-primary">
+            Preview Dokumen: {{ previewDocument?.file_name || previewDocument?.name }}
           </h3>
-          <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-500">
+          <button @click="showPreviewModal = false" class="text-text-tertiary hover:text-text-secondary transition-colors">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         
-        <div v-if="isLoading" class="flex items-center justify-center h-96">
+        <div v-if="isLoading" class="flex items-center justify-center h-96 bg-background-secondary rounded-lg">
           <div class="flex flex-col items-center">
-            <svg class="w-10 h-10 text-indigo-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="w-10 h-10 text-primary-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="mt-2 text-sm text-gray-500">Memuat preview...</p>
+            <p class="mt-2 text-sm text-text-secondary">Memuat preview...</p>
           </div>
         </div>
         
-        <div v-else-if="previewError" class="flex flex-col items-center justify-center h-96">
+        <div v-else-if="previewError" class="flex flex-col items-center justify-center h-96 bg-background-secondary rounded-lg">
           <svg class="w-12 h-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p class="mt-2 text-sm text-red-500">{{ previewError }}</p>
-          <Link :href="currentOriginalUrl" class="px-4 py-2 mt-4 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ previewError }}</p>
+          <p class="mt-1 text-xs text-text-tertiary px-6 text-center">
+            Sistem tidak dapat menampilkan pratinjau dokumen ini. Dokumen mungkin rusak atau format tidak didukung untuk pratinjau. 
+            Anda tetap dapat mengunduh dokumen aslinya.
+          </p>
+          <a :href="currentOriginalUrl" target="_blank" class="px-4 py-2 mt-4 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
             Download File Asli
-          </Link>
+          </a>
         </div>
         
-        <div v-else-if="previewType === 'pdf'" class="h-96">
+        <div v-else-if="previewType === 'pdf'" class="h-96 rounded-lg overflow-hidden border border-border-light">
           <iframe :src="currentPreviewUrl" frameborder="0" width="100%" height="100%"></iframe>
         </div>
         
@@ -197,29 +227,33 @@
               <div class="flex space-x-2">
                 <button 
                   @click="switchViewer('google')" 
-                  class="px-3 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
-                  :class="{ 'bg-indigo-100 text-indigo-700': activeViewer === 'google' }"
+                  class="px-3 py-1 text-xs rounded-md transition-colors"
+                  :class="activeViewer === 'google' 
+                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300' 
+                    : 'bg-background-tertiary text-text-secondary hover:bg-background-secondary'"
                 >
                   Google Docs Viewer
                 </button>
                 <button 
                   @click="switchViewer('office')" 
-                  class="px-3 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
-                  :class="{ 'bg-indigo-100 text-indigo-700': activeViewer === 'office' }"
+                  class="px-3 py-1 text-xs rounded-md transition-colors"
+                  :class="activeViewer === 'office' 
+                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300' 
+                    : 'bg-background-tertiary text-text-secondary hover:bg-background-secondary'"
                 >
                   Microsoft Office Viewer
                 </button>
               </div>
             </div>
-            <iframe :src="currentPreviewUrl" frameborder="0" width="100%" height="100%"></iframe>
+            <iframe :src="currentPreviewUrl" frameborder="0" class="w-full h-full rounded-lg border border-border-light"></iframe>
           </div>
         </div>
         
-        <div class="flex justify-end mt-4 space-x-3">
-          <Link :href="currentOriginalUrl" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        <div class="flex justify-end mt-6 space-x-3">
+          <a :href="currentOriginalUrl" target="_blank" class="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
             Download File Asli
-          </Link>
-          <button @click="showPreviewModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          </a>
+          <button @click="showPreviewModal = false" class="px-4 py-2 text-sm font-medium text-text-primary bg-background-tertiary rounded-md shadow-sm hover:bg-background-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
             Tutup
           </button>
         </div>
@@ -228,34 +262,31 @@
 
     <!-- Konfirmasi Hapus Modal -->
     <modal-dialog :show="showDeleteModal" @close="showDeleteModal = false">
-      <div class="p-6">
+      <div class="p-6 bg-background-primary">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium leading-6 text-gray-900">
+          <h3 class="text-lg font-medium leading-6 text-text-primary">
             Konfirmasi Hapus
           </h3>
-          <button @click="showDeleteModal = false" class="text-gray-400 hover:text-gray-500">
+          <button @click="showDeleteModal = false" class="text-text-tertiary hover:text-text-secondary transition-colors">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <p class="text-sm text-gray-500">
-          Apakah Anda yakin ingin menghapus dokumen <strong>"{{ documentToDelete?.name }}"</strong>? 
+        <p class="text-sm text-text-secondary">
+          Apakah Anda yakin ingin menghapus dokumen <strong class="text-text-primary font-medium">"{{ documentToDelete?.file_name || documentToDelete?.name }}"</strong>? 
           Tindakan ini tidak dapat dibatalkan.
         </p>
         <div class="flex justify-end mt-6 space-x-3">
-          <button @click="showDeleteModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <button @click="showDeleteModal = false" class="px-4 py-2 text-sm font-medium text-text-primary bg-background-tertiary border border-border-light rounded-md shadow-sm hover:bg-background-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
             Batal
           </button>
           <Link
             :href="route('admin.documents.destroy', documentToDelete?.id)"
             method="delete"
             as="button"
-            class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
             @click="showDeleteModal = false"
-            :preserve-scroll="true"
-            :only="['documents']"
-            @finish="() => { showDeleteModal = false }"
           >
             Hapus
           </Link>
@@ -342,27 +373,43 @@ const openPreviewModal = async (document) => {
   isLoading.value = true;
   previewError.value = null;
   previewType.value = null;
+  currentPreviewUrl.value = '';
+  officeViewerUrl.value = '';
   
   try {
-    const response = await fetch(route('documents.preview', document.id));
+    const timestamp = new Date().getTime();
+    const response = await fetch(`${route('documents.preview', document.id)}?t=${timestamp}`);
     const data = await response.json();
     
-    if (response.ok) {
+    console.log('Preview response:', data);
+    
+    if (response.ok && data.success) {
       previewType.value = data.type;
-      currentPreviewUrl.value = data.previewUrl;
-      currentOriginalUrl.value = data.originalUrl;
       
-      if (data.type === 'external') {
-        officeViewerUrl.value = data.officeViewerUrl;
+      if (data.type === 'pdf') {
+        currentPreviewUrl.value = data.previewUrl;
+      } else if (data.type === 'external') {
+        currentPreviewUrl.value = data.googleViewerUrl || data.previewUrl;
+        officeViewerUrl.value = data.officeViewerUrl || '';
         activeViewer.value = 'google';
+        
+        // Cek jika ada warning untuk local environment
+        if (data.localEnvironment) {
+          console.warn(data.warning);
+        }
+      } else {
+        currentPreviewUrl.value = data.previewUrl;
       }
+      
+      currentOriginalUrl.value = data.originalUrl || route('document.direct', document.id);
     } else {
-      previewError.value = data.error || 'Tidak dapat memuat preview';
-      currentOriginalUrl.value = route('documents.download', document.id);
+      previewError.value = data.error || 'Tidak dapat memuat preview dokumen';
+      currentOriginalUrl.value = route('document.direct', document.id);
     }
   } catch (error) {
-    previewError.value = 'Terjadi kesalahan saat memuat preview';
-    currentOriginalUrl.value = route('documents.download', document.id);
+    console.error('Preview error:', error);
+    previewError.value = 'Terjadi kesalahan saat memuat preview dokumen. Silakan coba lagi nanti.';
+    currentOriginalUrl.value = route('document.direct', document.id);
   } finally {
     isLoading.value = false;
   }
@@ -370,8 +417,14 @@ const openPreviewModal = async (document) => {
 
 const switchViewer = (viewer) => {
   activeViewer.value = viewer;
-  currentPreviewUrl.value = viewer === 'google' ? 
-    currentPreviewUrl.value : officeViewerUrl.value;
+  
+  if (viewer === 'google') {
+    currentPreviewUrl.value = previewType.value === 'external' ? 
+      (currentPreviewUrl.value || route('document.direct', previewDocument.value.id)) : 
+      currentPreviewUrl.value;
+  } else if (viewer === 'office') {
+    currentPreviewUrl.value = officeViewerUrl.value || route('document.direct', previewDocument.value.id);
+  }
 };
 
 const confirmDelete = (document) => {
@@ -385,4 +438,37 @@ watch(search, (value, oldValue) => {
     handleSearch();
   }
 });
+
+// Fungsi untuk mendapatkan nama pengirim
+const getPengirimName = (document) => {
+  // Prioritaskan pengirim dari metadata
+  if (document?.metadata?.pengirim) {
+    return document.metadata.pengirim;
+  }
+  
+  // Cek jika deskripsi berisi informasi pengirim (format lama)
+  if (document?.description?.includes('Dari pengunjung:')) {
+    return document.description.replace('Dari pengunjung:', '').trim();
+  }
+
+  // Cek jika deskripsi berisi nama pengirim dengan format lainnya
+  if (document?.description?.includes('pengunjung:')) {
+    return document.description.replace(/.*pengunjung:/, '').trim();
+  }
+  
+  // Alternatif lain: cek dalam deskripsi jika ada format "dokumen dari [nama]"
+  if (document?.description?.includes('dokumen dari')) {
+    const match = document.description.match(/dokumen dari\s+([^\.]+)/i);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  
+  // Sebagai fallback terakhir, gunakan nama uploader
+  if (document?.user?.name && !document.user.name.includes('Admin')) {
+    return document.user.name;
+  }
+  
+  return 'Pengunjung';
+};
 </script> 
