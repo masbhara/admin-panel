@@ -105,6 +105,24 @@
                   {{ getPengirimName(document) }}
                 </dd>
               </div>
+              <!-- Tambahkan informasi WhatsApp jika ada -->
+              <div v-if="document?.metadata?.whatsapp" class="px-4 py-5 bg-background-secondary sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-text-secondary">
+                  WhatsApp Pengirim
+                </dt>
+                <dd class="mt-1 text-sm text-text-primary sm:col-span-2 sm:mt-0">
+                  {{ document.metadata.whatsapp }}
+                </dd>
+              </div>
+              <!-- Tambahkan informasi Kota jika ada -->
+              <div v-if="document?.metadata?.city" class="px-4 py-5 bg-background-primary sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-text-secondary">
+                  Asal Kota
+                </dt>
+                <dd class="mt-1 text-sm text-text-primary sm:col-span-2 sm:mt-0">
+                  {{ document.metadata.city }}
+                </dd>
+              </div>
               <div class="px-4 py-5 bg-background-secondary sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-text-secondary">
                   Deskripsi
@@ -160,6 +178,30 @@
                 </dt>
                 <dd class="mt-1 text-sm text-text-secondary sm:col-span-2 sm:mt-0">
                   {{ document?.user?.name || 'Sistem' }}
+                </dd>
+              </div>
+              
+              <!-- Metadata Tambahan -->
+              <div v-if="hasAdditionalMetadata" class="px-4 py-5 bg-background-secondary sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-text-secondary">
+                  Metadata Lainnya
+                </dt>
+                <dd class="mt-1 text-sm text-text-secondary sm:col-span-2 sm:mt-0">
+                  <details>
+                    <summary class="cursor-pointer text-primary-600 dark:text-primary-400 hover:underline">
+                      Lihat semua metadata ({{ Object.keys(filteredMetadata).length }} item)
+                    </summary>
+                    <div class="mt-3 border border-border-light rounded-md overflow-hidden">
+                      <div class="grid grid-cols-1 divide-y divide-border-light">
+                        <div v-for="(value, key) in filteredMetadata" :key="key" class="px-4 py-3 grid grid-cols-3 gap-4">
+                          <div class="text-sm font-medium text-text-secondary">{{ formatMetadataKey(key) }}</div>
+                          <div class="text-sm text-text-primary col-span-2">
+                            {{ formatMetadataValue(value) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
                 </dd>
               </div>
             </dl>
@@ -566,6 +608,11 @@ const getPengirimName = (document) => {
     return document.metadata.pengirim;
   }
   
+  // Gunakan metadata.name jika tersedia
+  if (document?.metadata?.name) {
+    return document.metadata.name;
+  }
+  
   // Cek jika deskripsi berisi informasi pengirim (format lama)
   if (document?.description?.includes('Dari pengunjung:')) {
     return document.description.replace('Dari pengunjung:', '').trim();
@@ -693,5 +740,55 @@ const getActivityTypeName = (type) => {
   };
   
   return activityTypes[type] || type;
+};
+
+// Computed property untuk memeriksa apakah ada metadata tambahan
+const hasAdditionalMetadata = computed(() => {
+  if (!props.document?.metadata) return false;
+  return Object.keys(filteredMetadata.value).length > 0;
+});
+
+// Computed property untuk filter metadata (tanpa metadata yang sudah ditampilkan tersendiri)
+const filteredMetadata = computed(() => {
+  if (!props.document?.metadata) return {};
+  
+  // Daftar kunci yang sudah ditampilkan di bagian atas
+  const alreadyDisplayed = ['whatsapp', 'city', 'pengirim', 'name'];
+  
+  // Buat salinan objek metadata tanpa kunci yang sudah ditampilkan
+  const filtered = {};
+  for (const [key, value] of Object.entries(props.document.metadata)) {
+    if (!alreadyDisplayed.includes(key)) {
+      filtered[key] = value;
+    }
+  }
+  
+  return filtered;
+});
+
+// Fungsi untuk memformat kunci metadata menjadi teks yang lebih baik
+const formatMetadataKey = (key) => {
+  // Ubah snake_case menjadi Title Case
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+// Fungsi untuk memformat nilai metadata
+const formatMetadataValue = (value) => {
+  if (value === null || value === undefined) {
+    return 'Tidak ada';
+  }
+  
+  if (Array.isArray(value)) {
+    return value.join(', ');
+  }
+  
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  
+  return value.toString();
 };
 </script> 
