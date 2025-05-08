@@ -20,13 +20,15 @@ use Inertia\Inertia;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentPreviewController;
+use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 
 // Public routes
 Route::get('/', function () {
     return Inertia::render('Public/Home');
 })->name('public.home');
 
-Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+Route::post('/documents', [DocumentController::class, 'store'])->name('public.documents.store');
 
 Route::prefix('public')->name('public.')->group(function () {
     Route::get('/about', function () {
@@ -138,10 +140,29 @@ Route::middleware(['auth'])->group(function () {
                 // Activities routes
                 Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
-                // Documents routes
-                Route::get('/documents', [\App\Http\Controllers\Admin\DocumentController::class, 'index'])->name('documents.index');
-                Route::get('/documents/{document}', [\App\Http\Controllers\Admin\DocumentController::class, 'show'])->name('documents.show');
-                Route::delete('/documents/{document}', [\App\Http\Controllers\Admin\DocumentController::class, 'destroy'])->name('documents.destroy');
+                // Documents routes - definisikan semua route secara manual
+                Route::middleware('permission:view-documents')->group(function () {
+                    Route::get('/documents', [AdminDocumentController::class, 'index'])->name('documents.index');
+                });
+                
+                Route::middleware('permission:create-documents')->group(function () {
+                    Route::get('/documents/create', [AdminDocumentController::class, 'create'])->name('documents.create');
+                    Route::post('/documents', [AdminDocumentController::class, 'store'])->name('documents.store');
+                });
+                
+                Route::middleware('permission:view-documents')->group(function () {
+                    Route::get('/documents/{document}', [AdminDocumentController::class, 'show'])->name('documents.show');
+                });
+                
+                Route::middleware('permission:edit-documents')->group(function () {
+                    Route::get('/documents/{document}/edit', [AdminDocumentController::class, 'edit'])->name('documents.edit');
+                    Route::put('/documents/{document}', [AdminDocumentController::class, 'update'])->name('documents.update');
+                    Route::patch('/documents/{document}', [AdminDocumentController::class, 'update']);
+                });
+                
+                Route::middleware('permission:delete-documents')->group(function () {
+                    Route::delete('/documents/{document}', [AdminDocumentController::class, 'destroy'])->name('documents.destroy');
+                });
                 
                 // Components demo page
                 Route::get('/components-demo', function () {
@@ -235,3 +256,34 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 });
+
+// Routes untuk dokumen preview dan download
+Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
+Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download')->withoutMiddleware(['web']);
+
+// Route download paling sederhana
+Route::get('/document-direct/{document}', function(\App\Models\Document $document) {
+    $file = scandir(storage_path('app/public/documents'))[2] ?? null;
+    
+    if (!$file) {
+        return back()->with('error', 'File tidak ditemukan');
+    }
+    
+    $filePath = storage_path('app/public/documents/' . $file);
+    $fileName = $document->name . '.' . pathinfo($file, PATHINFO_EXTENSION);
+    $fileSize = filesize($filePath);
+    
+    // Set header untuk download
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="' . $fileName . '"');
+    header('Content-Length: ' . $fileSize);
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Expires: 0');
+    
+    ob_clean();
+    flush();
+    readfile($filePath);
+    exit;
+})->name('document.direct');

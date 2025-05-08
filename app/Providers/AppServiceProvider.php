@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Spatie\Activitylog\Models\Activity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +16,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Memastikan Activity class tersedia
+        $this->app->bind(Activity::class, function ($app) {
+            return new Activity;
+        });
     }
 
     /**

@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'avatar_url' => $request->user()->avatar_url,
+                    'can' => $request->user()->getAllPermissions()->pluck('name')->mapWithKeys(fn ($permission) => [$permission => true])->toArray(),
                 ] : null,
             ],
             'ziggy' => fn () => [

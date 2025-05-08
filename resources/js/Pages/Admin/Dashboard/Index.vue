@@ -7,6 +7,9 @@
         <p class="mt-2 text-gray-600">Here's what's happening with your application today.</p>
       </div>
 
+      <!-- Debug Permission -->
+      <PermissionDebug />
+
       <!-- Stats Grid -->
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div v-for="stat in stats" :key="stat.name" class="bg-white dark:bg-primary-600 overflow-hidden shadow rounded-lg">
@@ -128,6 +131,7 @@
 import { Link } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import StatusBadge from '@/Components/StatusBadge.vue'
+import PermissionDebug from '@/Components/PermissionDebug.vue'
 import {
   ArrowUpIcon,
   ArrowDownIcon,

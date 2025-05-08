@@ -22,6 +22,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit users',
             'delete users',
             'impersonate users',
+            'manage user status',
             
             // Roles
             'view roles',
@@ -54,6 +55,13 @@ class RolesAndPermissionsSeeder extends Seeder
             // Dashboard
             'view dashboard',
             'manage dashboard',
+            
+            // Documents
+            'view-documents',
+            'create-documents',
+            'edit-documents',
+            'delete-documents',
+            'approve-documents',
         ];
 
         foreach ($permissions as $permission) {
@@ -73,6 +81,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'create users',
             'edit users',
             'delete users',
+            'manage user status',
             
             // Roles
             'view roles',
@@ -102,6 +111,13 @@ class RolesAndPermissionsSeeder extends Seeder
             // Dashboard
             'view dashboard',
             'manage dashboard',
+            
+            // Documents
+            'view-documents',
+            'create-documents',
+            'edit-documents',
+            'delete-documents',
+            'approve-documents',
         ]);
 
         // Regular user has basic permissions
@@ -111,6 +127,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit profile',
             'manage avatar',
             'view dashboard',
+            'view-documents',
+            'create-documents',
         ]);
 
         // Assign super-admin role to user ID 1

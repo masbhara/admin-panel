@@ -7,7 +7,7 @@
         <!-- Primary Navigation -->
         <li>
           <ul role="list" class="-mx-2 space-y-1">
-            <li v-for="item in navigation" :key="item.name">
+            <li v-for="item in filteredNavigation" :key="item.name">
               <Link
                 v-if="!item.children"
                 :href="item.href"
@@ -62,7 +62,7 @@
                 </button>
                 <TransitionExpand>
                   <ul v-show="item.isOpen" class="mt-1 px-2">
-                    <li v-for="child in item.children" :key="child.name">
+                    <li v-for="child in filteredChildren(item.children)" :key="child.name">
                       <Link
                         :href="child.href"
                         :class="[
@@ -196,6 +196,7 @@ const navigation = ref([
     href: route('admin.documents.index'),
     active: 'admin.documents.*',
     icon: DocumentTextIcon,
+    requirePermission: 'view-documents',
   },
   {
     name: 'Activity Log',
@@ -210,6 +211,23 @@ const navigation = ref([
     icon: Cog6ToothIcon,
   },
 ])
+
+// Fungsi untuk memeriksa apakah pengguna memiliki izin
+const hasPermission = (permission) => {
+  if (!permission) return true;
+  return !!page.props.auth?.user?.can?.[permission];
+}
+
+// Filter menu navigasi berdasarkan izin
+const filteredNavigation = computed(() => {
+  return navigation.value.filter(item => !item.requirePermission || hasPermission(item.requirePermission));
+})
+
+// Filter children pada menu dropdown
+const filteredChildren = (children) => {
+  if (!children) return [];
+  return children.filter(child => !child.requirePermission || hasPermission(child.requirePermission));
+}
 
 const teams = ref([])
 

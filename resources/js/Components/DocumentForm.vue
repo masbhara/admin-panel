@@ -126,7 +126,7 @@
         <div>
           <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Unggah Dokumen</label>
           <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md"
-                :class="{'border-red-500 dark:border-red-500': form.errors?.document, 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700': isDragging}"
+                :class="{'border-red-500 dark:border-red-500': form.errors?.file, 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700': isDragging}"
                 @dragover="handleDragOver"
                 @dragleave="handleDragLeave"
                 @drop="handleDrop">
@@ -159,7 +159,7 @@
               </p>
             </div>
           </div>
-          <p v-if="form.errors?.document" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.document }}</p>
+          <p v-if="form.errors?.file" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.file }}</p>
         </div>
       </div>
       
@@ -196,7 +196,7 @@ const form = useForm({
   name: '',
   whatsapp: '',
   city: '',
-  document: null,
+  file: null,
 });
 
 const selectedFile = ref(null);
@@ -567,7 +567,7 @@ const handleFileChange = (event) => {
   const file = event.target.files[0];
   if (file) {
     selectedFile.value = file;
-    form.document = file;
+    form.file = file;
   }
 };
 
@@ -588,7 +588,7 @@ const handleDrop = (event) => {
   if (event.dataTransfer.files.length) {
     const file = event.dataTransfer.files[0];
     selectedFile.value = file;
-    form.document = file;
+    form.file = file;
   }
 };
 
@@ -599,8 +599,13 @@ const selectCity = (city) => {
 };
 
 const submitForm = () => {
+  if (!form.file) {
+    alert('Silakan pilih file dokumen terlebih dahulu');
+    return;
+  }
+  
   processing.value = true;
-  form.post(route('documents.store'), {
+  form.post(route('public.documents.store'), {
     preserveScroll: true,
     onFinish: () => {
       processing.value = false;

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
@@ -29,25 +31,47 @@ class DocumentController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'whatsapp' => 'required|string|max:20',
-            'city' => 'required|string|max:255',
-            'document' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,csv|max:10240',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'whatsapp' => 'nullable|string|max:20',
+                'city' => 'nullable|string|max:255',
+                'file' => 'required|file|max:10240',
+            ]);
 
-        $document = Document::create([
-            'name' => $request->name,
-            'whatsapp' => $request->whatsapp,
-            'city' => $request->city,
-        ]);
+            if (!$request->hasFile('file')) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['file' => 'File dokumen wajib diupload']);
+            }
 
-        if ($request->hasFile('document')) {
-            $document->addMediaFromRequest('document')
-                ->toMediaCollection('document');
+            $file = $request->file('file');
+            $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('documents', $fileName, 'public');
+
+            $document = Document::create([
+                'name' => $request->name,
+                'description' => 'Dokumen dari pengunjung: ' . $request->name,
+                'file_path' => $filePath,
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'file_type' => $file->getClientMimeType(),
+                'user_id' => 1, // Default admin user ID
+                'uploaded_at' => now(),
+                'status' => 'pending',
+                'metadata' => [
+                    'whatsapp' => $request->whatsapp,
+                    'city' => $request->city,
+                    'submitted_by' => 'guest'
+                ],
+            ]);
+
+            return redirect()->back()->with('success', 'Dokumen berhasil dikirim! Kami akan menghubungi Anda segera.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
-
-        return redirect()->back()->with('success', 'Dokumen berhasil dikirim!');
     }
 
     /**
