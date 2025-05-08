@@ -144,28 +144,36 @@ Route::middleware(['auth'])->group(function () {
                 // Activities routes
                 Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
-                // Documents routes - definisikan semua route secara manual
-                Route::middleware('permission:view-documents')->group(function () {
-                    Route::get('/documents', [AdminDocumentController::class, 'index'])->name('documents.index');
-                });
-                
-                Route::middleware('permission:create-documents')->group(function () {
-                    Route::get('/documents/create', [AdminDocumentController::class, 'create'])->name('documents.create');
-                    Route::post('/documents', [AdminDocumentController::class, 'store'])->name('documents.store');
-                });
-                
-                Route::middleware('permission:view-documents')->group(function () {
-                    Route::get('/documents/{document}', [AdminDocumentController::class, 'show'])->name('documents.show');
-                });
-                
-                Route::middleware('permission:edit-documents')->group(function () {
-                    Route::get('/documents/{document}/edit', [AdminDocumentController::class, 'edit'])->name('documents.edit');
-                    Route::put('/documents/{document}', [AdminDocumentController::class, 'update'])->name('documents.update');
-                    Route::patch('/documents/{document}', [AdminDocumentController::class, 'update']);
-                });
-                
-                Route::middleware('permission:delete-documents')->group(function () {
-                    Route::delete('/documents/{document}', [AdminDocumentController::class, 'destroy'])->name('documents.destroy');
+                // Documents routes
+                Route::prefix('documents')->name('documents.')->middleware('permission:view-documents')->group(function () {
+                    // Index
+                    Route::get('/', [AdminDocumentController::class, 'index'])->name('index');
+                    
+                    // Export dan template - harus berada SEBELUM rute dengan parameter {document}
+                    Route::get('/export', [AdminDocumentController::class, 'export'])->name('export');
+                    Route::get('/template', [AdminDocumentController::class, 'template'])->name('template');
+                    
+                    // Create
+                    Route::middleware('permission:create-documents')->group(function () {
+                        Route::get('/create', [AdminDocumentController::class, 'create'])->name('create');
+                        Route::post('/', [AdminDocumentController::class, 'store'])->name('store');
+                        Route::post('/import', [AdminDocumentController::class, 'import'])->name('import');
+                    });
+                    
+                    // Show
+                    Route::get('/{document}', [AdminDocumentController::class, 'show'])->name('show');
+                    
+                    // Edit
+                    Route::middleware('permission:edit-documents')->group(function () {
+                        Route::get('/{document}/edit', [AdminDocumentController::class, 'edit'])->name('edit');
+                        Route::put('/{document}', [AdminDocumentController::class, 'update'])->name('update');
+                        Route::patch('/{document}', [AdminDocumentController::class, 'update']);
+                    });
+                    
+                    // Delete
+                    Route::middleware('permission:delete-documents')->group(function () {
+                        Route::delete('/{document}', [AdminDocumentController::class, 'destroy'])->name('destroy');
+                    });
                 });
                 
                 // Components demo page

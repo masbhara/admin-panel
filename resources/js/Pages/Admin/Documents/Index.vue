@@ -29,15 +29,37 @@
                 />
               </div>
 
-              <Link 
-                :href="route('admin.documents.create')" 
-                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
-              >
-                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Tambah Dokumen Baru
-              </Link>
+              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2">
+                  <button 
+                    @click="openImportModal" 
+                    class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-lg shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+                  >
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l-4-4m4 4l4-4" />
+                    </svg>
+                    Import
+                  </button>
+                  <button 
+                    @click="exportToExcel" 
+                    class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                  >
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-4 12V8m0 0l-4 4m4-4l4 4" />
+                    </svg>
+                    Export
+                  </button>
+                </div>
+                <Link 
+                  :href="route('admin.documents.create')" 
+                  class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                >
+                  <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Tambah Dokumen Baru
+                </Link>
+              </div>
             </div>
 
             <!-- Tabel dokumen -->
@@ -216,8 +238,23 @@
               </Link>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="documents.data.length > 0" class="mt-6">
+            <!-- Pagination dan Per-Page Options -->
+            <div v-if="documents.data.length > 0" class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <label for="perPage" class="text-sm text-text-secondary">Tampilkan:</label>
+                <select 
+                  id="perPage" 
+                  v-model="perPage" 
+                  @change="changePerPage"
+                  class="py-1 px-2 text-sm rounded-md bg-background-tertiary border-border-light focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option :value="10">10</option>
+                  <option :value="25">25</option>
+                  <option :value="50">50</option>
+                  <option :value="100">100</option>
+                </select>
+                <span class="text-sm text-text-secondary">dari {{ documents.total }} dokumen</span>
+              </div>
               <Pagination :links="documents.links" />
             </div>
           </div>
@@ -339,6 +376,108 @@
         </div>
       </div>
     </modal-dialog>
+
+    <!-- Modal Import -->
+    <modal-dialog :show="showImportModal" @close="showImportModal = false">
+      <div class="p-6 bg-background-primary">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium leading-6 text-text-primary">
+            Import Dokumen
+          </h3>
+          <button @click="showImportModal = false" class="text-text-tertiary hover:text-text-secondary transition-colors">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <p class="text-sm text-text-secondary mb-4">
+          Unggah file CSV atau Excel untuk mengimpor daftar dokumen. Pastikan formatnya sesuai dengan template.
+        </p>
+        
+        <form @submit.prevent="submitImport" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-1">
+              File CSV/Excel
+            </label>
+            <div 
+              class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-border-light rounded-md"
+              :class="{ 'border-primary-300 bg-primary-50 dark:bg-primary-900/20': isDragging }"
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="isDragging = false"
+              @drop.prevent="handleImportFileDrop"
+            >
+              <div class="space-y-1 text-center">
+                <svg class="mx-auto h-12 w-12 text-text-tertiary" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4h-5m-6 0H9.33M28 8v7m0 0v8m0-8h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="flex text-sm text-text-secondary justify-center">
+                  <label for="file-upload" class="relative cursor-pointer bg-background-tertiary rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                    <span>Pilih file</span>
+                    <input 
+                      id="file-upload" 
+                      ref="importFileInput"
+                      name="file-upload" 
+                      type="file" 
+                      class="sr-only" 
+                      accept=".csv,.xlsx,.xls"
+                      @change="handleImportFileSelect"
+                    />
+                  </label>
+                  <p class="pl-1">atau seret dan letakkan</p>
+                </div>
+                <p class="text-xs text-text-tertiary">
+                  Format yang didukung: CSV, Excel (.xlsx, .xls)
+                </p>
+                <div v-if="importFile" class="mt-2 text-sm text-text-primary">
+                  <span class="font-medium">{{ importFile.name }}</span> ({{ formatFileSize(importFile.size) }})
+                </div>
+              </div>
+            </div>
+            <div v-if="importError" class="mt-2 text-sm text-red-600">
+              {{ importError }}
+            </div>
+          </div>
+          
+          <div class="flex gap-3 justify-between pt-2">
+            <a 
+              href="#" 
+              @click.prevent="downloadTemplate"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-secondary-600 border border-transparent rounded-lg shadow-sm hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Download Template
+            </a>
+            
+            <div>
+              <button 
+                @click="showImportModal = false" 
+                type="button"
+                class="mr-2 inline-flex items-center px-4 py-2 text-sm font-medium text-text-primary bg-background-tertiary border border-border-light rounded-md hover:bg-background-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              >
+                Batal
+              </button>
+              
+              <button 
+                type="submit" 
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                :disabled="!importFile || importProcessing"
+              >
+                <svg v-if="importProcessing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                {{ importProcessing ? 'Mengimpor...' : 'Import' }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </modal-dialog>
   </AdminLayout>
 </template>
 
@@ -368,6 +507,13 @@ const officeViewerUrl = ref('');
 const activeViewer = ref('google');
 const activeActionMenu = ref(null);
 const menuPosition = ref({ x: 0, y: 0 });
+const perPage = ref(props.documents.per_page || 10);
+const showImportModal = ref(false);
+const importFile = ref(null);
+const importError = ref(null);
+const importProcessing = ref(false);
+const isDragging = ref(false);
+const importFileInput = ref(null);
 
 const handleSearch = () => {
   router.get(route('admin.documents.index'), { search: search.value }, {
@@ -560,5 +706,116 @@ const getPengirimName = (document) => {
   }
   
   return 'Pengunjung';
+};
+
+// Fungsi untuk mengubah jumlah item per halaman
+const changePerPage = () => {
+  router.get(route('admin.documents.index'), { 
+    search: search.value, 
+    per_page: perPage.value 
+  }, {
+    preserveState: true,
+    replace: true,
+  });
+};
+
+// Fungsi untuk membuka modal import
+const openImportModal = () => {
+  showImportModal.value = true;
+  importFile.value = null;
+  importError.value = null;
+};
+
+// Handler untuk memilih file import
+const handleImportFileSelect = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    validateImportFile(file);
+  }
+};
+
+// Handler untuk file yang di-drag and drop
+const handleImportFileDrop = (event) => {
+  isDragging.value = false;
+  const file = event.dataTransfer.files[0];
+  if (file) {
+    validateImportFile(file);
+  }
+};
+
+// Validasi file import
+const validateImportFile = (file) => {
+  importError.value = null;
+  
+  // Validasi tipe file
+  const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+  const fileExtension = file.name.split('.').pop().toLowerCase();
+  
+  if (!validTypes.includes(file.type) && !['csv', 'xlsx', 'xls'].includes(fileExtension)) {
+    importError.value = 'Format file tidak valid. Gunakan CSV atau Excel (.xlsx, .xls)';
+    importFile.value = null;
+    return;
+  }
+  
+  // Validasi ukuran file (maksimal 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    importError.value = 'Ukuran file terlalu besar. Maksimal 5MB';
+    importFile.value = null;
+    return;
+  }
+  
+  importFile.value = file;
+};
+
+// Submit form import
+const submitImport = () => {
+  if (!importFile.value) {
+    importError.value = 'Pilih file untuk diimport';
+    return;
+  }
+  
+  importProcessing.value = true;
+  importError.value = null;
+  
+  const formData = new FormData();
+  formData.append('file', importFile.value);
+  
+  // Kirim file ke server untuk diproses
+  fetch(route('admin.documents.import'), {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+    },
+  })
+  .then(response => response.json())
+  .then(data => {
+    importProcessing.value = false;
+    
+    if (data.success) {
+      // Tutup modal dan refresh data
+      showImportModal.value = false;
+      router.reload({ only: ['documents'] });
+    } else {
+      importError.value = data.error || 'Terjadi kesalahan saat mengimpor data';
+    }
+  })
+  .catch(error => {
+    console.error('Import error:', error);
+    importProcessing.value = false;
+    importError.value = 'Terjadi kesalahan saat mengunggah file. Silakan coba lagi.';
+  });
+};
+
+// Download template untuk import
+const downloadTemplate = () => {
+  window.location.href = route('admin.documents.template');
+};
+
+// Export data dokumen ke Excel
+const exportToExcel = () => {
+  // Gunakan search query saat ini jika sedang melakukan pencarian
+  const params = search.value ? `?search=${encodeURIComponent(search.value)}` : '';
+  window.location.href = route('admin.documents.export') + params;
 };
 </script> 
