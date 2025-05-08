@@ -19,11 +19,14 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use App\Http\Controllers\DocumentController;
 
 // Public routes
 Route::get('/', function () {
     return Inertia::render('Public/Home');
 })->name('public.home');
+
+Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
 
 Route::prefix('public')->name('public.')->group(function () {
     Route::get('/about', function () {
