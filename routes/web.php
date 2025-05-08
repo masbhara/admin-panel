@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Document;
 use Illuminate\Support\Facades\Activity;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\CaptchaController;
 
 // Public routes
 Route::get('/', function () {
@@ -33,6 +34,10 @@ Route::get('/', function () {
 })->name('public.home');
 
 Route::post('/documents', [DocumentController::class, 'store'])->name('public.documents.store');
+
+// Captcha routes
+Route::get('/captcha', [CaptchaController::class, 'getCaptcha'])->name('captcha');
+Route::get('/refresh-captcha', [CaptchaController::class, 'refreshCaptcha'])->name('refresh.captcha');
 
 Route::prefix('public')->name('public.')->group(function () {
     Route::get('/about', function () {

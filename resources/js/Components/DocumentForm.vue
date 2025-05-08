@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+  <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
     <div class="bg-gradient-to-r from-primary-600 to-primary-800 px-6 py-4">
       <h3 class="text-xl font-bold text-white">Kirim Dokumen Anda</h3>
       <p class="text-white text-sm">Unggah dokumen Anda, dan kami akan memprosesnya untuk Anda</p>
@@ -44,11 +44,12 @@
             type="text" 
             class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
             :class="{'border-red-500 dark:border-red-500': form.errors?.whatsapp}"
-            placeholder="Masukkan nomor WhatsApp Anda"
+            placeholder="08xxx (gunakan nomor aktif)"
             required
           />
           <p v-if="form.errors?.whatsapp" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.whatsapp }}</p>
         </div>
+        
         
         <div>
           <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kota/Kabupaten</label>
@@ -155,18 +156,28 @@
                 <p class="pl-1">atau seret dan letakkan</p>
               </div>
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                PDF, Word, Excel, CSV hingga 10MB
+                Format: PDF, Word, maksimal 10MB
               </p>
             </div>
           </div>
           <p v-if="form.errors?.file" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.file }}</p>
+        </div>
+        
+        <!-- Captcha Component -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verifikasi (Klik refresh untuk ganti kode)</label>
+          <Captcha 
+            v-model="form.captcha"
+            v-model:captcha-key="form.captcha_key"
+            :error="form.errors?.captcha"
+          />
         </div>
       </div>
       
       <div>
         <button 
           type="submit" 
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-200 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
           :disabled="processing"
         >
           <svg v-if="processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -184,6 +195,7 @@
 import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
+import Captcha from '@/Components/Captcha.vue';
 
 const props = defineProps({
   successMessage: {
@@ -197,6 +209,8 @@ const form = useForm({
   whatsapp: '',
   city: '',
   file: null,
+  captcha: '',
+  captcha_key: '',
 });
 
 const selectedFile = ref(null);

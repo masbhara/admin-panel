@@ -38,6 +38,9 @@ class DocumentController extends Controller
                 'whatsapp' => 'nullable|string|max:20',
                 'city' => 'nullable|string|max:255',
                 'file' => 'required|file|max:10240',
+                'captcha' => 'required|captcha_api:' . $request->captcha_key . ',default',
+            ], [
+                'captcha.captcha_api' => 'Kode captcha tidak valid. Silakan coba lagi.'
             ]);
 
             if (!$request->hasFile('file')) {

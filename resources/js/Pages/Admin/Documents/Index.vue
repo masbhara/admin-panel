@@ -184,7 +184,7 @@
                               class="flex items-center px-4 py-2 text-sm text-text-primary hover:bg-background-secondary transition-colors"
                             >
                               <svg class="mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                               </svg>
                               <span>Download</span>
                             </a>
@@ -408,6 +408,7 @@
               File CSV
             </label>
             <div 
+              v-if="!importProcessing"
               class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-border-light rounded-md"
               :class="{ 'border-primary-300 bg-primary-50 dark:bg-primary-900/20': isDragging }"
               @dragover.prevent="isDragging = true"
@@ -444,12 +445,31 @@
                 </div>
               </div>
             </div>
-            <div v-if="importError" class="mt-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-              <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            
+            <!-- Menampilkan status loading yang lebih informatif -->
+            <div v-if="importProcessing" class="mt-1 flex flex-col items-center justify-center px-6 py-10 border-2 border-dashed border-primary-300 bg-primary-50 dark:bg-primary-900/20 rounded-md">
+              <div class="flex flex-col items-center space-y-3">
+                <svg class="animate-spin h-10 w-10 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div class="text-center">
+                  <p class="text-sm font-medium text-primary-700 dark:text-primary-300">Mengimpor Data</p>
+                  <p class="mt-1 text-xs text-text-secondary">Mohon tunggu, sistem sedang memproses file {{ importFile?.name }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tampilan error yang lebih jelas -->
+            <div v-if="importError" class="mt-2 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              <div class="flex items-start">
+                <svg class="w-5 h-5 mr-2 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {{ importError }}
+                <div>
+                  <p class="font-medium">Error saat mengimpor data:</p>
+                  <p class="mt-1">{{ importError }}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -459,6 +479,8 @@
               href="#" 
               @click.prevent="downloadTemplate"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-secondary-600 border border-transparent rounded-lg shadow-sm hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 transition-colors"
+              :class="{ 'opacity-50 cursor-not-allowed': importProcessing }"
+              :disabled="importProcessing"
             >
               <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -471,13 +493,14 @@
                 @click="showImportModal = false" 
                 type="button"
                 class="mr-2 inline-flex items-center px-4 py-2 text-sm font-medium text-text-primary bg-background-tertiary border border-border-light rounded-md hover:bg-background-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                :disabled="importProcessing"
               >
                 Batal
               </button>
               
               <button 
                 type="submit" 
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!importFile || importProcessing"
               >
                 <svg v-if="importProcessing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -493,7 +516,8 @@
           </div>
         </form>
         <div v-if="importProcessing" class="mt-3 text-xs text-text-secondary">
-          <p>Mohon tunggu, proses import sedang berjalan. Untuk file besar mungkin membutuhkan waktu lebih lama.</p>
+          <p>Proses import sedang berjalan, harap jangan menutup halaman ini.</p>
+          <p>Untuk file besar mungkin membutuhkan waktu lebih lama.</p>
           <p>Halaman akan refresh otomatis setelah proses selesai.</p>
         </div>
       </div>
@@ -766,13 +790,25 @@ const handleImportFileDrop = (event) => {
 // Validasi file import
 const validateImportFile = (file) => {
   importError.value = null;
+  console.log("Memeriksa file:", file.name, "type:", file.type);
   
-  // Validasi tipe file - hanya CSV
-  const validTypes = ['text/csv'];
+  // Validasi tipe file - terima berbagai format CSV
+  const validTypes = [
+    'text/csv', 
+    'application/csv', 
+    'text/plain', 
+    'application/vnd.ms-excel',
+    'application/octet-stream',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/comma-separated-values',
+    ''  // Browser terkadang tidak mengenali tipe file CSV
+  ];
+  const validExtensions = ['csv', 'txt'];
   const fileExtension = file.name.split('.').pop().toLowerCase();
   
-  if (!validTypes.includes(file.type) && !['csv'].includes(fileExtension)) {
-    importError.value = 'Format file tidak valid. Hanya file CSV (.csv) yang didukung untuk performa terbaik';
+  if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+    importError.value = 'Format file tidak valid. Hanya file CSV (.csv) atau TXT (.txt) yang didukung untuk import data.';
+    console.error('Format file tidak valid:', file.type, 'extension:', fileExtension);
     importFile.value = null;
     return;
   }
@@ -784,6 +820,7 @@ const validateImportFile = (file) => {
     return;
   }
   
+  console.log("File valid, siap untuk diupload");
   importFile.value = file;
 };
 
@@ -797,34 +834,72 @@ const submitImport = () => {
   importProcessing.value = true;
   importError.value = null;
   
-  // Gunakan Inertia.js router yang lebih aman dan sudah menangani CSRF token
+  // Buat form data baru
   const form = new FormData();
   form.append('file', importFile.value);
   
+  // Gunakan router.post dari Inertia dengan penanganan error yang lebih baik
   router.post(route('admin.documents.import'), form, {
+    forceFormData: true,
     preserveScroll: true,
-    onSuccess: () => {
+    onBefore: () => {
+      console.log('Memulai proses import file:', importFile.value.name);
+      return true; // Lanjutkan proses
+    },
+    onSuccess: (page) => {
       importProcessing.value = false;
-      showImportModal.value = false;
+      importFile.value = null;
       
       // Gunakan optional chaining saat mengakses flash message
-      const successMessage = usePage().props.flash?.success;
+      const successMessage = page.props?.flash?.success;
       if (successMessage) {
-        // Tampilkan pesan sukses jika ada
         console.log('Import berhasil:', successMessage);
+        // Tampilkan pesan sukses sebelum menutup modal
+        setTimeout(() => {
+          showImportModal.value = false;
+          // Refresh data dokumen
+          router.reload({ only: ['documents'] });
+        }, 1000);
+      } else {
+        showImportModal.value = false;
+        router.reload({ only: ['documents'] });
       }
-      
-      // Refresh data dokumen
-      router.reload({ only: ['documents'] });
     },
     onError: (errors) => {
       importProcessing.value = false;
-      // Gunakan optional chaining dan fallback untuk error handling
-      importError.value = errors?.file || 'Terjadi kesalahan saat mengimpor data';
       console.error('Import errors:', errors);
+      
+      // Tampilkan error dengan lebih spesifik
+      if (errors.file) {
+        importError.value = Array.isArray(errors.file) ? errors.file[0] : errors.file;
+      } else if (Object.keys(errors).length > 0) {
+        // Jika ada error lain, tampilkan error pertama
+        const firstErrorKey = Object.keys(errors)[0];
+        const firstError = Array.isArray(errors[firstErrorKey]) 
+          ? errors[firstErrorKey][0] 
+          : errors[firstErrorKey];
+        importError.value = `Error pada ${firstErrorKey}: ${firstError}`;
+      } else {
+        importError.value = 'Terjadi kesalahan yang tidak diketahui saat mengimpor data. Silahkan coba lagi.';
+      }
+      
+      // Reset file input sehingga pengguna dapat mencoba lagi dengan file yang sama
+      if (importFileInput.value) {
+        importFileInput.value.value = '';
+      }
     },
     onFinish: () => {
-      importProcessing.value = false;
+      // Jika masih processing setelah 1 menit, kemungkinan ada timeout
+      const timeoutCheck = setTimeout(() => {
+        if (importProcessing.value) {
+          importProcessing.value = false;
+          importError.value = 'Waktu proses import terlalu lama. Silahkan coba lagi atau gunakan file yang lebih kecil.';
+        }
+      }, 60000); // 1 menit
+      
+      if (!importProcessing.value) {
+        clearTimeout(timeoutCheck);
+      }
     }
   });
 };
