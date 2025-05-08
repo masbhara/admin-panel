@@ -168,20 +168,61 @@
 
         <!-- Aktivitas Log -->
         <div class="mt-6 overflow-hidden bg-background-primary shadow rounded-lg border border-border-light">
-          <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6 text-text-primary">
-              Aktivitas Dokumen
-            </h3>
-            <p class="max-w-2xl mt-1 text-sm text-text-secondary">
-              Riwayat aktivitas untuk dokumen ini.
-            </p>
+          <div class="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h3 class="text-lg font-medium leading-6 text-text-primary">
+                Aktivitas Dokumen
+              </h3>
+              <p class="max-w-2xl mt-1 text-sm text-text-secondary">
+                Riwayat aktivitas untuk dokumen ini. Total: {{ props.activities.length }} entri
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <select 
+                v-model="activityType" 
+                class="py-1.5 px-3 text-sm border-border-light rounded-lg bg-background-tertiary focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="all">Semua Aktivitas</option>
+                <option value="downloaded document">Download</option>
+                <option value="updated">Update/Edit</option>
+                <option value="created">Pembuatan</option>
+                <option value="deleted document">Penghapusan</option>
+              </select>
+              <select 
+                v-model="activityLimit" 
+                class="py-1.5 px-3 text-sm border-border-light rounded-lg bg-background-tertiary focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option :value="5">5 per halaman</option>
+                <option :value="10">10 per halaman</option>
+                <option :value="20">20 per halaman</option>
+                <option :value="50">50 per halaman</option>
+                <option :value="0">Tampilkan semua</option>
+              </select>
+              <button 
+                @click="expandActivities = !expandActivities" 
+                class="p-1.5 rounded-md text-text-secondary hover:bg-background-tertiary transition-colors"
+                :title="expandActivities ? 'Tutup aktivitas' : 'Perluas aktivitas'"
+              >
+                <svg v-if="expandActivities" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="border-t border-border-light">
+          <div v-if="expandActivities" class="border-t border-border-light">
             <div class="flow-root px-4 py-5 sm:px-6">
-              <ul role="list" class="-mb-8">
-                <li v-for="(activity, index) in activities" :key="activity.id">
+              <div v-if="filteredActivities.length === 0" class="py-6 text-center text-text-tertiary">
+                <p v-if="activityType !== 'all'">Tidak ada aktivitas tipe "{{ getActivityTypeName(activityType) }}" untuk dokumen ini.</p>
+                <p v-else>Belum ada aktivitas tercatat untuk dokumen ini.</p>
+              </div>
+              
+              <ul v-else role="list" class="-mb-8">
+                <li v-for="(activity, index) in displayedActivities" :key="activity.id">
                   <div class="relative pb-8">
-                    <span v-if="index !== activities.length - 1" class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-border-light" aria-hidden="true"></span>
+                    <span v-if="index !== displayedActivities.length - 1" class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-border-light" aria-hidden="true"></span>
                     <div class="relative flex items-start space-x-3">
                       <div class="relative">
                         <div class="flex items-center justify-center w-10 h-10 bg-background-secondary rounded-full">
@@ -191,6 +232,12 @@
                           <svg v-else-if="activity.description === 'downloaded document'" class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                           </svg>
+                          <svg v-else-if="activity.description === 'updated'" class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                          </svg>
+                          <svg v-else-if="activity.description === 'created'" class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                          </svg>
                           <svg v-else class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                           </svg>
@@ -199,7 +246,7 @@
                       <div class="min-w-0 flex-1">
                         <div>
                           <div class="text-sm">
-                            <a href="#" class="font-medium text-text-primary">{{ activity.causer ? activity.causer.name : 'Sistem' }}</a>
+                            <span class="font-medium text-text-primary">{{ activity.causer ? activity.causer.name : 'Sistem' }}</span>
                           </div>
                           <p class="mt-0.5 text-sm text-text-tertiary">
                             {{ formatDateTime(activity.created_at) }}
@@ -214,13 +261,46 @@
                     </div>
                   </div>
                 </li>
-                <li v-if="activities.length === 0">
-                  <div class="py-6 text-center text-text-tertiary">
-                    Belum ada aktivitas tercatat.
-                  </div>
-                </li>
               </ul>
+              
+              <!-- Paginasi untuk aktivitas -->
+              <div v-if="activityPages > 1" class="mt-4 flex justify-center">
+                <nav class="inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+                  <button 
+                    @click="activityPage = Math.max(1, activityPage - 1)" 
+                    :disabled="activityPage === 1"
+                    class="relative inline-flex items-center px-2 py-1 rounded-l-md border border-border-light bg-background-tertiary text-sm font-medium text-text-secondary hover:bg-background-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span class="sr-only">Sebelumnya</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                  <span class="relative inline-flex items-center px-4 py-1 border border-border-light bg-background-tertiary text-sm font-medium text-text-secondary">
+                    {{ activityPage }} / {{ activityPages }}
+                  </span>
+                  <button 
+                    @click="activityPage = Math.min(activityPages, activityPage + 1)" 
+                    :disabled="activityPage === activityPages"
+                    class="relative inline-flex items-center px-2 py-1 rounded-r-md border border-border-light bg-background-tertiary text-sm font-medium text-text-secondary hover:bg-background-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span class="sr-only">Berikutnya</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
             </div>
+          </div>
+          <div v-else class="border-t border-border-light py-4 px-6 text-center text-text-tertiary text-sm">
+            <p v-if="filteredActivities.length > 0">
+              {{ filteredActivities.length }} aktivitas tersedia. Klik tombol panah untuk menampilkan.
+            </p>
+            <p v-else>
+              <span v-if="activityType !== 'all'">Tidak ada aktivitas tipe "{{ getActivityTypeName(activityType) }}" untuk dokumen ini.</span>
+              <span v-else>Belum ada aktivitas tercatat.</span>
+            </p>
           </div>
         </div>
       </div>
@@ -350,7 +430,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useForm, Link, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import ModalDialog from '@/Components/ModalDialog.vue';
@@ -370,6 +450,58 @@ const currentOriginalUrl = ref('');
 const officeViewerUrl = ref('');
 const activeViewer = ref('google');
 const localEnvironment = ref(false);
+const activityLimit = ref(5);
+const expandActivities = ref(false);
+const activityPage = ref(1);
+const activityType = ref('all');
+
+// Computed property untuk aktivitas yang difilter berdasarkan tipe
+const filteredActivities = computed(() => {
+  if (!props.activities || !props.activities.length) return [];
+  
+  return props.activities.filter(activity => {
+    if (activityType.value === 'all') return true;
+    return activity.description === activityType.value;
+  });
+});
+
+// Computed property untuk total halaman setelah filter
+const activityPages = computed(() => {
+  if (!filteredActivities.value.length) return 1;
+  if (activityLimit.value <= 0) return 1;
+  return Math.ceil(filteredActivities.value.length / activityLimit.value);
+});
+
+// Computed property untuk aktivitas yang ditampilkan dengan pagination setelah filter
+const displayedActivities = computed(() => {
+  if (!filteredActivities.value.length) return [];
+  
+  // Jika limit 0, tampilkan semua
+  if (activityLimit.value <= 0) return filteredActivities.value;
+  
+  // Hitung offset dan batas
+  const start = (activityPage.value - 1) * activityLimit.value;
+  const end = start + activityLimit.value;
+  
+  return filteredActivities.value.slice(start, end);
+});
+
+// Reset halaman ke 1 saat limit berubah
+watch(activityLimit, () => {
+  activityPage.value = 1;
+});
+
+// Reset halaman ke 1 saat filter berubah
+watch(activityType, () => {
+  activityPage.value = 1;
+});
+
+// Pastikan halaman tidak lebih dari total halaman yang ada
+watch(activityPages, (newVal) => {
+  if (activityPage.value > newVal) {
+    activityPage.value = newVal;
+  }
+});
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -549,5 +681,17 @@ const switchViewer = (viewer) => {
 
 const confirmDelete = () => {
   showDeleteModal.value = true;
+};
+
+const getActivityTypeName = (type) => {
+  const activityTypes = {
+    'all': 'Semua Aktivitas',
+    'downloaded document': 'Download',
+    'updated': 'Update/Edit',
+    'created': 'Pembuatan',
+    'deleted document': 'Penghapusan'
+  };
+  
+  return activityTypes[type] || type;
 };
 </script> 
