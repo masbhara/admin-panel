@@ -126,30 +126,20 @@ import SidebarHeader from '@/Components/SidebarHeader.vue'
 const page = usePage()
 const settings = computed(() => page.props.settings || {})
 
-// Debugging untuk melihat data settings
-console.log('Settings dari sidebar:', settings.value)
-console.log('Current route:', route().current())
-
 onMounted(() => {
-  // Periksa ketersediaan Echo dan channel method
   if (window.Echo && typeof window.Echo.channel === 'function') {
     try {
       window.Echo.channel('settings')
         .listen('.settings.updated', (e) => {
-          console.log('Settings updated:', e.settings)
-          // Update settings secara langsung
           page.props.settings = e.settings
         })
     } catch (error) {
       console.error('Error setting up Echo channel:', error)
     }
-  } else {
-    console.warn('Echo or Echo.channel is not available')
   }
 })
 
 onUnmounted(() => {
-  // Periksa ketersediaan Echo dan leave method
   if (window.Echo && typeof window.Echo.leave === 'function') {
     try {
       window.Echo.leave('settings')
@@ -167,24 +157,30 @@ const navigation = ref([
     icon: HomeIcon,
   },
   {
-    name: 'User Management',
+    name: 'Daftar Dokumen',
+    href: route('admin.documents.index'),
+    active: 'admin.documents.*',
+    icon: DocumentTextIcon,
+  },
+  {
+    name: 'Manajemen',
     icon: UsersIcon,
     isOpen: true,
     children: [
       {
-        name: 'Users',
+        name: 'Pengguna',
         href: route('admin.users.index'),
         active: 'admin.users.*',
         icon: UserGroupIcon,
       },
       {
-        name: 'Roles',
+        name: 'Peran',
         href: route('admin.roles.index'),
         active: 'admin.roles.*',
         icon: ShieldCheckIcon,
       },
       {
-        name: 'Permissions',
+        name: 'Izin',
         href: route('admin.permissions.index'),
         active: 'admin.permissions.*',
         icon: KeyIcon,
@@ -192,20 +188,13 @@ const navigation = ref([
     ],
   },
   {
-    name: 'Manajemen Dokumen',
-    href: route('admin.documents.index'),
-    active: 'admin.documents.*',
-    icon: DocumentTextIcon,
-    requirePermission: 'view-documents',
-  },
-  {
-    name: 'Activity Log',
+    name: 'Log Aktivitas',
     href: route('admin.activities.index'),
     active: 'admin.activities.*',
     icon: ClockIcon,
   },
   {
-    name: 'Settings',
+    name: 'Pengaturan',
     href: route('admin.settings.index'),
     active: 'admin.settings.*',
     icon: Cog6ToothIcon,

@@ -40,7 +40,13 @@ class DocumentController extends Controller
                 'file' => 'required|file|max:10240',
                 'captcha' => 'required|captcha_api:' . $request->captcha_key . ',default',
             ], [
-                'captcha.captcha_api' => 'Kode captcha tidak valid. Silakan coba lagi.'
+                'captcha.captcha_api' => 'Kode captcha tidak valid. Silakan coba lagi.',
+                'name.required' => 'Nama lengkap wajib diisi.',
+                'name.max' => 'Nama tidak boleh lebih dari 255 karakter.',
+                'whatsapp.max' => 'Nomor WhatsApp tidak boleh lebih dari 20 digit.',
+                'file.required' => 'File dokumen wajib diunggah.',
+                'file.file' => 'Tipe file tidak valid. Silakan unggah file dokumen.',
+                'file.max' => 'Ukuran file tidak boleh lebih dari 10MB.',
             ]);
 
             if (!$request->hasFile('file')) {
@@ -86,7 +92,7 @@ class DocumentController extends Controller
             Log::error('Error uploading public document: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['error' => 'Terjadi kesalahan saat mengunggah dokumen. Silakan coba lagi.']);
+                ->withErrors(['error' => 'Terjadi kesalahan saat mengunggah dokumen: ' . $e->getMessage()]);
         }
     }
 

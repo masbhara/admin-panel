@@ -197,7 +197,7 @@
             <button
               type="button"
               @click="confirmDelete"
-              :disabled="form.processing"
+              :disabled="isProcessing"
               class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
             >
               Delete
@@ -211,7 +211,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, useForm, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import Modal from '@/Components/Modal.vue'
 import Pagination from '@/Components/Pagination.vue'
@@ -225,6 +225,7 @@ const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const selectedUser = ref(null)
+const isProcessing = ref(false)
 
 const form = useForm({
   name: '',
@@ -259,11 +260,26 @@ const submitForm = () => {
 }
 
 const confirmDelete = () => {
-  form.delete(route('admin.users.destroy', selectedUser.value.id), {
+  if (!selectedUser.value || !selectedUser.value.id) {
+    alert('User ID tidak valid')
+    return
+  }
+
+  isProcessing.value = true
+  
+  router.delete(route('admin.users.destroy', selectedUser.value.id), {
     onSuccess: () => {
       showDeleteModal.value = false
       selectedUser.value = null
+      isProcessing.value = false
     },
+    onError: (errors) => {
+      console.error('Delete errors:', errors)
+      isProcessing.value = false
+    },
+    onFinish: () => {
+      isProcessing.value = false
+    }
   })
 }
 

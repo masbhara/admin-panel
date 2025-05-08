@@ -1,12 +1,13 @@
 <template>
   <div
     :class="[
-      'flex h-full flex-col border-r border-gray-200 bg-white transition-all duration-300',
-      expanded ? 'w-64' : 'w-16'
+      'flex h-full flex-col border-r transition-all duration-300',
+      expanded ? 'w-64' : 'w-16',
+      'dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-200'
     ]"
   >
     <!-- Logo -->
-    <div class="flex h-16 shrink-0 items-center border-b border-gray-200 px-4">
+    <div class="flex h-16 shrink-0 items-center border-b border-gray-200 dark:border-gray-700 px-4">
       <img v-if="expanded" :src="logo" alt="Logo" class="h-8 w-auto" />
       <img v-else :src="logoSmall || logo" alt="Logo" class="h-8 w-auto" />
     </div>
@@ -16,20 +17,24 @@
       <nav class="flex-1 space-y-1 px-2 py-4"> 
         <template v-for="(item, index) in filteredItems" :key="index">
           <!-- Menu Item with Submenu -->
-          <div v-if="item.children && item.children.length > 0">
+          <div v-if="item.children && item.children.length > 0" class="mb-1">
             <button
               @click="toggleSubmenu(item)"
               :class="[
-                'group flex w-full items-center rounded-md py-2 text-sm font-medium',
-                isActive(item) ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                'group flex w-full items-center rounded-md py-2 text-sm font-medium transition-colors duration-200',
+                isActive(item) 
+                  ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400' 
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white',
                 expanded ? 'px-2' : 'justify-center px-3'
               ]"
             >
               <component
                 :is="item.icon"
                 :class="[
-                  'h-5 w-5 shrink-0',
-                  isActive(item) ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
+                  'h-5 w-5 shrink-0 transition-colors duration-200',
+                  isActive(item) 
+                    ? 'text-primary-500 dark:text-primary-400' 
+                    : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                 ]"
                 aria-hidden="true"
               />
@@ -37,7 +42,7 @@
               <ChevronRightIcon
                 v-if="expanded"
                 :class="[
-                  'ml-3 h-4 w-4 shrink-0 transition-transform',
+                  'ml-3 h-4 w-4 shrink-0 transition-transform duration-200',
                   item.expanded ? 'rotate-90 transform' : ''
                 ]"
               />
@@ -50,15 +55,17 @@
                 :key="childIndex"
                 :href="child.to"
                 :class="[
-                  'group flex items-center rounded-md py-2 pl-4 pr-2 text-sm font-medium',
-                  isActive(child) ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  'group flex items-center rounded-md py-2 pl-4 pr-2 text-sm font-medium transition-colors duration-200',
+                  isActive(child) 
+                    ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400' 
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white'
                 ]"
                 @click.prevent="navigateTo(child)"
               >
                 <div
                   :class="[
                     'mr-3 h-1.5 w-1.5 rounded-full',
-                    isActive(child) ? 'bg-primary-500' : 'bg-gray-300'
+                    isActive(child) ? 'bg-primary-500 dark:bg-primary-400' : 'bg-gray-300 dark:bg-gray-600'
                   ]"
                 ></div>
                 {{ child.label }}
@@ -71,8 +78,10 @@
             v-else
             :href="item.to"
             :class="[
-              'group flex items-center rounded-md py-2 text-sm font-medium',
-              isActive(item) ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+              'group flex items-center rounded-md py-2 text-sm font-medium transition-colors duration-200 mb-1',
+              isActive(item) 
+                ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white',
               expanded ? 'px-2' : 'justify-center px-3'
             ]"
             @click.prevent="navigateTo(item)"
@@ -80,8 +89,10 @@
             <component
               :is="item.icon"
               :class="[
-                'h-5 w-5 shrink-0',
-                isActive(item) ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
+                'h-5 w-5 shrink-0 transition-colors duration-200',
+                isActive(item) 
+                  ? 'text-primary-500 dark:text-primary-400' 
+                  : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
               ]"
               aria-hidden="true"
             />
@@ -92,24 +103,24 @@
     </div>
 
     <!-- Toggle Button -->
-    <div class="shrink-0 border-t border-gray-200 p-2">
+    <div class="shrink-0 border-t border-gray-200 dark:border-gray-700 p-2">
       <button
         type="button"
-        class="group flex w-full items-center rounded-md py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+        class="group flex w-full items-center rounded-md py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white transition-colors duration-200"
         :class="expanded ? 'px-2' : 'justify-center px-3'"
         @click="toggleSidebar"
       >
         <ChevronLeftIcon
           v-if="expanded"
-          class="h-5 w-5 shrink-0 text-gray-400 group-hover:text-gray-500"
+          class="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"
           aria-hidden="true"
         />
         <ChevronRightIcon
           v-else
-          class="h-5 w-5 shrink-0 text-gray-400 group-hover:text-gray-500"
+          class="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"
           aria-hidden="true"
         />
-        <span v-if="expanded" class="ml-3">Collapse</span>
+        <span v-if="expanded" class="ml-3">{{ expanded ? 'Tutup Menu' : 'Buka Menu' }}</span>
       </button>
     </div>
   </div>

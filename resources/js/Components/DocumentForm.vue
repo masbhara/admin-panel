@@ -5,6 +5,76 @@
       <p class="text-white text-sm">Unggah dokumen Anda, dan kami akan memprosesnya untuk Anda</p>
     </div>
     
+    <!-- Notification Popup -->
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
+    >
+      <div v-if="showNotification" 
+        class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+        @click.self="showNotification = false">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full mx-4 overflow-hidden transform transition-all" 
+          :class="notificationType === 'success' ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'">
+          <div class="p-5">
+            <div class="flex items-start">
+              <div v-if="notificationType === 'success'" class="flex-shrink-0">
+                <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div v-else class="flex-shrink-0">
+                <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="ml-3 w-0 flex-1">
+                <h3 class="text-lg font-medium" :class="notificationType === 'success' ? 'text-green-800 dark:text-green-400' : 'text-red-800 dark:text-red-400'">
+                  {{ notificationTitle }}
+                </h3>
+                <div class="mt-2">
+                  <p class="text-sm text-gray-700 dark:text-gray-300">
+                    {{ notificationMessage }}
+                  </p>
+                </div>
+              </div>
+              <div class="ml-4 flex-shrink-0 flex">
+                <button @click="showNotification = false" class="rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none">
+                  <span class="sr-only">Tutup</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mt-4 flex">
+              <button 
+                @click="showNotification = false" 
+                class="w-full inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white shadow-sm focus:outline-none"
+                :class="notificationType === 'success' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+    
+    <!-- Loading Overlay -->
+    <div v-if="processing" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div class="bg-white dark:bg-gray-800 px-8 py-6 rounded-lg shadow-lg text-center">
+        <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">Mengirim Dokumen...</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Mohon tunggu sebentar sementara kami memproses dokumen Anda.</p>
+      </div>
+    </div>
+    
     <form @submit.prevent="submitForm" class="p-6 space-y-6">
       <div v-if="successMessage" class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-4 mb-6">
         <div class="flex">
@@ -23,45 +93,53 @@
 
       <div class="space-y-4">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Lengkap</label>
+          <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Lengkap <span class="text-red-500">*</span></label>
           <input 
             id="name" 
             v-model="form.name" 
             type="text" 
             class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            :class="{'border-red-500 dark:border-red-500': form.errors?.name}"
+            :class="{'border-red-500 dark:border-red-500': nameErrors.length > 0 || form.errors?.name}"
             placeholder="Masukkan nama lengkap Anda"
             required
+            @blur="validateName"
           />
-          <p v-if="form.errors?.name" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.name }}</p>
+          <div v-if="nameErrors.length > 0" class="mt-1 text-sm text-red-600 dark:text-red-500">
+            <p v-for="(error, index) in nameErrors" :key="index">{{ error }}</p>
+          </div>
+          <p v-else-if="form.errors?.name" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.name }}</p>
         </div>
         
         <div>
-          <label for="whatsapp" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nomor WhatsApp</label>
+          <label for="whatsapp" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nomor WhatsApp <span class="text-red-500">*</span></label>
           <input 
             id="whatsapp" 
             v-model="form.whatsapp" 
             type="text" 
             class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            :class="{'border-red-500 dark:border-red-500': form.errors?.whatsapp}"
+            :class="{'border-red-500 dark:border-red-500': whatsappErrors.length > 0 || form.errors?.whatsapp}"
             placeholder="08xxx (gunakan nomor aktif)"
             required
+            @blur="validateWhatsapp"
           />
-          <p v-if="form.errors?.whatsapp" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.whatsapp }}</p>
+          <div v-if="whatsappErrors.length > 0" class="mt-1 text-sm text-red-600 dark:text-red-500">
+            <p v-for="(error, index) in whatsappErrors" :key="index">{{ error }}</p>
+          </div>
+          <p v-else-if="form.errors?.whatsapp" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.whatsapp }}</p>
         </div>
         
-        
         <div>
-          <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kota/Kabupaten</label>
+          <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kota/Kabupaten <span class="text-red-500">*</span></label>
           <div class="relative" ref="cityDropdownRef">
             <div class="relative">
               <input
                 type="text" 
                 v-model="citySearch"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-                :class="{'border-red-500 dark:border-red-500': form.errors?.city}"
+                :class="{'border-red-500 dark:border-red-500': cityErrors.length > 0 || form.errors?.city}"
                 placeholder="Ketik untuk mencari kota/kabupaten..."
                 @focus="showCityDropdown = true"
+                @blur="validateCity"
                 @keydown.down.prevent="navigateDropdown(1)"
                 @keydown.up.prevent="navigateDropdown(-1)"
                 @keydown.enter.prevent="selectHighlightedCity"
@@ -120,14 +198,17 @@
               </div>
             </div>
           </div>
-          <p v-if="form.errors?.city" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.city }}</p>
+          <div v-if="cityErrors.length > 0" class="mt-1 text-sm text-red-600 dark:text-red-500">
+            <p v-for="(error, index) in cityErrors" :key="index">{{ error }}</p>
+          </div>
+          <p v-else-if="form.errors?.city" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.city }}</p>
           <p v-if="form.city" class="mt-1 text-xs text-gray-500 dark:text-gray-400">Anda memilih: {{ form.city }}</p>
         </div>
         
         <div>
-          <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Unggah Dokumen</label>
+          <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Unggah Dokumen <span class="text-red-500">*</span></label>
           <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md"
-                :class="{'border-red-500 dark:border-red-500': form.errors?.file, 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700': isDragging}"
+                :class="{'border-red-500 dark:border-red-500': fileErrors.length > 0 || form.errors?.file, 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700': isDragging}"
                 @dragover="handleDragOver"
                 @dragleave="handleDragLeave"
                 @drop="handleDrop">
@@ -160,17 +241,24 @@
               </p>
             </div>
           </div>
-          <p v-if="form.errors?.file" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.file }}</p>
+          <div v-if="fileErrors.length > 0" class="mt-1 text-sm text-red-600 dark:text-red-500">
+            <p v-for="(error, index) in fileErrors" :key="index">{{ error }}</p>
+          </div>
+          <p v-else-if="form.errors?.file" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.file }}</p>
         </div>
         
         <!-- Captcha Component -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verifikasi (Klik refresh untuk ganti kode)</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verifikasi (Klik refresh untuk ganti kode) <span class="text-red-500">*</span></label>
           <Captcha 
             v-model="form.captcha"
             v-model:captcha-key="form.captcha_key"
-            :error="form.errors?.captcha"
+            :error="captchaErrors.length > 0 ? captchaErrors[0] : form.errors?.captcha"
+            @blur="validateCaptcha"
           />
+          <div v-if="captchaErrors.length > 0" class="mt-1 text-sm text-red-600 dark:text-red-500">
+            <p v-for="(error, index) in captchaErrors" :key="index">{{ error }}</p>
+          </div>
         </div>
       </div>
       
@@ -180,12 +268,12 @@
           class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
           :disabled="processing"
         >
-          <svg v-if="processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          {{ processing ? 'Mengirim...' : 'Kirim Dokumen' }}
+          {{ processing ? 'Sedang Memproses...' : 'Kirim Dokumen' }}
         </button>
+      </div>
+      
+      <div class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <p>Kolom dengan tanda <span class="text-red-500">*</span> wajib diisi</p>
       </div>
     </form>
   </div>
@@ -204,6 +292,39 @@ const props = defineProps({
   }
 });
 
+// Notification states
+const showNotification = ref(false);
+const notificationType = ref('success');
+const notificationTitle = ref('');
+const notificationMessage = ref('');
+
+// Form validation states
+const nameErrors = ref([]);
+const whatsappErrors = ref([]);
+const cityErrors = ref([]);
+const fileErrors = ref([]);
+const captchaErrors = ref([]);
+const touchedFields = ref({
+  name: false,
+  whatsapp: false,
+  city: false,
+  file: false,
+  captcha: false
+});
+
+// Show notification popup
+const showNotificationPopup = (type, title, message) => {
+  notificationType.value = type;
+  notificationTitle.value = title;
+  notificationMessage.value = message;
+  showNotification.value = true;
+  
+  // Auto close after 5 seconds
+  setTimeout(() => {
+    showNotification.value = false;
+  }, 5000);
+};
+
 const form = useForm({
   name: '',
   whatsapp: '',
@@ -211,6 +332,114 @@ const form = useForm({
   file: null,
   captcha: '',
   captcha_key: '',
+});
+
+// Validate name field
+const validateName = () => {
+  nameErrors.value = [];
+  touchedFields.value.name = true;
+  
+  if (!form.name) {
+    nameErrors.value.push('Nama lengkap wajib diisi');
+  } else if (form.name.length > 255) {
+    nameErrors.value.push('Nama tidak boleh lebih dari 255 karakter');
+  }
+  
+  return nameErrors.value.length === 0;
+};
+
+// Validate whatsapp field
+const validateWhatsapp = () => {
+  whatsappErrors.value = [];
+  touchedFields.value.whatsapp = true;
+  
+  if (!form.whatsapp) {
+    whatsappErrors.value.push('Nomor WhatsApp wajib diisi');
+  } else if (!/^08[0-9]{8,11}$/.test(form.whatsapp)) {
+    whatsappErrors.value.push('Format nomor WhatsApp tidak valid (harus diawali dengan 08)');
+  } else if (form.whatsapp.length > 20) {
+    whatsappErrors.value.push('Nomor WhatsApp tidak boleh lebih dari 20 digit');
+  }
+  
+  return whatsappErrors.value.length === 0;
+};
+
+// Validate city field
+const validateCity = () => {
+  cityErrors.value = [];
+  touchedFields.value.city = true;
+  
+  if (!form.city) {
+    cityErrors.value.push('Kota/Kabupaten wajib diisi');
+  }
+  
+  return cityErrors.value.length === 0;
+};
+
+// Validate file field
+const validateFile = () => {
+  fileErrors.value = [];
+  touchedFields.value.file = true;
+  
+  if (!form.file) {
+    fileErrors.value.push('File dokumen wajib diunggah');
+    return false;
+  }
+  
+  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  if (!allowedTypes.includes(form.file.type)) {
+    fileErrors.value.push('Tipe file tidak valid. Hanya menerima file PDF atau Word (.doc, .docx)');
+    return false;
+  }
+  
+  if (form.file.size > 10 * 1024 * 1024) { // 10MB
+    fileErrors.value.push('Ukuran file tidak boleh lebih dari 10MB');
+    return false;
+  }
+  
+  return true;
+};
+
+// Validate captcha field
+const validateCaptcha = () => {
+  captchaErrors.value = [];
+  touchedFields.value.captcha = true;
+  
+  if (!form.captcha) {
+    captchaErrors.value.push('Kode captcha wajib diisi');
+  } else if (form.captcha.length < 4) {
+    captchaErrors.value.push('Kode captcha tidak valid');
+  }
+  
+  return captchaErrors.value.length === 0;
+};
+
+// Validate all fields
+const validateForm = () => {
+  const isNameValid = validateName();
+  const isWhatsappValid = validateWhatsapp();
+  const isCityValid = validateCity();
+  const isFileValid = validateFile();
+  const isCaptchaValid = validateCaptcha();
+  
+  return isNameValid && isWhatsappValid && isCityValid && isFileValid && isCaptchaValid;
+};
+
+// Watch for changes in form fields to perform live validation
+watch(() => form.name, () => {
+  if (touchedFields.value.name) validateName();
+});
+
+watch(() => form.whatsapp, () => {
+  if (touchedFields.value.whatsapp) validateWhatsapp();
+});
+
+watch(() => form.city, () => {
+  if (touchedFields.value.city) validateCity();
+});
+
+watch(() => form.captcha, () => {
+  if (touchedFields.value.captcha) validateCaptcha();
 });
 
 const selectedFile = ref(null);
@@ -246,6 +475,7 @@ watch(citySearch, (newValue) => {
   if (showCityDropdown.value && filteredCities.value.length > 0) {
     highlightedIndex.value = 0;
   }
+  if (touchedFields.value.city) validateCity();
 });
 
 // Watch untuk showCityDropdown untuk mengatur highlightedIndex
@@ -582,6 +812,8 @@ const handleFileChange = (event) => {
   if (file) {
     selectedFile.value = file;
     form.file = file;
+    touchedFields.value.file = true;
+    validateFile();
   }
 };
 
@@ -603,6 +835,8 @@ const handleDrop = (event) => {
     const file = event.dataTransfer.files[0];
     selectedFile.value = file;
     form.file = file;
+    touchedFields.value.file = true;
+    validateFile();
   }
 };
 
@@ -610,24 +844,54 @@ const selectCity = (city) => {
   form.city = city.name;
   citySearch.value = city.name;
   showCityDropdown.value = false;
+  touchedFields.value.city = true;
+  validateCity();
 };
 
 const submitForm = () => {
-  if (!form.file) {
-    alert('Silakan pilih file dokumen terlebih dahulu');
+  // Validasi form sebelum submit
+  if (!validateForm()) {
+    // Tampilkan notifikasi jika ada error
+    showNotificationPopup('error', 'Validasi Gagal', 'Mohon periksa kembali data yang dimasukkan.');
     return;
   }
   
   processing.value = true;
   form.post(route('public.documents.store'), {
     preserveScroll: true,
+    onSuccess: () => {
+      processing.value = false;
+      showNotificationPopup('success', 'Berhasil Terkirim', 'Dokumen Anda telah berhasil dikirim. Kami akan memprosesnya segera.');
+      form.reset();
+      selectedFile.value = null;
+      citySearch.value = '';
+      // Reset touched fields
+      Object.keys(touchedFields.value).forEach(field => {
+        touchedFields.value[field] = false;
+      });
+      nameErrors.value = [];
+      whatsappErrors.value = [];
+      cityErrors.value = [];
+      fileErrors.value = [];
+      captchaErrors.value = [];
+    },
+    onError: (errors) => {
+      processing.value = false;
+      let errorMessage = 'Terjadi kesalahan saat mengunggah dokumen.';
+      
+      // Cek error spesifik
+      if (errors.captcha) {
+        errorMessage = errors.captcha;
+      } else if (errors.file) {
+        errorMessage = errors.file;
+      } else if (errors.error) {
+        errorMessage = errors.error;
+      }
+      
+      showNotificationPopup('error', 'Gagal Mengirim', errorMessage);
+    },
     onFinish: () => {
       processing.value = false;
-      if (!form.hasErrors) {
-        form.reset();
-        selectedFile.value = null;
-        citySearch.value = '';
-      }
     },
   });
 };

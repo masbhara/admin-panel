@@ -44,6 +44,7 @@
         :class="{'border-red-500 dark:border-red-500': error}"
         placeholder="Masukkan kode captcha"
         required
+        @blur="$emit('blur')"
       />
       <p v-if="error" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ error }}</p>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -72,7 +73,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:modelValue', 'update:captchaKey']);
+const emit = defineEmits(['update:modelValue', 'update:captchaKey', 'blur']);
 
 const captchaImage = ref(null);
 const localValue = ref(props.modelValue);
