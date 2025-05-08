@@ -192,6 +192,12 @@ const navigation = ref([
     ],
   },
   {
+    name: 'Manajemen Dokumen',
+    href: route('admin.documents.index'),
+    active: 'admin.documents.*',
+    icon: DocumentTextIcon,
+  },
+  {
     name: 'Activity Log',
     href: route('admin.activities.index'),
     active: 'admin.activities.*',

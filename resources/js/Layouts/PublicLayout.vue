@@ -7,7 +7,7 @@
           <!-- Logo -->
           <div class="flex-shrink-0 flex items-center">
             <router-link :to="{ name: 'public.home' }" class="text-primary-600 dark:text-primary-400 font-bold text-2xl">
-              Nama Perusahaan
+              #NulisAja
             </router-link>
           </div>
 
@@ -98,7 +98,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          
           <div class=" text-center text-gray-500 dark:text-gray-400">
-            &copy; 2025 GoViral. All rights reserved.
+            &copy; 2025 NulisAja. All rights reserved.
           </div>
       </div>
     </footer>

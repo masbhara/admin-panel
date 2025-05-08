@@ -138,6 +138,11 @@ Route::middleware(['auth'])->group(function () {
                 // Activities routes
                 Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
+                // Documents routes
+                Route::get('/documents', [\App\Http\Controllers\Admin\DocumentController::class, 'index'])->name('documents.index');
+                Route::get('/documents/{document}', [\App\Http\Controllers\Admin\DocumentController::class, 'show'])->name('documents.show');
+                Route::delete('/documents/{document}', [\App\Http\Controllers\Admin\DocumentController::class, 'destroy'])->name('documents.destroy');
+                
                 // Components demo page
                 Route::get('/components-demo', function () {
                     return Inertia::render('ComponentDemo');
