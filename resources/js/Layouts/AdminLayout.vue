@@ -77,8 +77,7 @@
           </div>
         </div>
 
-        <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-          <SearchInput class="flex items-center" />
+        <div class="flex flex-1 gap-x-4 justify-end self-stretch lg:gap-x-6">
           <div class="flex items-center gap-x-4 lg:gap-x-6">
             <NotificationDropdown />
             
@@ -87,65 +86,12 @@
               <ThemeToggleSimple />
             </div>
             
-            <!-- Profile dropdown -->
-            <Menu as="div" class="relative ml-3" v-if="$page.props.auth?.user">
-              <div>
-                <MenuButton class="flex rounded-full bg-background-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
-                  <span class="sr-only">Open user menu</span>
-                  <img
-                    v-if="$page.props.auth.user.avatar_url"
-                    class="h-8 w-8 rounded-full"
-                    :src="$page.props.auth.user.avatar_url"
-                    :alt="$page.props.auth.user.name"
-                  />
-                  <span
-                    v-else
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary-500"
-                  >
-                    <span class="text-sm font-medium leading-none text-white">
-                      {{ $page.props.auth.user.name.charAt(0) }}
-                    </span>
-                  </span>
-                </MenuButton>
-              </div>
-              <transition
-                enter-active-class="transition ease-out duration-100"
-                enter-from-class="transform opacity-0 scale-95"
-                enter-to-class="transform opacity-100 scale-100"
-                leave-active-class="transition ease-in duration-75"
-                leave-from-class="transform opacity-100 scale-100"
-                leave-to-class="transform opacity-0 scale-95"
-              >
-                <MenuItems class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-background-primary py-1 shadow-lg ring-1 ring-border-light focus:outline-none">
-                  <MenuItem v-slot="{ active }">
-                    <Link
-                      :href="route('admin.profile.edit')"
-                      :class="[active ? 'bg-background-secondary' : '', 'block px-4 py-2 text-sm text-text-primary']"
-                    >
-                      Your Profile
-                    </Link>
-                  </MenuItem>
-                  <MenuItem v-slot="{ active }">
-                    <Link
-                      :href="route('admin.settings.index')"
-                      :class="[active ? 'bg-background-secondary' : '', 'block px-4 py-2 text-sm text-text-primary']"
-                    >
-                      Settings
-                    </Link>
-                  </MenuItem>
-                  <MenuItem v-slot="{ active }">
-                    <Link
-                      :href="route('logout')"
-                      method="post"
-                      as="button"
-                      :class="[active ? 'bg-background-secondary' : '', 'block w-full px-4 py-2 text-left text-sm text-text-primary']"
-                    >
-                      Sign out
-                    </Link>
-                  </MenuItem>
-                </MenuItems>
-              </transition>
-            </Menu>
+            <!-- Menggunakan komponen ProfileDropdown - prioritaskan user dari props, fallback ke $page.props -->
+            <ProfileDropdown 
+              v-if="userToDisplay" 
+              :user="userToDisplay" 
+              :is-admin="true" 
+            />
           </div>
         </div>
       </div>
@@ -161,15 +107,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Link, Head, usePage } from '@inertiajs/vue3'
 import {
   Dialog,
   DialogPanel,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
   TransitionChild,
   TransitionRoot,
 } from '@headlessui/vue'
@@ -178,17 +120,26 @@ import {
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import SidebarContent from '@/Components/SidebarContent.vue'
-import SearchInput from '@/Components/SearchInput.vue'
 import NotificationDropdown from '@/Components/NotificationDropdown.vue'
 import ThemeToggleSimple from '@/Components/ThemeToggleSimple.vue'
+import ProfileDropdown from '@/Components/ProfileDropdown.vue'
 
 const props = defineProps({
   title: {
     type: String,
     default: ''
+  },
+  user: {
+    type: Object,
+    default: null
   }
 })
 
 const page = usePage()
 const sidebarOpen = ref(false)
+
+// Prioritaskan user dari props, fallback ke $page.props
+const userToDisplay = computed(() => {
+  return props.user || page.props.auth?.user
+})
 </script>

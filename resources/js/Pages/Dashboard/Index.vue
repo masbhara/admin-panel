@@ -8,7 +8,7 @@
 
     <div class="space-y-6">
       <!-- Profile Overview -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
+      <div v-if="user" class="bg-white rounded-lg shadow-sm p-6">
         <div class="flex items-center space-x-4">
           <div class="flex-shrink-0">
             <img 
@@ -102,13 +102,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3'
 import UserLayout from '@/Layouts/UserLayout.vue'
 
 const props = defineProps({
-  user: Object,
   unreadNotifications: Number,
   recentActivities: Array
 })
+
+const page = usePage()
+const user = computed(() => page.props.auth?.user)
 </script>

@@ -14,8 +14,8 @@
                 :class="[
                   route().current(item.active)
                     ? 'bg-primary-700 text-white'
-                    : 'text-primary-200 hover:text-white hover:bg-primary-700',
-                  'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                    : 'text-primary-300 hover:text-white hover:bg-primary-700',
+                  'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors duration-200'
                 ]"
               >
                 <component
@@ -31,7 +31,7 @@
                 {{ item.name }}
               </Link>
 
-              <!-- Dropdown Menu -->
+              <!-- Dropdown Menu dengan animasi yang lebih baik -->
               <div v-else>
                 <button
                   @click="item.isOpen = !item.isOpen"
@@ -39,7 +39,7 @@
                     isAnyChildActive(item.children)
                       ? 'bg-primary-700 text-white'
                       : 'text-primary-200 hover:text-white hover:bg-primary-700',
-                    'group flex w-full items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                    'group flex w-full items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors duration-200'
                   ]"
                 >
                   <component
@@ -56,7 +56,7 @@
                   <ChevronRightIcon
                     :class="[
                       item.isOpen ? 'rotate-90' : '',
-                      'ml-auto h-5 w-5 text-primary-200 group-hover:text-white transition-transform'
+                      'ml-auto h-5 w-5 text-primary-200 group-hover:text-white transition-transform duration-200'
                     ]"
                   />
                 </button>
@@ -69,7 +69,7 @@
                           route().current(child.active)
                             ? 'bg-primary-700 text-white'
                             : 'text-primary-200 hover:text-white hover:bg-primary-700',
-                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors duration-200'
                         ]"
                       >
                         <component
@@ -151,13 +151,13 @@ onUnmounted(() => {
 
 const navigation = ref([
   {
-    name: 'Dashboard',
+    name: 'Dasbor',
     href: route('admin.dashboard'),
     active: 'admin.dashboard',
     icon: HomeIcon,
   },
   {
-    name: 'Daftar Dokumen',
+    name: 'Dokumen',
     href: route('admin.documents.index'),
     active: 'admin.documents.*',
     icon: DocumentTextIcon,
@@ -188,7 +188,7 @@ const navigation = ref([
     ],
   },
   {
-    name: 'Log Aktivitas',
+    name: 'Aktivitas',
     href: route('admin.activities.index'),
     active: 'admin.activities.*',
     icon: ClockIcon,

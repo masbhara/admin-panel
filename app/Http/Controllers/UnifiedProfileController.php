@@ -11,9 +11,44 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Models\User;
 
 class UnifiedProfileController extends Controller
 {
+    /**
+     * Menampilkan daftar profil (halaman index)
+     */
+    public function index(): Response
+    {
+        return Inertia::render('Profile/Index', [
+            'mustVerifyEmail' => $this->mustVerifyEmail(),
+            'status' => session('status'),
+        ]);
+    }
+
+    /**
+     * Menampilkan detail profil pengguna
+     */
+    public function show($id): Response
+    {
+        $user = Auth::user();
+        $requestedUser = User::findOrFail($id);
+        
+        // Only admin can view other profiles
+        if ($user->id != $id && !$user->hasRole('admin')) {
+            return Redirect::route('profile.index');
+        }
+
+        $isAdmin = $user->hasRole('admin');
+        $view = $isAdmin ? 'Admin/Profile/Show' : 'Profile/Show';
+
+        return Inertia::render($view, [
+            'user' => $requestedUser,
+            'mustVerifyEmail' => $this->mustVerifyEmail(),
+            'status' => session('status'),
+        ]);
+    }
+
     /**
      * Menampilkan halaman edit profil sesuai dengan role pengguna
      */

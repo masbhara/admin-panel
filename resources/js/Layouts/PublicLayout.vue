@@ -12,22 +12,39 @@
           </div>
 
           <!-- Desktop Navigation -->
-          <div class="hidden md:flex md:items-center md:space-x-6">
-            <router-link :to="{ name: 'public.home' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
-              Beranda
-            </router-link>
-            <!-- <router-link :to="{ name: 'public.about' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
-              Tentang Kami
-            </router-link>
-            <router-link :to="{ name: 'public.services' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
-              Layanan
-            </router-link>
-            <router-link :to="{ name: 'public.contact' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
-              Kontak
-            </router-link> -->
-            <a href="/login" class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition">
-              Login
-            </a>
+          <div class="flex items-center">
+            <div class="hidden md:flex md:items-center md:space-x-6">
+              <router-link :to="{ name: 'public.home' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
+                Beranda
+              </router-link>
+              <!-- <router-link :to="{ name: 'public.about' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
+                Tentang Kami
+              </router-link>
+              <router-link :to="{ name: 'public.services' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
+                Layanan
+              </router-link>
+              <router-link :to="{ name: 'public.contact' }" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium">
+                Kontak
+              </router-link> -->
+            </div>
+            
+            <!-- Theme Toggle -->
+            <div class="hidden md:flex items-center ml-4">
+              <ThemeToggleSimple />
+            </div>
+            
+            <!-- Profile Icon -->
+            <div class="hidden md:flex items-center ml-4">
+              <ProfileDropdown 
+                v-if="$page.props.auth?.user"
+                :user="$page.props.auth?.user"
+                :is-admin="false"
+              />
+              
+              <a v-else href="/login" class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition">
+                Login
+              </a>
+            </div>
           </div>
 
           <!-- Mobile menu button -->
@@ -73,7 +90,31 @@
             Beranda
           </router-link>
 
-          <a href="/login" class="block text-white bg-primary-600 hover:bg-primary-700 px-3 py-2 rounded-md text-base font-medium mt-4" @click="isOpen = false">
+          <!-- Theme Toggle Mobile -->
+          <div class="flex items-center px-3 py-2">
+            <ThemeToggleSimple />
+            <span class="ml-3 text-gray-700 dark:text-gray-300">Tema</span>
+          </div>
+
+          <!-- User Profile Mobile -->
+          <div v-if="$page.props.auth?.user" class="mt-3 space-y-1">
+            <Link :href="route('dashboard')" class="block text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-base font-medium">
+              Dashboard
+            </Link>
+            <Link :href="route('profile.edit')" class="block text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-base font-medium">
+              Profil Saya
+            </Link>
+            <Link 
+              :href="route('logout')" 
+              method="post" 
+              as="button"
+              class="block w-full text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2 rounded-md text-base font-medium"
+            >
+              Keluar
+            </Link>
+          </div>
+
+          <a v-else href="/login" class="block text-white bg-primary-600 hover:bg-primary-700 px-3 py-2 rounded-md text-base font-medium mt-4" @click="isOpen = false">
             Login
           </a>
         </div>
@@ -98,8 +139,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { Link as RouterLink } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import ThemeToggleSimple from '@/Components/ThemeToggleSimple.vue';
+import ProfileDropdown from '@/Components/ProfileDropdown.vue';
 
+const page = usePage();
 const isOpen = ref(false);
 </script> 

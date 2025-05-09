@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout :title="`Detail Dokumen - ${document.file_name || document.name}`">
+  <AdminLayout :title="`Detail Dokumen - ${document.file_name || document.name}`" :user="$page.props.auth?.user">
     <template #header>
       <h2 class="text-xl font-semibold leading-tight text-text-primary">
         Detail Dokumen: {{ document.file_name || document.name }}
@@ -45,7 +45,7 @@
                 </button>
                 
                 <a 
-                  :href="route('document.direct', document.id)" 
+                  :href="route('documents.download', document.id)" 
                   target="_blank"
                   class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                 >
@@ -700,15 +700,15 @@ const openPreviewModal = async () => {
         currentPreviewUrl.value = data.previewUrl;
       }
       
-      currentOriginalUrl.value = data.originalUrl || route('document.direct', props.document.id);
+      currentOriginalUrl.value = data.originalUrl || route('documents.download', props.document.id);
     } else {
       previewError.value = data.error || 'Tidak dapat memuat preview dokumen';
-      currentOriginalUrl.value = route('document.direct', props.document.id);
+      currentOriginalUrl.value = route('documents.download', props.document.id);
     }
   } catch (error) {
     console.error('Preview error:', error);
     previewError.value = 'Terjadi kesalahan saat memuat preview dokumen. Silakan coba lagi nanti.';
-    currentOriginalUrl.value = route('document.direct', props.document.id);
+    currentOriginalUrl.value = route('documents.download', props.document.id);
   } finally {
     isLoading.value = false;
   }
@@ -719,10 +719,10 @@ const switchViewer = (viewer) => {
   
   if (viewer === 'google') {
     currentPreviewUrl.value = previewType.value === 'external' ? 
-      (currentPreviewUrl.value || route('document.direct', props.document.id)) : 
+      (currentPreviewUrl.value || route('documents.download', props.document.id)) : 
       currentPreviewUrl.value;
   } else if (viewer === 'office') {
-    currentPreviewUrl.value = officeViewerUrl.value || route('document.direct', props.document.id);
+    currentPreviewUrl.value = officeViewerUrl.value || route('documents.download', props.document.id);
   }
 };
 

@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout title="Profile">
+  <UserLayout title="Profile">
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 leading-tight">Profile</h2>
     </template>
@@ -166,13 +166,13 @@
         </div>
       </div>
     </div>
-  </AdminLayout>
+  </UserLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import AdminLayout from '@/Layouts/AdminLayout.vue'
+import UserLayout from '@/Layouts/UserLayout.vue'
 import InputError from '@/Components/InputError.vue'
 import InputLabel from '@/Components/InputLabel.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'

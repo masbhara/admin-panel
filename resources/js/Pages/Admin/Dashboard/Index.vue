@@ -1,22 +1,22 @@
 <template>
   <AdminLayout :title="'Dashboard'">
-    <div class="space-y-6">
-      <!-- Welcome Banner -->
-      <div class="bg-gradient-to-r from-primary-600 to-primary-700 shadow-md rounded-lg p-6">
+    <div class="space-y-6 max-w-7xl mx-auto">
+      <!-- Welcome Banner dengan gradient yang lebih menarik -->
+      <div class="bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700 shadow-lg rounded-lg p-6 border border-primary-400/20">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-white">Selamat datang, {{ auth.user.name }}!</h2>
+            <h2 class="text-2xl font-bold text-white">Selamat datang, {{ auth?.user?.name || 'Admin' }}!</h2>
             <p class="mt-2 text-primary-100">Berikut ringkasan aktivitas aplikasi Anda saat ini.</p>
           </div>
-          <div class="hidden md:block">
-            <CalendarIcon class="h-12 w-12 text-primary-200" />
+          <div class="hidden md:flex items-center justify-center bg-white/10 p-3 rounded-full">
+            <CalendarIcon class="h-12 w-12 text-white" />
           </div>
         </div>
       </div>
 
-      <!-- Stats Grid -->
+      <!-- Stats Grid dengan desain card yang ditingkatkan -->
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div v-for="stat in stats" :key="stat.name" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200">
+        <div v-for="stat in stats" :key="stat.name" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-gray-700">
           <div class="p-5">
             <div class="flex items-center">
               <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900 p-3 rounded-lg">
@@ -46,23 +46,23 @@
               </div>
             </div>
           </div>
-          <div class="bg-gray-50 dark:bg-gray-700 px-5 py-2">
+          <div class="bg-gray-50 dark:bg-gray-700 px-5 py-2 border-t border-gray-100 dark:border-gray-600">
             <Link 
               :href="stat.href" 
               class="text-sm text-primary-600 dark:text-primary-400 font-medium hover:text-primary-800 dark:hover:text-primary-300 flex items-center"
             >
-              Detail
+              Lihat Detail
               <ArrowRightIcon class="ml-1 h-4 w-4" />
             </Link>
           </div>
         </div>
       </div>
 
-      <!-- Activity List -->
+      <!-- Activity List dengan UI yang ditingkatkan -->
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- Recent Activities -->
-        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
-          <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Aktivitas Terbaru</h3>
               <span class="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-300 px-2.5 py-0.5 rounded-full text-xs font-medium">
@@ -116,9 +116,9 @@
           </div>
         </div>
 
-        <!-- Recent Users -->
-        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
-          <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+        <!-- Recent Users dengan UI yang ditingkatkan -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Pengguna Terbaru</h3>
               <span class="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-300 px-2.5 py-0.5 rounded-full text-xs font-medium">

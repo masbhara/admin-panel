@@ -1,14 +1,14 @@
 <template>
-  <UserLayout :user="auth.user">
+  <UserLayout :user="auth?.user">
     <div class="space-y-6">
       <!-- Welcome Banner -->
-      <div class="bg-white shadow-sm rounded-lg p-6">
+      <div v-if="auth?.user" class="bg-white shadow-sm rounded-lg p-6">
         <h2 class="text-2xl font-semibold text-gray-800">Welcome, {{ auth.user.name }}!</h2>
         <p class="mt-2 text-gray-600">Here's your personal dashboard.</p>
       </div>
 
       <!-- User Profile Summary -->
-      <div class="bg-white shadow rounded-lg">
+      <div v-if="auth?.user" class="bg-white shadow rounded-lg">
         <div class="p-6">
           <div class="flex items-center space-x-6">
             <div class="flex-shrink-0">

@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout title="Tambah Dokumen Baru">
+  <AdminLayout title="Tambah Dokumen Baru" :user="$page.props.auth?.user">
     <div class="py-6">
       <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">

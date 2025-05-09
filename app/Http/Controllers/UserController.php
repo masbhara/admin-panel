@@ -106,7 +106,7 @@ class UserController extends Controller
 
     public function profile()
     {
-        return Inertia::render('Users/Profile', [
+        return Inertia::render('Profile/Show', [
             'user' => auth()->user()->load('roles'),
             'activities' => Activity::causedBy(auth()->user())
                 ->orderBy('created_at', 'desc')

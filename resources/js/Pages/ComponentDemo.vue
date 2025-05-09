@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout title="Demo Komponen">
+  <UserLayout title="Demo Komponen">
     <Toast />
     
     <div class="space-y-12">
@@ -140,12 +140,12 @@
         </CardContent>
       </Card>
     </div>
-  </AdminLayout>
+  </UserLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import AdminLayout from '@/Layouts/AdminLayout.vue'
+import UserLayout from '@/Layouts/UserLayout.vue'
 import { useToast, Toast } from '@/Components/ui/toast'
 import { Combobox } from '@/Components/ui/combobox'
 import { MultiSelect } from '@/Components/ui/multiselect'

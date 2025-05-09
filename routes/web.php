@@ -3,12 +3,10 @@
 use App\Http\Controllers\Admin\ActivityController as AdminActivityController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ImpersonateController;
-use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\User\SettingController as UserSettingController;
 use App\Http\Controllers\UserController;
@@ -21,7 +19,9 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentPreviewController;
-use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
+use App\Http\Controllers\Admin\Document\CrudController as AdminDocumentCrudController;
+use App\Http\Controllers\Admin\Document\ExportController as AdminDocumentExportController;
+use App\Http\Controllers\Admin\Document\ImportController as AdminDocumentImportController;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Document;
 use Illuminate\Support\Facades\Activity;
@@ -125,11 +125,11 @@ Route::middleware(['auth'])->group(function () {
             // Users resource routes
             Route::resource('users', UserController::class);
             
-            // Profile routes
+            // Profile routes - Konsolidasi ke UnifiedProfileController
             Route::prefix('profile')->name('profile.')->group(function () {
-                Route::get('/', [ProfileController::class, 'index'])->name('index');
+                Route::get('/', [UnifiedProfileController::class, 'index'])->name('index');
                 Route::get('/edit', [UnifiedProfileController::class, 'edit'])->name('edit');
-                Route::get('/{user}', [ProfileController::class, 'show'])->name('show');
+                Route::get('/{user}', [UnifiedProfileController::class, 'show'])->name('show');
                 Route::patch('/', [UnifiedProfileController::class, 'update'])->name('update');
                 Route::delete('/', [UnifiedProfileController::class, 'destroy'])->name('destroy');
                 Route::put('/password', [UnifiedProfileController::class, 'updatePassword'])->name('password.update');
@@ -152,32 +152,32 @@ Route::middleware(['auth'])->group(function () {
                 // Documents routes
                 Route::prefix('documents')->name('documents.')->middleware('permission:view-documents')->group(function () {
                     // Index
-                    Route::get('/', [AdminDocumentController::class, 'index'])->name('index');
+                    Route::get('/', [AdminDocumentCrudController::class, 'index'])->name('index');
                     
                     // Export dan template - harus berada SEBELUM rute dengan parameter {document}
-                    Route::get('/export', [AdminDocumentController::class, 'export'])->name('export');
-                    Route::get('/template', [AdminDocumentController::class, 'template'])->name('template');
+                    Route::get('/export', [AdminDocumentExportController::class, 'export'])->name('export');
+                    Route::get('/template', [AdminDocumentExportController::class, 'template'])->name('template');
                     
                     // Create
                     Route::middleware('permission:create-documents')->group(function () {
-                        Route::get('/create', [AdminDocumentController::class, 'create'])->name('create');
-                        Route::post('/', [AdminDocumentController::class, 'store'])->name('store');
-                        Route::post('/import', [AdminDocumentController::class, 'import'])->name('import');
+                        Route::get('/create', [AdminDocumentCrudController::class, 'create'])->name('create');
+                        Route::post('/', [AdminDocumentCrudController::class, 'store'])->name('store');
+                        Route::post('/import', [AdminDocumentImportController::class, 'import'])->name('import');
                     });
                     
                     // Show
-                    Route::get('/{document}', [AdminDocumentController::class, 'show'])->name('show');
+                    Route::get('/{document}', [AdminDocumentCrudController::class, 'show'])->name('show');
                     
                     // Edit
                     Route::middleware('permission:edit-documents')->group(function () {
-                        Route::get('/{document}/edit', [AdminDocumentController::class, 'edit'])->name('edit');
-                        Route::put('/{document}', [AdminDocumentController::class, 'update'])->name('update');
-                        Route::patch('/{document}', [AdminDocumentController::class, 'update']);
+                        Route::get('/{document}/edit', [AdminDocumentCrudController::class, 'edit'])->name('edit');
+                        Route::put('/{document}', [AdminDocumentCrudController::class, 'update'])->name('update');
+                        Route::patch('/{document}', [AdminDocumentCrudController::class, 'update']);
                     });
                     
                     // Delete
                     Route::middleware('permission:delete-documents')->group(function () {
-                        Route::delete('/{document}', [AdminDocumentController::class, 'destroy'])->name('destroy');
+                        Route::delete('/{document}', [AdminDocumentCrudController::class, 'destroy'])->name('destroy');
                     });
                 });
                 
@@ -186,11 +186,11 @@ Route::middleware(['auth'])->group(function () {
                     return Inertia::render('ComponentDemo');
                 })->name('components-demo');
                 
-                // Tambahkan route profile admin yang mengarah ke controller terpadu
+                // Konsolidasi route profile admin ke UnifiedProfileController
                 Route::get('profile/edit', [UnifiedProfileController::class, 'edit'])->name('profile.edit');
                 Route::patch('profile', [UnifiedProfileController::class, 'update'])->name('profile.update');
                 Route::delete('profile', [UnifiedProfileController::class, 'destroy'])->name('profile.destroy');
-                Route::put('password', [UnifiedProfileController::class, 'updatePassword'])->name('password.update');
+                Route::put('profile/password', [UnifiedProfileController::class, 'updatePassword'])->name('profile.password.update');
                 Route::delete('profile/avatar', [UnifiedProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
                 
                 // Users routes with middleware
@@ -212,6 +212,12 @@ Route::middleware(['auth'])->group(function () {
                 
                 Route::middleware('permission:delete users')->group(function () {
                     Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
+                    
+                    // Tambahan route fallback untuk menangani DELETE request ke /users tanpa parameter
+                    Route::delete('users', function() {
+                        return redirect()->route('admin.users.index')
+                            ->with('error', 'User ID diperlukan untuk operasi DELETE');
+                    });
                 });
                 
                 Route::middleware('permission:manage user status')->group(function () {
@@ -276,79 +282,5 @@ Route::middleware(['auth'])->group(function () {
 
 // Routes untuk dokumen preview dan download
 Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
-Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download')->withoutMiddleware(['web']);
-
-// Route download paling sederhana
-Route::get('/document-direct/{document}', function(\App\Models\Document $document) {
-    try {
-        // Pastikan file ada
-        Log::info('Direct download for document: ' . $document->id . ', Path: ' . $document->file_path);
-        
-        // Cek apakah file path kosong
-        if (empty($document->file_path)) {
-            Log::error('Document has empty file_path: ' . $document->id);
-            return back()->with('error', 'File path tidak valid');
-        }
-        
-        // Cek keberadaan file dengan multiple path possibility
-        $possiblePaths = [
-            $document->file_path,
-            'public/' . $document->file_path,
-            ltrim($document->file_path, 'public/'),
-            str_replace('//', '/', $document->file_path)
-        ];
-        
-        $filePath = null;
-        foreach ($possiblePaths as $path) {
-            if (Storage::exists($path)) {
-                Log::info('Found valid file path: ' . $path);
-                $filePath = $path;
-                break;
-            }
-        }
-        
-        // Jika file storage link tidak bekerja, coba cek secara langsung di disk
-        if (!$filePath) {
-            $basePath = storage_path('app/public');
-            $strippedPath = ltrim($document->file_path, 'public/');
-            
-            if (file_exists($basePath . '/' . $strippedPath)) {
-                $filePath = 'public/' . $strippedPath;
-                Log::info('Found file directly in disk: ' . $filePath);
-            }
-        }
-        
-        if (!$filePath) {
-            Log::error('File does not exist in any location: ' . $document->file_path);
-            return back()->with('error', 'File tidak ditemukan di server');
-        }
-        
-        $fullPath = storage_path('app/' . $filePath);
-        
-        // Gunakan nama file asli jika ada, jika tidak gunakan nama dokumen
-        $fileName = $document->file_name ?? $document->name;
-        
-        // Tambahkan ekstensi jika tidak ada
-        if (!pathinfo($fileName, PATHINFO_EXTENSION)) {
-            $extension = pathinfo($filePath, PATHINFO_EXTENSION);
-            $fileName = $fileName . '.' . $extension;
-        }
-        
-        Log::info('Serving file from: ' . $fullPath . ' as ' . $fileName);
-        
-        // Log aktivitas jika user login
-        if (auth()->check()) {
-            activity()
-                ->performedOn($document)
-                ->causedBy(auth()->user())
-                ->log('downloaded document');
-        }
-        
-        // Tambahkan header yang tepat untuk download
-        return response()->download($fullPath, $fileName);
-    } catch (\Exception $e) {
-        Log::error('Document direct download error: ' . $e->getMessage());
-        return back()->with('error', 'Terjadi kesalahan saat mengunduh dokumen: ' . $e->getMessage());
-    }
-})->name('document.direct');
+Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
 

@@ -1,17 +1,26 @@
 <template>
-  <AdminLayout title="Users">
+  <AdminLayout title="Pengguna" :user="$page.props.auth?.user">
     <div class="py-6">
       <div class="max-w-7xl mx-auto">
+        <!-- Flash messages -->
+        <div v-if="$page.props.flash && $page.props.flash.success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+          <span class="block sm:inline">{{ $page.props.flash.success }}</span>
+        </div>
+        
+        <div v-if="$page.props.flash && $page.props.flash.error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          <span class="block sm:inline">{{ $page.props.flash.error }}</span>
+        </div>
+        
         <div class="bg-white dark:bg-primary-600 overflow-hidden shadow-sm sm:rounded-lg">
           <div class="p-6 bg-white dark:bg-primary-600 border-b border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Users</h2>
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Pengguna</h2>
               <button
                 v-if="$page.props.can && $page.props.can.create_users"
                 @click="showCreateModal = true"
                 class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 active:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition ease-in-out duration-150"
               >
-                Add User
+                Tambah Pengguna
               </button>
             </div>
 
@@ -21,16 +30,16 @@
                 <thead class="bg-gray-50 dark:bg-primary-700">
                   <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                      Name
+                      Nama
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                       Email
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                      Roles
+                      Peran
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                      Actions
+                      Aksi
                     </th>
                   </tr>
                 </thead>
@@ -72,7 +81,7 @@
                         >
                           {{ role.name }}
                         </span>
-                        <span v-if="user.roles.length === 0" class="text-gray-400 dark:text-gray-300 italic text-xs">No roles assigned</span>
+                        <span v-if="user.roles.length === 0" class="text-gray-400 dark:text-gray-300 italic text-xs">Belum ada peran</span>
                       </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -86,7 +95,7 @@
                         @click="deleteUser(user)"
                         class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
                       >
-                        Delete
+                        Hapus
                       </button>
                     </td>
                   </tr>
@@ -106,18 +115,19 @@
       <Modal v-if="showCreateModal || showEditModal" @close="closeModal">
         <div class="p-6 bg-white dark:bg-primary-600">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-            {{ showEditModal ? 'Edit User' : 'Create User' }}
+            {{ showEditModal ? 'Edit Pengguna' : 'Tambah Pengguna' }}
           </h3>
 
           <form @submit.prevent="submitForm" class="mt-6 space-y-6">
             <div>
-              <label for="name" class="block text-sm font-medium text-gray-700 dark:text-white">Name</label>
+              <label for="name" class="block text-sm font-medium text-gray-700 dark:text-white">Nama</label>
               <input
                 id="name"
                 v-model="form.name"
                 type="text"
                 class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-primary-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
+              <div v-if="form.errors.name" class="mt-1 text-sm text-red-600">{{ form.errors.name }}</div>
             </div>
 
             <div>
@@ -128,6 +138,7 @@
                 type="email"
                 class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-primary-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
+              <div v-if="form.errors.email" class="mt-1 text-sm text-red-600">{{ form.errors.email }}</div>
             </div>
 
             <div v-if="!showEditModal">
@@ -138,10 +149,11 @@
                 type="password"
                 class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-primary-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
+              <div v-if="form.errors.password" class="mt-1 text-sm text-red-600">{{ form.errors.password }}</div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-white">Roles</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-white">Peran</label>
               <div class="mt-2 space-y-2">
                 <label
                   v-for="role in roles"
@@ -157,6 +169,7 @@
                   <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">{{ role.name }}</span>
                 </label>
               </div>
+              <div v-if="form.errors.roles" class="mt-1 text-sm text-red-600">{{ form.errors.roles }}</div>
             </div>
 
             <div class="mt-6 flex justify-end">
@@ -165,14 +178,14 @@
                 @click="closeModal"
                 class="mr-3 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-white uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
               >
-                Cancel
+                Batal
               </button>
               <button
                 type="submit"
                 :disabled="form.processing"
                 class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-500 active:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition ease-in-out duration-150"
               >
-                {{ showEditModal ? 'Update' : 'Create' }}
+                {{ showEditModal ? 'Update' : 'Simpan' }}
               </button>
             </div>
           </form>
@@ -180,29 +193,35 @@
       </Modal>
 
       <!-- Delete Confirmation Modal -->
-      <Modal v-if="showDeleteModal" @close="showDeleteModal = false">
-        <div class="p-6 bg-white dark:bg-primary-600">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Delete User</h3>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">
-            Are you sure you want to delete this user? This action cannot be undone.
-          </p>
-          <div class="mt-6 flex justify-end">
-            <button
-              type="button"
-              @click="showDeleteModal = false"
-              class="mr-3 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-white uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              @click="confirmDelete"
-              :disabled="isProcessing"
-              class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-            >
-              Delete
-            </button>
+      <Modal v-if="showDeleteModal" @close="cancelDelete" :paddingInner="false">
+        <div class="bg-gray-800 rounded-t-lg">
+          <div class="p-4 text-white">
+            <h3 class="text-lg font-medium leading-6 text-white">Hapus Pengguna</h3>
+            <p class="mt-2 text-sm text-gray-300">
+              Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div v-if="errorMessage" class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+              <span class="block sm:inline">{{ errorMessage }}</span>
+            </div>
           </div>
+        </div>
+        <div class="bg-gray-800 rounded-b-lg px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
+          <button
+            type="button"
+            @click="confirmDelete"
+            :disabled="isProcessing"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            <span v-if="isProcessing">Memproses...</span>
+            <span v-else>Hapus</span>
+          </button>
+          <button
+            type="button"
+            @click="cancelDelete"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-500 shadow-sm px-4 py-2 bg-gray-800 text-base font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            Batal
+          </button>
         </div>
       </Modal>
     </div>
@@ -226,6 +245,7 @@ const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const selectedUser = ref(null)
 const isProcessing = ref(false)
+const errorMessage = ref('')
 
 const form = useForm({
   name: '',
@@ -243,8 +263,14 @@ const editUser = (user) => {
 }
 
 const deleteUser = (user) => {
+  errorMessage.value = ''
   selectedUser.value = user
   showDeleteModal.value = true
+}
+
+const cancelDelete = () => {
+  showDeleteModal.value = false
+  errorMessage.value = ''
 }
 
 const submitForm = () => {
@@ -261,21 +287,37 @@ const submitForm = () => {
 
 const confirmDelete = () => {
   if (!selectedUser.value || !selectedUser.value.id) {
-    alert('User ID tidak valid')
+    errorMessage.value = 'ID pengguna tidak valid'
     return
   }
 
   isProcessing.value = true
+  errorMessage.value = ''
   
-  router.delete(route('admin.users.destroy', selectedUser.value.id), {
+  // Pastikan ID tidak kosong dan numerik
+  const userId = parseInt(selectedUser.value.id);
+  if (isNaN(userId) || userId <= 0) {
+    errorMessage.value = 'ID pengguna tidak valid'
+    isProcessing.value = false
+    return
+  }
+  
+  // Gunakan method delete dari Inertia untuk menghapus user
+  router.delete(route('admin.users.destroy', userId), {
+    preserveScroll: true,
     onSuccess: () => {
       showDeleteModal.value = false
       selectedUser.value = null
-      isProcessing.value = false
     },
     onError: (errors) => {
       console.error('Delete errors:', errors)
-      isProcessing.value = false
+      if (typeof errors === 'string') {
+        errorMessage.value = errors
+      } else if (errors && errors.message) {
+        errorMessage.value = errors.message
+      } else {
+        errorMessage.value = 'Terjadi kesalahan saat menghapus pengguna.'
+      }
     },
     onFinish: () => {
       isProcessing.value = false
@@ -288,5 +330,6 @@ const closeModal = () => {
   showCreateModal.value = false
   showEditModal.value = false
   selectedUser.value = null
+  errorMessage.value = ''
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout title="Roles">
+  <AdminLayout title="Roles" :user="$page.props.auth?.user">
     <div class="py-6">
       <div class="max-w-7xl mx-auto">
         <div class="bg-white dark:bg-primary-600 overflow-hidden shadow-sm sm:rounded-lg">

@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout>
+  <UserLayout>
     <template #header>
       <h2 class="text-xl font-semibold leading-tight text-gray-800">Create New User</h2>
     </template>
@@ -108,13 +108,13 @@
         </div>
       </div>
     </div>
-  </AdminLayout>
+  </UserLayout>
 </template>
 
 <script setup>
 import { useForm } from '@inertiajs/vue3'
 import { Link } from '@inertiajs/vue3'
-import AdminLayout from '@/Layouts/AdminLayout.vue'
+import UserLayout from '@/Layouts/UserLayout.vue'
 import InputLabel from '@/Components/InputLabel.vue'
 import TextInput from '@/Components/TextInput.vue'
 import InputError from '@/Components/InputError.vue'

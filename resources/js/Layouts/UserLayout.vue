@@ -49,38 +49,18 @@
           </div>
 
           <!-- Right Side Menu -->
-          <div v-if="user" class="hidden sm:ml-6 sm:flex sm:items-center">
-            <!-- Profile Dropdown -->
-            <div class="ml-3 relative">
-              <Dropdown align="right" width="48">
-                <template #trigger>
-                  <button
-                    class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition"
-                  >
-                    <img
-                      class="h-8 w-8 rounded-full object-cover"
-                      :src="user.profile_photo_url"
-                      :alt="user.name"
-                    />
-                  </button>
-                </template>
-
-                <template #content>
-                  <DropdownLink :href="route('profile.edit')">
-                    Profil Saya
-                  </DropdownLink>
-                  <DropdownLink :href="route('profile.show', user.id)">
-                    Lihat Profil
-                  </DropdownLink>
-                  <div class="border-t border-gray-200" />
-                  <form @submit.prevent="logout">
-                    <DropdownLink as="button">
-                      Keluar
-                    </DropdownLink>
-                  </form>
-                </template>
-              </Dropdown>
+          <div class="flex items-center gap-x-4">
+            <!-- Theme Toggle -->
+            <div class="flex items-center">
+              <ThemeToggleSimple />
             </div>
+            
+            <!-- Menggunakan komponen ProfileDropdown -->
+            <ProfileDropdown 
+              v-if="user" 
+              :user="user" 
+              :is-admin="false" 
+            />
           </div>
 
           <!-- Mobile menu button -->
@@ -204,6 +184,8 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
+import ThemeToggleSimple from '@/Components/ThemeToggleSimple.vue'
+import ProfileDropdown from '@/Components/ProfileDropdown.vue'
 
 const page = usePage()
 const showingNavigationDropdown = ref(false)

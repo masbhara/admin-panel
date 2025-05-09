@@ -135,7 +135,7 @@
                     <td class="px-4 py-3 text-sm text-text-secondary whitespace-nowrap">
                       {{ formatDate(document?.uploaded_at || new Date()) }}
                     </td>
-                    <td class="px-2 py-3 text-sm font-medium text-right relative">
+                    <td class="px-2 py-3 text-sm font-medium text-right" style="position: relative;">
                       <div class="relative z-40" :data-dropdown-id="document.id">
                         <button 
                           @click="toggleActionMenu(document.id, $event)" 
@@ -148,14 +148,8 @@
                         
                         <div 
                           v-if="activeActionMenu === document.id"
-                          class="fixed z-[999] min-w-[200px] bg-white dark:bg-gray-800 rounded-md shadow-xl border border-border-light"
-                          :style="{
-                            top: menuPosition.y + 'px',
-                            left: menuPosition.x + 'px',
-                            maxHeight: '300px',
-                            overflow: 'auto',
-                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                          }"
+                          class="absolute z-[100] min-w-[200px] bg-background-primary rounded-md shadow-lg border border-border-light"
+                          style="top: -10px; right: 100%; margin-right: 5px; max-height: 300px; overflow-y: auto;"
                         >
                           <div class="py-1 divide-y divide-border-light">
                             <Link 
@@ -682,26 +676,6 @@ const toggleActionMenu = (documentId, event) => {
     // Tutup menu lain yang mungkin terbuka
     activeActionMenu.value = null;
     
-    // Hitung posisi menu berdasarkan posisi tombol
-    const button = event.currentTarget;
-    const rect = button.getBoundingClientRect();
-    
-    // Posisikan menu di kiri atas tombol, dengan pengecekan agar tidak keluar layar
-    const screenWidth = window.innerWidth;
-    if (rect.right > screenWidth / 2) {
-      // Tombol di sisi kanan layar, tampilkan menu di sebelah kiri tombol
-      menuPosition.value = {
-        x: Math.max(10, rect.left - 220), // 220 adalah perkiraan lebar menu
-        y: rect.top
-      };
-    } else {
-      // Tombol di sisi kiri layar, tampilkan menu di sebelah kanan tombol
-      menuPosition.value = {
-        x: rect.right,
-        y: rect.top
-      };
-    }
-    
     // Buka menu dengan delay kecil untuk menghindari race condition
     setTimeout(() => {
       activeActionMenu.value = documentId;
@@ -737,6 +711,24 @@ const vClickOutside = {
     window.removeEventListener('click', el._clickOutsideHandler);
   }
 };
+
+// Direktif kustom untuk click outside yang disederhanakan
+const vClickOutside = {
+  beforeMount(el, binding) {
+    document.addEventListener('click', (e) => {
+      if (el !== e.target && !el.contains(e.target)) {
+        binding.value();
+      }
+    });
+  }
+};
+
+// Tambahkan watch untuk filter pencarian
+watch(search, (value, oldValue) => {
+  if (value === '') {
+    handleSearch();
+  }
+});
 
 // Fungsi untuk mendapatkan nama pengirim
 const getPengirimName = (document) => {
@@ -954,12 +946,5 @@ onMounted(() => {
       }
     }
   });
-  
-  // Tambahkan event listener untuk menutup dropdown saat scroll
-  window.addEventListener('scroll', () => {
-    if (activeActionMenu.value !== null) {
-      activeActionMenu.value = null;
-    }
-  }, { passive: true });
 });
 </script> 

@@ -10,7 +10,7 @@
     >
       <div
         v-if="show"
-        class="fixed inset-0 z-50 bg-gray-500/75 transition-opacity"
+        class="fixed inset-0 z-50 bg-gray-500/75 transition-opacity dark:bg-gray-900/80"
         @click="close"
       />
     </Transition>
@@ -28,9 +28,19 @@
         class="fixed inset-0 z-50 overflow-y-auto"
         @click="close"
       >
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div 
+          :class="[
+            'flex min-h-full items-end justify-center text-center sm:items-center',
+            paddingOuter ? 'p-4 sm:p-0' : 'p-0'
+          ]"
+        >
           <div
-            class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
+            :class="[
+              'relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full',
+              maxWidth,
+              paddingInner ? 'px-4 pb-4 pt-5 sm:p-6' : '',
+              contentClass
+            ]"
             @click.stop
           >
             <slot />
@@ -49,6 +59,22 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  paddingOuter: {
+    type: Boolean,
+    default: true,
+  },
+  paddingInner: {
+    type: Boolean,
+    default: true,
+  },
+  maxWidth: {
+    type: String,
+    default: 'sm:max-w-lg',
+  },
+  contentClass: {
+    type: String,
+    default: '',
+  }
 })
 
 const emit = defineEmits(['close'])

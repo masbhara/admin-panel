@@ -3,29 +3,29 @@
     :class="[
       'flex h-full flex-col border-r transition-all duration-300',
       expanded ? 'w-64' : 'w-16',
-      'dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-200'
+      'dark:bg-gray-900 bg-white dark:border-gray-800 border-gray-200 shadow-sm'
     ]"
   >
     <!-- Logo -->
-    <div class="flex h-16 shrink-0 items-center border-b border-gray-200 dark:border-gray-700 px-4">
+    <div class="flex h-16 shrink-0 items-center justify-center border-b border-gray-200 dark:border-gray-800 px-4">
       <img v-if="expanded" :src="logo" alt="Logo" class="h-8 w-auto" />
       <img v-else :src="logoSmall || logo" alt="Logo" class="h-8 w-auto" />
     </div>
 
     <!-- Sidebar Content -->
-    <div class="flex flex-1 flex-col overflow-y-auto">
-      <nav class="flex-1 space-y-1 px-2 py-4"> 
+    <div class="flex flex-1 flex-col overflow-y-auto py-2">
+      <nav class="flex-1 space-y-1 px-2 py-2"> 
         <template v-for="(item, index) in filteredItems" :key="index">
           <!-- Menu Item with Submenu -->
-          <div v-if="item.children && item.children.length > 0" class="mb-1">
+          <div v-if="item.children && item.children.length > 0" class="mb-2">
             <button
               @click="toggleSubmenu(item)"
               :class="[
-                'group flex w-full items-center rounded-md py-2 text-sm font-medium transition-colors duration-200',
+                'group flex w-full items-center rounded-md py-2 text-sm font-medium transition-all duration-200',
                 isActive(item) 
-                  ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400' 
+                  ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300' 
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white',
-                expanded ? 'px-2' : 'justify-center px-3'
+                expanded ? 'px-3' : 'justify-center px-3'
               ]"
             >
               <component
@@ -33,12 +33,12 @@
                 :class="[
                   'h-5 w-5 shrink-0 transition-colors duration-200',
                   isActive(item) 
-                    ? 'text-primary-500 dark:text-primary-400' 
-                    : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                    ? 'text-primary-600 dark:text-primary-400' 
+                    : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300'
                 ]"
                 aria-hidden="true"
               />
-              <span v-if="expanded" class="ml-3 flex-1">{{ item.label }}</span>
+              <span v-if="expanded" class="ml-3 flex-1 truncate">{{ item.label }}</span>
               <ChevronRightIcon
                 v-if="expanded"
                 :class="[
@@ -48,16 +48,17 @@
               />
             </button>
 
-            <!-- Submenu -->
-            <div v-if="expanded && item.expanded" class="mt-1 space-y-1 pl-6">
+            <!-- Submenu dengan transisi yang lebih baik -->
+            <div v-if="expanded && item.expanded" 
+                 class="mt-1 space-y-1 pl-6 overflow-hidden transition-all duration-200">
               <a
                 v-for="(child, childIndex) in item.children"
                 :key="childIndex"
                 :href="child.to"
                 :class="[
-                  'group flex items-center rounded-md py-2 pl-4 pr-2 text-sm font-medium transition-colors duration-200',
+                  'group flex items-center rounded-md py-2 pl-4 pr-2 text-sm font-medium transition-all duration-200',
                   isActive(child) 
-                    ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400' 
+                    ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300' 
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white'
                 ]"
                 @click.prevent="navigateTo(child)"
@@ -65,24 +66,24 @@
                 <div
                   :class="[
                     'mr-3 h-1.5 w-1.5 rounded-full',
-                    isActive(child) ? 'bg-primary-500 dark:bg-primary-400' : 'bg-gray-300 dark:bg-gray-600'
+                    isActive(child) ? 'bg-primary-600 dark:bg-primary-400' : 'bg-gray-400 dark:bg-gray-600'
                   ]"
                 ></div>
-                {{ child.label }}
+                <span class="truncate">{{ child.label }}</span>
               </a>
             </div>
           </div>
 
-          <!-- Regular Menu Item -->
+          <!-- Regular Menu Item dengan efek hover yang ditingkatkan -->
           <a
             v-else
             :href="item.to"
             :class="[
-              'group flex items-center rounded-md py-2 text-sm font-medium transition-colors duration-200 mb-1',
+              'group flex items-center rounded-md py-2 text-sm font-medium transition-all duration-200 mb-2',
               isActive(item) 
-                ? 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400' 
+                ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white',
-              expanded ? 'px-2' : 'justify-center px-3'
+              expanded ? 'px-3' : 'justify-center px-3'
             ]"
             @click.prevent="navigateTo(item)"
           >
@@ -91,33 +92,33 @@
               :class="[
                 'h-5 w-5 shrink-0 transition-colors duration-200',
                 isActive(item) 
-                  ? 'text-primary-500 dark:text-primary-400' 
-                  : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                  ? 'text-primary-600 dark:text-primary-400' 
+                  : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300'
               ]"
               aria-hidden="true"
             />
-            <span v-if="expanded" class="ml-3">{{ item.label }}</span>
+            <span v-if="expanded" class="ml-3 truncate">{{ item.label }}</span>
           </a>
         </template>
       </nav>
     </div>
 
-    <!-- Toggle Button -->
-    <div class="shrink-0 border-t border-gray-200 dark:border-gray-700 p-2">
+    <!-- Toggle Button dengan styling yang lebih baik -->
+    <div class="shrink-0 border-t border-gray-200 dark:border-gray-800 p-2">
       <button
         type="button"
-        class="group flex w-full items-center rounded-md py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white transition-colors duration-200"
-        :class="expanded ? 'px-2' : 'justify-center px-3'"
+        class="group flex w-full items-center rounded-md py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white transition-all duration-200"
+        :class="expanded ? 'px-3' : 'justify-center px-3'"
         @click="toggleSidebar"
       >
         <ChevronLeftIcon
           v-if="expanded"
-          class="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+          class="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
           aria-hidden="true"
         />
         <ChevronRightIcon
           v-else
-          class="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+          class="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
           aria-hidden="true"
         />
         <span v-if="expanded" class="ml-3">{{ expanded ? 'Tutup Menu' : 'Buka Menu' }}</span>
@@ -213,7 +214,7 @@ const isActive = (item) => {
   return false
 }
 
-// Toggle submenu
+// Toggle submenu dengan animasi yang lebih baik
 const toggleSubmenu = (item) => {
   menuItems.value = menuItems.value.map(menuItem => {
     if (menuItem === item) {
