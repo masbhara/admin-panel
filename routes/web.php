@@ -173,6 +173,8 @@ Route::middleware(['auth'])->group(function () {
                         Route::get('/{document}/edit', [AdminDocumentCrudController::class, 'edit'])->name('edit');
                         Route::put('/{document}', [AdminDocumentCrudController::class, 'update'])->name('update');
                         Route::patch('/{document}', [AdminDocumentCrudController::class, 'update']);
+                        Route::put('/{document}/status', [AdminDocumentCrudController::class, 'updateStatus'])->name('update-status');
+                        Route::post('/{document}/status', [AdminDocumentCrudController::class, 'updateStatus']);
                     });
                     
                     // Delete

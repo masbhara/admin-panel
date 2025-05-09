@@ -209,6 +209,41 @@
                               </svg>
                               <span>Hapus</span>
                             </button>
+
+                            <!-- Tombol Status -->
+                            <div class="py-1 border-t border-border-light">
+                              <button 
+                                @click="updateDocumentStatus(document, 'approved')" 
+                                class="w-full flex items-center px-4 py-3 text-sm text-green-600 hover:bg-background-secondary transition-colors"
+                                :class="{ 'bg-green-50 dark:bg-green-900/20': document.status === 'approved' }"
+                                :disabled="processingStatus"
+                              >
+                                <svg v-if="processingStatus && processingDocumentId === document.id && processingStatusType === 'approved'" class="animate-spin mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <svg v-else class="mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Disetujui</span>
+                              </button>
+                              
+                              <button 
+                                @click="updateDocumentStatus(document, 'rejected')" 
+                                class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-background-secondary transition-colors"
+                                :class="{ 'bg-red-50 dark:bg-red-900/20': document.status === 'rejected' }"
+                                :disabled="processingStatus"
+                              >
+                                <svg v-if="processingStatus && processingDocumentId === document.id && processingStatusType === 'rejected'" class="animate-spin mr-3 h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <svg v-else class="mr-3 h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Ditolak</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -559,6 +594,9 @@ const importError = ref(null);
 const importProcessing = ref(false);
 const isDragging = ref(false);
 const importFileInput = ref(null);
+const processingStatus = ref(false);
+const processingDocumentId = ref(null);
+const processingStatusType = ref(null);
 
 const handleSearch = () => {
   router.get(route('admin.documents.index'), { search: search.value }, {
@@ -686,7 +724,8 @@ const toggleActionMenu = (documentId, event) => {
     const button = event.currentTarget;
     const rect = button.getBoundingClientRect();
     
-    // Posisikan menu di kiri atas tombol, dengan pengecekan agar tidak keluar layar
+    // Posisikan menu di dekat tombol
+    // Cek jika di sisi kanan layar, tampilkan di kiri. Jika di sisi kiri, tampilkan di kanan
     const screenWidth = window.innerWidth;
     if (rect.right > screenWidth / 2) {
       // Tombol di sisi kanan layar, tampilkan menu di sebelah kiri tombol
@@ -938,6 +977,60 @@ const exportToExcel = () => {
   // Gunakan search query saat ini jika sedang melakukan pencarian
   const params = search.value ? `?search=${encodeURIComponent(search.value)}` : '';
   window.location.href = route('admin.documents.export') + params;
+};
+
+const updateDocumentStatus = (document, status) => {
+  // Jangan lakukan apa-apa jika status sama
+  if (document.status === status) {
+    activeActionMenu.value = null;
+    return;
+  }
+
+  // Tampilkan indikator loading
+  processingStatus.value = true;
+  processingDocumentId.value = document.id;
+  processingStatusType.value = status;
+  
+  console.log('Mengupdate status dokumen:', document.id, 'ke', status);
+  
+  // Gunakan Inertia router dengan method post dan method spoofing PUT yang benar
+  router.post(route('admin.documents.update-status', document.id), {
+    _method: 'PUT', // Method spoofing Laravel
+    status: status
+  }, {
+    preserveScroll: true,
+    preserveState: false,
+    replace: true, // Gunakan replace untuk menghindari pesan error Inertia
+    onBefore: () => {
+      // Tutup menu dropdown sebelum submit
+      activeActionMenu.value = null;
+      return true;
+    },
+    onSuccess: () => {
+      // Reset status loading
+      processingStatus.value = false;
+      processingDocumentId.value = null;
+      processingStatusType.value = null;
+      
+      // Refresh halaman untuk memastikan UI diperbarui
+      router.reload();
+    },
+    onError: (errors) => {
+      console.error('Error saat mengubah status dokumen:', errors);
+      
+      // Reset status loading
+      processingStatus.value = false;
+      processingDocumentId.value = null;
+      processingStatusType.value = null;
+      
+      // Tampilkan pesan error yang lebih spesifik jika tersedia
+      if (errors.message) {
+        alert(errors.message);
+      } else {
+        alert('Terjadi kesalahan saat mengubah status dokumen. Silakan coba lagi.');
+      }
+    }
+  });
 };
 
 onMounted(() => {
