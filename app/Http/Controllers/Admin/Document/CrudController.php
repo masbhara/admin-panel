@@ -243,47 +243,13 @@ class CrudController extends Controller
                 ])
                 ->log('changed document status');
 
-            // Deteksi request AJAX/XHR melalui header
-            $requestWantsJson = $request->ajax() || $request->wantsJson() || $request->acceptsJson() || 
-                                $request->expectsJson() || $request->header('X-Inertia');
-
-            // Jika ini adalah request Inertia, kembalikan format yang sesuai untuk Inertia
-            if ($request->header('X-Inertia')) {
-                return back()->with('success', "Status dokumen berhasil diubah menjadi {$statusMessages[$request->status]}.");
-            }
-            
-            // Untuk request AJAX biasa (non-Inertia)
-            if ($requestWantsJson && !$request->header('X-Inertia')) {
-                return response()->json([
-                    'success' => true,
-                    'message' => "Status dokumen berhasil diubah menjadi {$statusMessages[$request->status]}.",
-                    'document' => $document
-                ]);
-            }
-
-            // Untuk request normal browser
+            // Untuk semua jenis request, selalu gunakan redirect ke halaman yang sama
+            // dengan flash message untuk menghindari response JSON mentah
             return redirect()->back()->with('success', "Status dokumen berhasil diubah menjadi {$statusMessages[$request->status]}.");
         } catch (\Exception $e) {
             Log::error('Error updating document status: ' . $e->getMessage());
             
-            // Deteksi request AJAX/XHR
-            $requestWantsJson = $request->ajax() || $request->wantsJson() || $request->acceptsJson() || 
-                                $request->expectsJson() || $request->header('X-Inertia');
-
-            // Jika ini adalah request Inertia
-            if ($request->header('X-Inertia')) {
-                return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
-            }
-            
-            // Untuk request AJAX biasa (non-Inertia)
-            if ($requestWantsJson && !$request->header('X-Inertia')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-                ], 422);
-            }
-            
-            // Untuk request normal browser
+            // Selalu gunakan redirect untuk semua jenis request
             return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }

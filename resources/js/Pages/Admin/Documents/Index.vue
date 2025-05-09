@@ -993,42 +993,25 @@ const updateDocumentStatus = (document, status) => {
   
   console.log('Mengupdate status dokumen:', document.id, 'ke', status);
   
-  // Gunakan Inertia router dengan method post dan method spoofing PUT yang benar
-  router.post(route('admin.documents.update-status', document.id), {
-    _method: 'PUT', // Method spoofing Laravel
-    status: status
-  }, {
-    preserveScroll: true,
-    preserveState: false,
-    replace: true, // Gunakan replace untuk menghindari pesan error Inertia
-    onBefore: () => {
-      // Tutup menu dropdown sebelum submit
-      activeActionMenu.value = null;
-      return true;
+  // Gunakan router.visit untuk memastikan perpindahan halaman yang benar
+  router.visit(route('admin.documents.update-status', document.id), { 
+    method: 'post',
+    data: {
+      _method: 'PUT', // Method spoofing Laravel
+      status: status
     },
+    preserveScroll: true,
     onSuccess: () => {
       // Reset status loading
       processingStatus.value = false;
       processingDocumentId.value = null;
       processingStatusType.value = null;
-      
-      // Refresh halaman untuk memastikan UI diperbarui
-      router.reload();
     },
-    onError: (errors) => {
-      console.error('Error saat mengubah status dokumen:', errors);
-      
-      // Reset status loading
+    onFinish: () => {
+      // Reset status loading jika terjadi error
       processingStatus.value = false;
       processingDocumentId.value = null;
       processingStatusType.value = null;
-      
-      // Tampilkan pesan error yang lebih spesifik jika tersedia
-      if (errors.message) {
-        alert(errors.message);
-      } else {
-        alert('Terjadi kesalahan saat mengubah status dokumen. Silakan coba lagi.');
-      }
     }
   });
 };
