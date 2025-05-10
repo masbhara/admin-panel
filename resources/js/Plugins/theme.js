@@ -35,23 +35,24 @@ function setCSSVariables(theme = 'light') {
   })
 }
 
-// Plugin Vue
-export default {
-  install(app) {
-    // Inisialisasi theme
-    const theme = localStorage.getItem('theme') || 'light'
-    setCSSVariables(theme)
-    
-    // Listen untuk perubahan theme
-    window.addEventListener('theme-changed', (e) => {
-      setCSSVariables(e.detail.theme)
-    })
-    
-    // Provide theme utilities ke komponen
-    app.provide('setTheme', (theme) => {
-      localStorage.setItem('theme', theme)
-      setCSSVariables(theme)
-      document.documentElement.classList.toggle('dark', theme === 'dark')
-    })
-  }
-} 
+const ThemePlugin = {
+    install: (app) => {
+        app.config.globalProperties.$theme = {
+            isDark: false,
+            toggle() {
+                this.isDark = !this.isDark;
+                document.documentElement.classList.toggle('dark');
+            },
+            setDark() {
+                this.isDark = true;
+                document.documentElement.classList.add('dark');
+            },
+            setLight() {
+                this.isDark = false;
+                document.documentElement.classList.remove('dark');
+            }
+        };
+    }
+};
+
+export default ThemePlugin; 

@@ -189,6 +189,7 @@ return [
         App\Providers\AuthServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\SettingsServiceProvider::class,
+        App\Providers\CacheServiceProvider::class,
     ],
 
     /*

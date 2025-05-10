@@ -14,6 +14,11 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \Illuminate\Http\Middleware\AddHeaders::class => [
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'X-XSS-Protection' => '1; mode=block',
+            'X-Content-Type-Options' => 'nosniff',
+        ],
         \App\Http\Middleware\AdminMiddleware::class,
     ];
 
@@ -27,6 +32,9 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
             \App\Http\Middleware\Impersonate::class,
+            \Illuminate\Http\Middleware\AddHeaders::class => [
+                'Cache-Control' => 'public, max-age=31536000',
+            ],
         ],
 
         'api' => [

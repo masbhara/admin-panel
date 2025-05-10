@@ -16,40 +16,40 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
-     * Determine the current asset version.
+     * Determines the current asset version.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return string|null
      */
-    public function version(Request $request): string|null
+    public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
     /**
-     * Define the props that are shared by default.
+     * Defines the props that are shared by default.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
      */
     public function share(Request $request): array
     {
-        return [
-            ...parent::share($request),
-            'auth' => fn () => [
-                'user' => $request->user() ? [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'avatar_url' => $request->user()->avatar_url,
-                    'can' => $request->user()->getAllPermissions()->pluck('name')->mapWithKeys(fn ($permission) => [$permission => true])->toArray(),
-                ] : null,
+        return array_merge(parent::share($request), [
+            'auth' => [
+                'user' => $request->user(),
             ],
-            'ziggy' => fn () => [
+            'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),
-                'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-            'impersonating' => fn () => $request->session()->has('impersonate'),
-            'isAdmin' => fn () => $request->user()?->hasRole('admin'),
-        ];
+            'can' => [
+                'login' => fn () => !$request->user(),
+                'register' => fn () => !$request->user(),
+            ],
+        ]);
     }
 }

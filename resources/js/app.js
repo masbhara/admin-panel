@@ -5,7 +5,6 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ThemePlugin from '@/Plugins/theme';
-import ZiggyPlugin from '@/Plugins/ziggy';
 
 // Import semua weight Manrope
 import '@fontsource/manrope/200.css';
@@ -23,7 +22,10 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    resolve: async (name) => {
+        const page = await resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue'));
+        return page;
+    },
     setup({ el, App, props, plugin }) {
         const app = createApp({
             render: () => h(ThemeProvider, null, {
@@ -31,10 +33,13 @@ createInertiaApp({
             })
         });
         
-        app.use(plugin)
-        app.use(ThemePlugin)
-        app.use(ZiggyPlugin)
-        app.mount(el)
+        app.use(plugin);
+        app.use(ThemePlugin);
+        
+        // Mendaftarkan route helper global
+        app.config.globalProperties.route = window.route;
+        
+        return app.mount(el);
     },
     progress: {
         color: '#4B5563',
