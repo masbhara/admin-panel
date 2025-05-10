@@ -102,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import {
   HomeIcon,
@@ -137,6 +137,7 @@ onMounted(() => {
       console.error('Error setting up Echo channel:', error)
     }
   }
+  closeAllSubmenus()
 })
 
 onUnmounted(() => {
@@ -159,7 +160,7 @@ const navigation = ref([
   {
     name: 'Dokumen',
     icon: DocumentTextIcon,
-    isOpen: true,
+    isOpen: false,
     children: [
       {
         name: 'Daftar Dokumen',
@@ -168,7 +169,7 @@ const navigation = ref([
         icon: DocumentDuplicateIcon,
       },
       {
-        name: 'Pengaturan Dokumen',
+        name: 'Pengaturan Waktu',
         href: route('admin.document-settings.index'),
         active: 'admin.document-settings.*',
         icon: Cog6ToothIcon,
@@ -178,7 +179,7 @@ const navigation = ref([
   {
     name: 'Manajemen',
     icon: UsersIcon,
-    isOpen: true,
+    isOpen: false,
     children: [
       {
         name: 'Pengguna',
@@ -219,6 +220,22 @@ const navigation = ref([
     icon: ChatBubbleLeftEllipsisIcon,
   },
 ])
+
+// Fungsi untuk menutup semua submenu
+const closeAllSubmenus = () => {
+  navigation.value = navigation.value.map(item => ({
+    ...item,
+    isOpen: false
+  }))
+}
+
+// Panggil closeAllSubmenus saat route berubah
+watch(
+  () => route().current(),
+  () => {
+    closeAllSubmenus()
+  }
+)
 
 // Fungsi untuk memeriksa apakah pengguna memiliki izin
 const hasPermission = (permission) => {

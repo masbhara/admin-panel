@@ -174,6 +174,25 @@ const menuItems = ref(props.items.map(item => ({
   expanded: false
 })))
 
+// Fungsi untuk menutup semua submenu
+const closeAllSubmenus = () => {
+  menuItems.value = menuItems.value.map(item => ({
+    ...item,
+    expanded: false
+  }))
+}
+
+// Panggil closeAllSubmenus saat komponen dimount
+onMounted(() => {
+  const savedExpanded = localStorage.getItem('sidebarExpanded')
+  if (savedExpanded !== null) {
+    expanded.value = savedExpanded === 'true'
+  }
+  
+  // Pastikan semua submenu tertutup saat komponen dimount
+  closeAllSubmenus()
+})
+
 // Filter items based on permissions
 const filteredItems = computed(() => {
   return menuItems.value.filter(item => {
@@ -247,36 +266,12 @@ const navigateTo = (item) => {
   }
 }
 
-// Expand parent menu of active item
-const expandActiveParent = () => {
-  const currentPath = route.path
-  
-  menuItems.value = menuItems.value.map(item => {
-    if (item.children && item.children.some(child => 
-      (typeof child.to === 'string' && (child.to === currentPath || currentPath.startsWith(`${child.to}/`))) ||
-      (child.to && child.to.name && route.name === child.to.name)
-    )) {
-      return { ...item, expanded: true }
-    }
-    return item
-  })
-}
-
-// Load expanded state from localStorage
-onMounted(() => {
-  const savedExpanded = localStorage.getItem('sidebarExpanded')
-  if (savedExpanded !== null) {
-    expanded.value = savedExpanded === 'true'
-  }
-  
-  expandActiveParent()
-})
-
-// Watch for route changes to update active state
+// Watch for route changes
 watch(
   () => route.path,
   () => {
-    expandActiveParent()
+    // Tidak perlu memanggil expandActiveParent() lagi
+    // Biarkan user yang mengontrol submenu secara manual
   }
 )
 
@@ -286,9 +281,8 @@ watch(
   (newItems) => {
     menuItems.value = newItems.map(item => ({
       ...item,
-      expanded: menuItems.value.find(i => i.label === item.label)?.expanded || false
+      expanded: false // Selalu set expanded ke false untuk item baru
     }))
-    expandActiveParent()
   }
 )
 </script>
