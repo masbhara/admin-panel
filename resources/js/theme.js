@@ -2,6 +2,63 @@
 export const themeColors = {
   light: {
     primary: {
+      50: '#f0f9ff ',
+      100: '#e0f2fe',
+      200: '#bae6fd',
+      300: '#7dd3fc',
+      400: '#38bdf8',
+      500: '#0ea5e9',
+      600: '#0284c7',
+      700: '#0369a1',
+      800: '#075985',
+      900: '#0c4a6e',
+      950: '#082f49',
+    },
+    secondary: {
+      50: '#f8fafc',
+      100: '#f1f5f9',
+      200: '#e2e8f0',
+      300: '#cbd5e1',
+      400: '#94a3b8',
+      500: '#64748b',
+      600: '#475569',
+      700: '#334155',
+      800: '#1e293b',
+      900: '#0f172a',
+      950: '#020617',
+    },
+    background: {
+      primary: '#F5F5F5',
+      secondary: '#f8fafc',
+      tertiary: '#f1f5f9',
+      card: '#ffffff',
+      elevated: '#ffffff',
+    },
+    text: {
+      primary: '#0f172a',
+      secondary: '#475569',
+      tertiary: '#64748b',
+      inverted: '#f8fafc',
+      muted: '#94a3b8',
+      highlight: '#0ea5e9',
+    },
+    border: {
+      light: '#f1f5f9',
+      default: '#e2e8f0',
+      dark: '#cbd5e1',
+      focus: '#0ea5e9',
+      divider: 'rgba(0, 0, 0, 0.06)',
+    },
+    status: {
+      success: '#10b981',
+      warning: '#f59e0b',
+      danger: '#ef4444',
+      info: '#3b82f6',
+      pending: '#f97316',
+    },
+  },
+  dark: {
+    primary: {
       50: '#f0f9ff',
       100: '#e0f2fe',
       200: '#bae6fd',
@@ -28,93 +85,34 @@ export const themeColors = {
       950: '#020617',
     },
     background: {
-      primary: '#f9f9f9',
-      secondary: '#f1f5f9',
-      tertiary: '#e2e8f0',
+      primary: '#111827',
+      secondary: '#1e293b',
+      tertiary: '#283548',
+      card: '#1e293b',
+      elevated: '#20304b',
+      input: 'rgba(31, 41, 55, 0.5)',
     },
     text: {
-      primary: '#0f172a',
-      secondary: '#475569',
+      primary: '#f8fafc',
+      secondary: '#e2e8f0',
       tertiary: '#94a3b8',
-      inverted: '#f8fafc',
-    },
-    border: {
-      light: '#e2e8f0',
-      default: '#cbd5e1',
-      dark: '#94a3b8',
-    },
-    status: {
-      success: '#10b981',
-      warning: '#f59e0b',
-      danger: '#ef4444',
-      info: '#3b82f6',
-      pending: '#f97316',
-    },
-  },
-  dark: {
-    // Palette warna primary yang lebih seimbang, sidebar lebih gelap
-    primary: {
-      50: '#082f49',
-      100: '#0c4a6e',
-      200: '#075985',
-      300: '#0369a1',
-      400: '#0284c7', 
-      500: '#393E46',
-      // Sidebar utama - lebih gelap dari sebelumnya
-      600: '#222831', // Diganti dari#023a52 (terlalu terang) ke#051924 (lebih gelap)
-      700: '#0c4a6e', // Untuk item aktif, lebih gelap
-      800: '#38bdf8', // Untuk elemen interaktif  
-      900: '#e0f2fe',
-      950: '#f0f9ff',
-    },
-    // Secondary yang lebih seimbang untuk keterbacaan
-    secondary: {
-      50: '#020617',
-      100: '#0f172a',
-      200: '#1e293b',
-      300: '#334155',
-      400: '#475569',
-      500: '#64748b',
-      // Peningkatan keterbacaan untuk teks sekunder
-      600: '#94a3b8',
-      700: '#cbd5e1',
-      800: '#e2e8f0',
-      900: '#f1f5f9',
-      950: '#f8fafc',
-    },
-    // Background yang lebih netral dan nyaman di mata
-    background: {
-      primary: '#111827', // Diubah dari #0f172a ke #111827 - abu-abu gelap dengan hint biru, lebih netral
-      secondary: '#1e293b', // Warna sekunder untuk kartu
-      tertiary: '#283548', // Warna tersier untuk elemen nested yang ditingkatkan kontrasnya
-      card: '#1e293b', // Warna khusus untuk kartu/panel
-      elevated: '#20304b', // Warna untuk elemen yang ditinggikan
-    },
-    // Teks dengan kontras yang lebih baik
-    text: {
-      primary: '#f8fafc', // Putih dengan sedikit hint biru
-      secondary: '#e2e8f0', // Abu-abu terang untuk teks sekunder
-      tertiary: '#94a3b8', // Teks tersier lebih kontras
       inverted: '#0f172a',
-      muted: '#64748b', // Teks yang diredam untuk informasi tidak penting
-      highlight: '#38bdf8', // Untuk teks yang perlu disorot
-      white: '#f9f9f9',
+      muted: '#64748b',
+      highlight: '#38bdf8',
     },
-    // Border dengan lebih banyak variasi
     border: {
-      light: '#334155', // Border ringan
-      default: '#475569', // Border standar
-      dark: '#64748b', // Border yang lebih terlihat
-      focus: '#0ea5e9', // Border untuk elemen yang difokuskan
-      divider: 'rgba(255, 255, 255, 0.06)', // Untuk pemisah yang lebih halus
+      light: 'rgba(75, 85, 99, 0.5)',
+      default: 'rgba(75, 85, 99, 0.5)',
+      dark: 'rgba(75, 85, 99, 0.7)',
+      focus: '#0ea5e9',
+      divider: 'rgba(255, 255, 255, 0.06)',
     },
-    // Status colors untuk badge dan indikator
     status: {
-      success: '#10b981', // Hijau emerald untuk sukses
-      warning: '#fbbf24', // Kuning yang lebih lembut untuk peringatan
-      danger: '#ef4444', // Merah untuk danger/error
-      info: '#3b82f6', // Biru untuk informasi
-      pending: '#f97316', // Oranye untuk status pending
+      success: '#059669',
+      warning: '#d97706',
+      danger: '#dc2626',
+      info: '#2563eb',
+      pending: '#ea580c',
     },
   },
 };

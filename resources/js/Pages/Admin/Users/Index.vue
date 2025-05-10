@@ -1,18 +1,18 @@
 <template>
   <AdminLayout title="Pengguna" :user="$page.props.auth?.user">
     <div class="py-6">
-      <div class="max-w-7xl mx-auto">
-        <!-- Flash messages -->
-        <div v-if="$page.props.flash && $page.props.flash.success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-          <span class="block sm:inline">{{ $page.props.flash.success }}</span>
-        </div>
-        
-        <div v-if="$page.props.flash && $page.props.flash.error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <span class="block sm:inline">{{ $page.props.flash.error }}</span>
-        </div>
-        
-        <div class="bg-white dark:bg-primary-600 overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6 bg-white dark:bg-primary-600 border-b border-gray-200 dark:border-gray-700">
+      <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
+          <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
+            <!-- Flash messages -->
+            <div v-if="$page.props.flash && $page.props.flash.success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+              <span class="block sm:inline">{{ $page.props.flash.success }}</span>
+            </div>
+            
+            <div v-if="$page.props.flash && $page.props.flash.error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+              <span class="block sm:inline">{{ $page.props.flash.error }}</span>
+            </div>
+            
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Pengguna</h2>
               <button

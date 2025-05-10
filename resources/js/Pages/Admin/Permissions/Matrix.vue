@@ -1,9 +1,9 @@
 <template>
   <AdminLayout title="Permission Matrix">
     <div class="py-6">
-      <div class="max-w-7xl mx-auto">
-        <div class="bg-white dark:bg-primary-600 overflow-hidden shadow-sm sm:rounded-lg">
-          <div class="p-6 bg-white dark:bg-primary-600 border-b border-gray-200 dark:border-gray-700">
+      <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
+          <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Permission Matrix</h2>
               <div class="flex space-x-2">

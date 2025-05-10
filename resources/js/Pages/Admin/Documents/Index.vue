@@ -9,7 +9,7 @@
     <div class="py-6">
       <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
-          <div class="p-6 bg-background-primary">
+          <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
             <!-- Filter dan pencarian -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div class="relative flex-1 max-w-md">
@@ -71,81 +71,50 @@
             </div>
 
             <!-- Tabel dokumen -->
-            <div v-if="documents.data.length > 0" class="overflow-x-auto rounded-lg border border-border-light relative">
-              <table class="min-w-full divide-y divide-border-light">
-                <thead class="bg-background-secondary">
+            <div v-if="documents.data.length > 0" class="overflow-x-auto rounded-lg border border-border-light bg-background-primary shadow-sm relative mt-4">
+              <table class="min-w-full text-sm">
+                <thead class="bg-background-secondary dark:bg-background-tertiary">
                   <tr>
-                    <th scope="col" class="px-4 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
-                      Nama Dokumen
-                    </th>
-                    <th scope="col" class="px-4 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
-                      Pengirim
-                    </th>
-                    <th scope="col" class="px-4 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
-                      WhatsApp
-                    </th>
-                    <th scope="col" class="px-4 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
-                      Asal Kota
-                    </th>
-                    <th scope="col" class="px-4 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
-                      Status
-                    </th>
-                    <th scope="col" class="px-4 py-3 text-xs font-medium tracking-wider text-left text-text-secondary">
-                      Tanggal Upload
-                    </th>
-                    <th scope="col" class="relative px-4 py-3 w-10">
-                      <span class="sr-only">Aksi</span>
-                    </th>
+                    <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Nama Dokumen</th>
+                    <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Pengirim</th>
+                    <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">WhatsApp</th>
+                    <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Asal Kota</th>
+                    <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Status</th>
+                    <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Tanggal Upload</th>
+                    <th scope="col" class="px-4 py-4 w-10 border-b border-border-light"><span class="sr-only">Aksi</span></th>
                   </tr>
                 </thead>
-                <tbody class="bg-background-primary divide-y divide-border-light">
-                  <tr v-for="document in documents.data" :key="document.id" class="hover:bg-background-secondary transition-colors">
-                    <td class="px-4 py-3">
-                      <div class="text-sm font-medium text-text-primary break-words max-w-[200px]">
-                        {{ document?.file_name || document?.name || 'Tanpa Nama' }}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="text-sm text-text-secondary break-words">
-                        {{ getPengirimName(document) }}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="text-sm text-text-secondary break-words">
-                        {{ document?.metadata?.whatsapp || '-' }}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="text-sm text-text-secondary break-words max-w-[150px]">
-                        {{ document?.metadata?.city || '-' }}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
+                <tbody>
+                  <tr v-for="document in documents.data" :key="document.id" class="border-b border-border-light last:border-0 bg-white dark:bg-background-secondary hover:bg-primary-50 dark:hover:bg-background-tertiary/60 transition-colors group">
+                    <td class="px-6 py-4 font-medium text-text-primary max-w-[220px] break-words group-hover:text-primary-700 dark:group-hover:text-primary-400">{{ document?.file_name || document?.name || 'Tanpa Nama' }}</td>
+                    <td class="px-6 py-4 text-text-secondary break-words">{{ getPengirimName(document) }}</td>
+                    <td class="px-6 py-4 text-text-secondary break-words">{{ document?.metadata?.whatsapp || '-' }}</td>
+                    <td class="px-6 py-4 text-text-secondary break-words max-w-[150px]">{{ document?.metadata?.city || '-' }}</td>
+                    <td class="px-6 py-4">
                       <span 
-                        class="inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full"
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border border-transparent transition-colors"
                         :class="{
-                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': document?.status === 'pending',
-                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': document?.status === 'approved',
-                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': document?.status === 'rejected',
+                          'bg-yellow-50 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200': document?.status === 'pending',
+                          'bg-green-50 text-green-700 dark:bg-green-900/60 dark:text-green-200': document?.status === 'approved',
+                          'bg-red-50 text-red-700 dark:bg-red-900/60 dark:text-red-200': document?.status === 'rejected',
                         }"
                       >
                         {{ statusLabel(document?.status || 'pending') }}
                       </span>
                     </td>
-                    <td class="px-4 py-3 text-sm text-text-secondary whitespace-nowrap">
-                      {{ formatDate(document?.uploaded_at || new Date()) }}
-                    </td>
-                    <td class="px-2 py-3 text-sm font-medium text-right relative">
+                    <td class="px-6 py-4 text-text-secondary whitespace-nowrap">{{ formatDate(document?.uploaded_at || new Date()) }}</td>
+                    <td class="px-4 py-4 text-right relative">
+                      <!-- Aksi -->
                       <div class="relative z-40" :data-dropdown-id="document.id">
                         <button 
                           @click="toggleActionMenu(document.id, $event)" 
-                          class="p-1.5 rounded-md text-text-secondary hover:bg-background-tertiary transition-colors"
+                          class="p-2 rounded-lg text-text-secondary hover:bg-background-tertiary/80 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                           </svg>
                         </button>
-                        
+                        <!-- Dropdown aksi tetap pakai style lama -->
                         <div 
                           v-if="activeActionMenu === document.id"
                           class="fixed z-[999] min-w-[200px] bg-white dark:bg-gray-800 rounded-md shadow-xl border border-border-light"

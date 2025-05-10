@@ -3,7 +3,7 @@
     <div class="py-6">
       <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
-          <div class="p-6">
+          <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
             <div class="mb-6">
               <h2 class="text-xl font-semibold text-text-primary">Edit Dokumen</h2>
               <p class="mt-1 text-sm text-text-secondary">

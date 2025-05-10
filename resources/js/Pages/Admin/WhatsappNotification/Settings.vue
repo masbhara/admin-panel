@@ -150,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, inject } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { 
   ArrowLeftIcon,
@@ -164,6 +164,9 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+
+// Inject route function dari plugin Ziggy
+const route = inject('route');
 
 const props = defineProps({
   settings: Object,
@@ -199,55 +202,53 @@ const alertMessage = ref('');
 const form = useForm({
   dripsender_api_key: props.settings.dripsender_api_key ? props.settings.dripsender_api_key.value : '',
   dripsender_webhook_url: props.settings.dripsender_webhook_url ? props.settings.dripsender_webhook_url.value : '',
-  whatsapp_notification_enabled: props.settings.whatsapp_notification_enabled ? 
-    (props.settings.whatsapp_notification_enabled.value === true || 
-     props.settings.whatsapp_notification_enabled.value === '1' || 
-     props.settings.whatsapp_notification_enabled.value === 'true') : false,
+  whatsapp_notification_enabled: props.settings.whatsapp_notification_enabled ? props.settings.whatsapp_notification_enabled.value : false,
 });
 
 const saveSettings = () => {
   form.post(route('admin.whatsapp-notifications.settings.update'), {
+    preserveScroll: true,
     onSuccess: () => {
       showAlert.value = true;
       alertType.value = 'success';
       alertMessage.value = 'Pengaturan berhasil disimpan';
-      
-      // Sembunyikan alert setelah 5 detik
       setTimeout(() => {
         showAlert.value = false;
       }, 5000);
-    }
+    },
+    onError: () => {
+      showAlert.value = true;
+      alertType.value = 'error';
+      alertMessage.value = 'Gagal menyimpan pengaturan';
+      setTimeout(() => {
+        showAlert.value = false;
+      }, 5000);
+    },
   });
 };
 
 const testConnection = () => {
   testingConnection.value = true;
-  
   form.post(route('admin.whatsapp-notifications.test-connection'), {
     preserveScroll: true,
-    preserveState: true,
     onSuccess: () => {
       showAlert.value = true;
       alertType.value = 'success';
-      alertMessage.value = 'Koneksi ke Dripsender berhasil!';
+      alertMessage.value = 'Koneksi berhasil';
       testingConnection.value = false;
-      
-      // Sembunyikan alert setelah 5 detik
       setTimeout(() => {
         showAlert.value = false;
       }, 5000);
     },
-    onError: (errors) => {
+    onError: () => {
       showAlert.value = true;
       alertType.value = 'error';
-      alertMessage.value = errors.message || 'Gagal terhubung ke Dripsender';
+      alertMessage.value = 'Koneksi gagal';
       testingConnection.value = false;
-      
-      // Sembunyikan alert setelah 5 detik
       setTimeout(() => {
         showAlert.value = false;
       }, 5000);
-    }
+    },
   });
 };
 </script> 

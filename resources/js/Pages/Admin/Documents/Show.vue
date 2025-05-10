@@ -21,8 +21,8 @@
           </div>
         </div>
 
-        <div class="overflow-hidden bg-background-primary shadow rounded-lg border border-border-light">
-          <div class="px-4 py-5 sm:px-6">
+        <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
+          <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h3 class="text-lg font-medium leading-6 text-text-primary">
@@ -209,8 +209,8 @@
         </div>
 
         <!-- Aktivitas Log -->
-        <div class="mt-6 overflow-hidden bg-background-primary shadow rounded-lg border border-border-light">
-          <div class="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div class="mt-6 overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
+          <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h3 class="text-lg font-medium leading-6 text-text-primary">
                 Aktivitas Dokumen

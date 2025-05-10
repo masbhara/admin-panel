@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div :class="[
+    'min-h-screen font-sans antialiased',
+    'transition-colors duration-300 ease-in-out',
+    'bg-background-primary text-text-primary'
+  ]">
     <slot />
   </div>
 </template>
@@ -13,48 +17,35 @@ const setCSSVariables = (theme) => {
   const themeMode = theme === 'dark' ? 'dark' : 'light';
   const colors = themeColors[themeMode];
   
-  // Background colors
-  document.documentElement.style.setProperty('--color-bg-primary', 
-    colors.background.primary);
-  document.documentElement.style.setProperty('--color-bg-secondary', 
-    colors.background.secondary);
-  document.documentElement.style.setProperty('--color-bg-tertiary', 
-    colors.background.tertiary);
-    
-  // Text colors
-  document.documentElement.style.setProperty('--color-text-primary', 
-    colors.text.primary);
-  document.documentElement.style.setProperty('--color-text-secondary', 
-    colors.text.secondary);
-  document.documentElement.style.setProperty('--color-text-tertiary', 
-    colors.text.tertiary);
-  document.documentElement.style.setProperty('--color-text-inverted', 
-    colors.text.inverted);
-    
-  // Border colors
-  document.documentElement.style.setProperty('--color-border-light', 
-    colors.border.light);
-  document.documentElement.style.setProperty('--color-border-default', 
-    colors.border.default);
-  document.documentElement.style.setProperty('--color-border-dark', 
-    colors.border.dark);
+  // Set semua warna background
+  Object.entries(colors.background).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(`--background-${key}`, value);
+  });
   
-  // Primary colors - ambil dari objek colors.primary
-  for (const [key, value] of Object.entries(colors.primary)) {
-    document.documentElement.style.setProperty(`--color-primary-${key}`, value);
-  }
+  // Set semua warna text
+  Object.entries(colors.text).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(`--text-${key}`, value);
+  });
   
-  // Secondary colors - ambil dari objek colors.secondary
-  for (const [key, value] of Object.entries(colors.secondary)) {
-    document.documentElement.style.setProperty(`--color-secondary-${key}`, value);
-  }
-
-  // Status colors (jika ada di UI)
-  for (const [key, value] of Object.entries(colors.status)) {
-    document.documentElement.style.setProperty(`--color-status-${key}`, value);
-  }
+  // Set semua warna border
+  Object.entries(colors.border).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(`--border-${key}`, value);
+  });
   
-  console.log(`Theme applied: ${themeMode}`, colors);
+  // Set semua warna primary
+  Object.entries(colors.primary).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(`--primary-${key}`, value);
+  });
+  
+  // Set semua warna secondary
+  Object.entries(colors.secondary).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(`--secondary-${key}`, value);
+  });
+  
+  // Set semua warna status
+  Object.entries(colors.status).forEach(([key, value]) => {
+    document.documentElement.style.setProperty(`--status-${key}`, value);
+  });
 };
 
 onMounted(() => {
@@ -80,10 +71,25 @@ onMounted(() => {
     attributeFilter: ['class'],
   });
 
-  // Debug untuk memastikan nilai diambil dengan benar
+  // Listen untuk event perubahan tema
   window.addEventListener('theme-changed', (event) => {
-    console.log('Theme changed event received', event.detail);
     setCSSVariables(event.detail.theme);
   });
 });
-</script> 
+</script>
+
+<style>
+/* Transisi untuk perubahan tema */
+.theme-transitioning,
+.theme-transitioning * {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* Reset transisi setelah selesai */
+.theme-transitioning-done,
+.theme-transitioning-done * {
+  transition: none !important;
+}
+</style> 
