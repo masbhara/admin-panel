@@ -119,7 +119,11 @@ class WhatsappNotificationController extends Controller
         ];
         
         return Inertia::render('Admin/WhatsappNotification/Settings', [
-            'settings' => $settings
+            'settings' => $settings,
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error')
+            ]
         ]);
     }
 
@@ -171,16 +175,28 @@ class WhatsappNotificationController extends Controller
     /**
      * Test connection to Dripsender.
      */
-    public function testConnection()
+    public function testConnection(Request $request)
     {
         $result = $this->dripsenderService->testConnection();
         
         if ($result['success']) {
-            return redirect()->back()
-                ->with('success', $result['message']);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Koneksi ke Dripsender berhasil'
+                ]);
+            }
+            
+            return back()->with('success', 'Koneksi ke Dripsender berhasil');
         }
         
-        return redirect()->back()
-            ->with('error', $result['message']);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Gagal terhubung ke Dripsender'
+            ], 422);
+        }
+        
+        return back()->with('error', $result['message'] ?? 'Gagal terhubung ke Dripsender');
     }
 } 

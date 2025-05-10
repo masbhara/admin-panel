@@ -284,6 +284,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::middleware('permission:view_whatsapp_notifications')->group(function() {
                         Route::get('/', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'index'])->name('index');
                         Route::get('/settings', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'settings'])->name('settings');
+                        Route::post('/test-connection', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'testConnection'])->name('test-connection');
                     });
                     
                     // Create routes
@@ -292,17 +293,10 @@ Route::middleware(['auth'])->group(function () {
                         Route::post('/', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'store'])->name('store');
                     });
                     
-                    // Test connection route
-                    Route::middleware('permission:edit_whatsapp_notifications')->group(function() {
-                        Route::post('/settings', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'updateSettings'])->name('settings.update');
-                        Route::post('/test-connection', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'testConnection'])->name('test-connection');
-                    });
+                    // Settings update route
+                    Route::post('/settings', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'updateSettings'])->name('settings.update');
                     
-                    // Routes with parameters should come last
-                    Route::middleware('permission:view_whatsapp_notifications')->group(function() {
-                        Route::get('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'show'])->name('show');
-                    });
-                    
+                    // Edit and delete routes with parameters
                     Route::middleware('permission:edit_whatsapp_notifications')->group(function() {
                         Route::get('/{whatsappNotification}/edit', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'edit'])->name('edit');
                         Route::put('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'update'])->name('update');
@@ -311,6 +305,9 @@ Route::middleware(['auth'])->group(function () {
                     Route::middleware('permission:delete_whatsapp_notifications')->group(function() {
                         Route::delete('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'destroy'])->name('destroy');
                     });
+                    
+                    // Show route
+                    Route::get('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'show'])->name('show');
                 });
             });
         });
