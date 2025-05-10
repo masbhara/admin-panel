@@ -199,6 +199,12 @@ const navigation = ref([
     active: 'admin.settings.*',
     icon: Cog6ToothIcon,
   },
+  {
+    name: 'Notifikasi WhatsApp',
+    href: route('admin.whatsapp-notifications.index'),
+    active: 'admin.whatsapp-notifications.*',
+    icon: ChatBubbleLeftEllipsisIcon,
+  },
 ])
 
 // Fungsi untuk memeriksa apakah pengguna memiliki izin

@@ -277,6 +277,22 @@ Route::middleware(['auth'])->group(function () {
                     Route::post('/{setting}', [SettingController::class, 'update'])->name('update.item');
                     Route::delete('/{setting}', [SettingController::class, 'destroy'])->name('destroy');
                 });
+
+                // WhatsApp Notification routes
+                Route::prefix('whatsapp-notifications')->name('whatsapp-notifications.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'index'])->name('index');
+                    Route::get('/create', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'create'])->name('create');
+                    Route::post('/', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'store'])->name('store');
+                    Route::get('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'show'])->name('show');
+                    Route::get('/{whatsappNotification}/edit', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'edit'])->name('edit');
+                    Route::put('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'update'])->name('update');
+                    Route::delete('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'destroy'])->name('destroy');
+                    
+                    // Pengaturan WhatsApp
+                    Route::get('/settings', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'settings'])->name('settings');
+                    Route::post('/settings', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'updateSettings'])->name('settings.update');
+                    Route::post('/test-connection', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'testConnection'])->name('test-connection');
+                });
             });
         });
     });

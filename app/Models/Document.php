@@ -30,6 +30,8 @@ class Document extends Model implements HasMedia
         'uploaded_at',
         'status',
         'metadata',
+        'whatsapp_number',
+        'notification_sent',
     ];
 
     /**
@@ -40,6 +42,7 @@ class Document extends Model implements HasMedia
     protected $casts = [
         'uploaded_at' => 'datetime',
         'metadata' => 'array',
+        'notification_sent' => 'boolean',
     ];
 
     /**

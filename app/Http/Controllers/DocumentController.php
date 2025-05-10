@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Services\WhatsappNotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -11,6 +12,13 @@ use Illuminate\Support\Facades\Log;
 
 class DocumentController extends Controller
 {
+    protected $whatsappNotificationService;
+
+    public function __construct(WhatsappNotificationService $whatsappNotificationService)
+    {
+        $this->whatsappNotificationService = $whatsappNotificationService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -73,6 +81,8 @@ class DocumentController extends Controller
                 'file_size' => $file->getSize(),
                 'file_type' => $file->getClientMimeType(),
                 'user_id' => auth()->check() ? auth()->id() : null,
+                'whatsapp_number' => $request->whatsapp,
+                'notification_sent' => false,
                 'metadata' => [
                     'whatsapp' => $request->whatsapp,
                     'city' => $request->city,
@@ -85,6 +95,23 @@ class DocumentController extends Controller
             activity()
                 ->performedOn($document)
                 ->log('uploaded by guest');
+
+            // Kirim notifikasi WhatsApp jika nomor tersedia
+            if (!empty($request->whatsapp)) {
+                $notificationResult = $this->whatsappNotificationService->sendDocumentUploadNotification($document);
+                
+                if (!$notificationResult['success']) {
+                    Log::warning('Gagal mengirim notifikasi WhatsApp: ' . $notificationResult['message'], [
+                        'document_id' => $document->id,
+                        'phone' => $request->whatsapp
+                    ]);
+                } else {
+                    Log::info('Notifikasi WhatsApp berhasil dikirim', [
+                        'document_id' => $document->id,
+                        'phone' => $request->whatsapp
+                    ]);
+                }
+            }
 
             // Redirect dengan sukses
             return redirect()->back()->with('success', 'Dokumen berhasil diunggah! Terima kasih.');

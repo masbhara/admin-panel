@@ -10,9 +10,17 @@ use App\Models\Document;
 use Carbon\Carbon;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Log;
+use App\Services\WhatsappNotificationService;
 
 class CrudController extends Controller
 {
+    protected $whatsappNotificationService;
+
+    public function __construct(WhatsappNotificationService $whatsappNotificationService)
+    {
+        $this->whatsappNotificationService = $whatsappNotificationService;
+    }
+
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 10);
@@ -243,14 +251,89 @@ class CrudController extends Controller
                 ])
                 ->log('changed document status');
 
+            // Kirim notifikasi WhatsApp jika dokumen memiliki nomor WhatsApp dan status berubah
+            $notificationSent = false;
+            if (!empty($document->whatsapp_number) && $oldStatus !== $request->status) {
+                // Siapkan event_type berdasarkan status baru
+                $eventType = '';
+                if ($request->status === 'approved') {
+                    $eventType = 'document_approved';
+                } elseif ($request->status === 'rejected') {
+                    $eventType = 'document_rejected';
+                }
+
+                // Hanya kirim notifikasi untuk status approved atau rejected
+                if ($eventType) {
+                    $result = $this->sendWhatsAppNotification($document, $eventType);
+                    $notificationSent = $result['success'];
+                    
+                    // Log hasil notifikasi
+                    if ($notificationSent) {
+                        Log::info("WhatsApp notification sent for document {$document->id}", [
+                            'document_id' => $document->id,
+                            'phone' => $document->whatsapp_number,
+                            'status' => $request->status,
+                        ]);
+                    } else {
+                        Log::warning("Failed to send WhatsApp notification for document {$document->id}", [
+                            'document_id' => $document->id,
+                            'phone' => $document->whatsapp_number,
+                            'status' => $request->status,
+                            'error' => $result['message'],
+                        ]);
+                    }
+                }
+            }
+
+            $successMessage = "Status dokumen berhasil diubah menjadi {$statusMessages[$request->status]}.";
+            if ($notificationSent) {
+                $successMessage .= " Notifikasi WhatsApp telah dikirim ke nomor terkait.";
+            }
+
             // Untuk semua jenis request, selalu gunakan redirect ke halaman yang sama
             // dengan flash message untuk menghindari response JSON mentah
-            return redirect()->back()->with('success', "Status dokumen berhasil diubah menjadi {$statusMessages[$request->status]}.");
+            return redirect()->back()->with('success', $successMessage);
         } catch (\Exception $e) {
             Log::error('Error updating document status: ' . $e->getMessage());
             
             // Selalu gunakan redirect untuk semua jenis request
             return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Send WhatsApp notification based on event type
+     * 
+     * @param Document $document
+     * @param string $eventType
+     * @return array
+     */
+    private function sendWhatsAppNotification(Document $document, string $eventType): array
+    {
+        try {
+            $notificationMethod = '';
+            
+            switch ($eventType) {
+                case 'document_approved':
+                    return $this->whatsappNotificationService->sendDocumentApprovalNotification($document);
+                case 'document_rejected':
+                    return $this->whatsappNotificationService->sendDocumentRejectionNotification($document);
+                default:
+                    return [
+                        'success' => false,
+                        'message' => 'Tipe notifikasi tidak didukung'
+                    ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending WhatsApp notification: ' . $e->getMessage(), [
+                'document_id' => $document->id,
+                'event_type' => $eventType
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ];
         }
     }
 } 

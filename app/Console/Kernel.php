@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\AddDocumentPermissions::class,
+        Commands\SetupWhatsappNotification::class,
+        Commands\AddWhatsappNotificationPermissions::class,
     ];
 
     /**
