@@ -6,26 +6,26 @@
 
     <div class="py-12">
       <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div class="overflow-hidden bg-white dark:bg-primary-600 shadow-sm sm:rounded-lg">
+        <div class="overflow-hidden bg-white dark:bg-gray-800/50 shadow-sm sm:rounded-lg border border-gray-200 dark:border-gray-700/50">
           <!-- Alert Message -->
-          <div v-if="localFlash" :class="`mb-4 p-4 rounded-md ${localFlash.type === 'error' ? 'bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-200' : 'bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-200'}`">
+          <div v-if="localFlash" :class="`mb-4 p-4 rounded-md ${localFlash.type === 'error' ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200' : 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200'}`">
             {{ localFlash.message }}
           </div>
 
           <form @submit.prevent="submitForm" class="p-6">
             <Tabs defaultValue="general" class="w-full">
-              <TabsList class="grid w-full grid-cols-3">
-                <TabsTrigger value="general">Pengaturan Umum</TabsTrigger>
-                <TabsTrigger value="tracking">Script & Tracking</TabsTrigger>
-                <TabsTrigger value="footer">Footer</TabsTrigger>
+              <TabsList class="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                <TabsTrigger value="general" class="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-primary-600 dark:data-[state=active]:text-primary-400 dark:text-gray-400 rounded-md transition-all">Pengaturan Umum</TabsTrigger>
+                <TabsTrigger value="tracking" class="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-primary-600 dark:data-[state=active]:text-primary-400 dark:text-gray-400 rounded-md transition-all">Script & Tracking</TabsTrigger>
+                <TabsTrigger value="footer" class="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-primary-600 dark:data-[state=active]:text-primary-400 dark:text-gray-400 rounded-md transition-all">Footer</TabsTrigger>
               </TabsList>
 
               <!-- General Settings Tab -->
               <TabsContent value="general">
-                <Card>
+                <Card class="border-0 shadow-none">
                   <CardHeader>
                     <CardTitle class="dark:text-white">Pengaturan Umum</CardTitle>
-                    <CardDescription class="dark:text-gray-300">
+                    <CardDescription class="dark:text-gray-400">
                       Pengaturan dasar website seperti logo, favicon, judul, dan deskripsi.
                     </CardDescription>
                   </CardHeader>
@@ -33,7 +33,7 @@
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <!-- Logo -->
                       <div>
-                        <InputLabel for="logo" value="Logo Website" class="dark:text-white" />
+                        <InputLabel for="logo" value="Logo Website" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <div v-if="logoPreview || logo" class="mb-2">
                             <img :src="logoPreview || logo" alt="Logo Preview" class="h-12 w-auto object-contain" />
@@ -43,7 +43,7 @@
                             @input="handleLogoChange"
                             type="file"
                             accept="image/*"
-                            class="block w-full dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           />
                           <p v-if="form.errors.logo" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.logo }}</p>
                         </div>
@@ -51,7 +51,7 @@
 
                       <!-- Favicon -->
                       <div>
-                        <InputLabel for="favicon" value="Favicon" class="dark:text-white" />
+                        <InputLabel for="favicon" value="Favicon" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <div v-if="faviconPreview || favicon" class="mb-2">
                             <img :src="faviconPreview || favicon" alt="Favicon Preview" class="h-8 w-auto object-contain" />
@@ -61,7 +61,7 @@
                             @input="handleFaviconChange"
                             type="file"
                             accept="image/*"
-                            class="block w-full dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           />
                           <p v-if="form.errors.favicon" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.favicon }}</p>
                         </div>
@@ -69,13 +69,13 @@
 
                       <!-- Site Title -->
                       <div>
-                        <InputLabel for="site_title" value="Judul Website" class="dark:text-white" />
+                        <InputLabel for="site_title" value="Judul Website" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <TextInput
                             id="site_title"
                             v-model="form.site_title"
                             type="text"
-                            class="block w-full dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                             required
                           />
                           <p v-if="form.errors.site_title" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.site_title }}</p>
@@ -84,13 +84,13 @@
 
                       <!-- Site Subtitle -->
                       <div>
-                        <InputLabel for="site_subtitle" value="Sub Judul Website" class="dark:text-white" />
+                        <InputLabel for="site_subtitle" value="Sub Judul Website" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <TextInput
                             id="site_subtitle"
                             v-model="form.site_subtitle"
                             type="text"
-                            class="block w-full dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           />
                           <p v-if="form.errors.site_subtitle" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.site_subtitle }}</p>
                         </div>
@@ -98,13 +98,13 @@
 
                       <!-- Site Description -->
                       <div class="sm:col-span-2">
-                        <InputLabel for="site_description" value="Deskripsi Website" class="dark:text-white" />
+                        <InputLabel for="site_description" value="Deskripsi Website" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <TextArea
                             id="site_description"
                             v-model="form.site_description"
                             rows="3"
-                            class="block w-full dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           />
                           <p v-if="form.errors.site_description" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.site_description }}</p>
                         </div>
@@ -112,7 +112,7 @@
 
                       <!-- Global Thumbnail -->
                       <div class="sm:col-span-2">
-                        <InputLabel for="thumbnail" value="Thumbnail Global" class="dark:text-white" />
+                        <InputLabel for="thumbnail" value="Thumbnail Global" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <div v-if="thumbnailPreview || thumbnail" class="mb-2">
                             <img :src="thumbnailPreview || thumbnail" alt="Thumbnail Preview" class="h-32 w-auto object-contain" />
@@ -122,7 +122,7 @@
                             @input="handleThumbnailChange"
                             type="file"
                             accept="image/*"
-                            class="block w-full dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           />
                           <p v-if="form.errors.thumbnail" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.thumbnail }}</p>
                         </div>
@@ -134,10 +134,10 @@
 
               <!-- Tracking Scripts Tab -->
               <TabsContent value="tracking">
-                <Card>
+                <Card class="border-0 shadow-none">
                   <CardHeader>
                     <CardTitle class="dark:text-white">Script Tracking & Pixel</CardTitle>
-                    <CardDescription class="dark:text-gray-300">
+                    <CardDescription class="dark:text-gray-400">
                       Konfigurasi script tracking dan pixel untuk analitik website.
                     </CardDescription>
                   </CardHeader>
@@ -145,13 +145,13 @@
                     <div class="space-y-6">
                       <!-- Meta Pixel -->
                       <div>
-                        <InputLabel for="meta_pixel" value="Meta (Facebook) Pixel" class="dark:text-white" />
+                        <InputLabel for="meta_pixel" value="Meta (Facebook) Pixel" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <TextArea
                             id="meta_pixel"
                             v-model="form.meta_pixel"
                             rows="3"
-                            class="block w-full font-mono text-sm dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                             placeholder="<!-- Meta Pixel Code -->"
                           />
                           <p v-if="form.errors.meta_pixel" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.meta_pixel }}</p>
@@ -160,13 +160,13 @@
 
                       <!-- Google Analytics -->
                       <div>
-                        <InputLabel for="google_analytics" value="Google Analytics" class="dark:text-white" />
+                        <InputLabel for="google_analytics" value="Google Analytics" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <TextArea
                             id="google_analytics"
                             v-model="form.google_analytics"
                             rows="3"
-                            class="block w-full font-mono text-sm dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                             placeholder="<!-- Google Analytics Code -->"
                           />
                           <p v-if="form.errors.google_analytics" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.google_analytics }}</p>
@@ -175,13 +175,13 @@
 
                       <!-- TikTok Pixel -->
                       <div>
-                        <InputLabel for="tiktok_pixel" value="TikTok Pixel" class="dark:text-white" />
+                        <InputLabel for="tiktok_pixel" value="TikTok Pixel" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <TextArea
                             id="tiktok_pixel"
                             v-model="form.tiktok_pixel"
                             rows="3"
-                            class="block w-full font-mono text-sm dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                             placeholder="<!-- TikTok Pixel Code -->"
                           />
                           <p v-if="form.errors.tiktok_pixel" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.tiktok_pixel }}</p>
@@ -190,13 +190,13 @@
 
                       <!-- Twitter/X Pixel -->
                       <div>
-                        <InputLabel for="twitter_pixel" value="Twitter/X Pixel" class="dark:text-white" />
+                        <InputLabel for="twitter_pixel" value="Twitter/X Pixel" class="dark:text-gray-300" />
                         <div class="mt-2">
                           <TextArea
                             id="twitter_pixel"
                             v-model="form.twitter_pixel"
                             rows="3"
-                            class="block w-full font-mono text-sm dark:bg-primary-700 dark:text-white dark:border-gray-600"
+                            class="block w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                             placeholder="<!-- Twitter/X Website Tag -->"
                           />
                           <p v-if="form.errors.twitter_pixel" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.twitter_pixel }}</p>
@@ -209,25 +209,25 @@
 
               <!-- Footer Settings Tab -->
               <TabsContent value="footer">
-                <Card>
+                <Card class="border-0 shadow-none">
                   <CardHeader>
-                    <CardTitle>Pengaturan Footer</CardTitle>
-                    <CardDescription>
+                    <CardTitle class="dark:text-white">Pengaturan Footer</CardTitle>
+                    <CardDescription class="dark:text-gray-400">
                       Konfigurasi teks dan informasi yang ditampilkan di footer website.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div>
-                      <InputLabel for="footer_copyright" value="Copyright Text" />
+                      <InputLabel for="footer_copyright" value="Copyright Text" class="dark:text-gray-300" />
                       <div class="mt-2">
                         <TextInput
                           id="footer_copyright"
                           v-model="form.footer_copyright"
                           type="text"
-                          class="block w-full"
+                          class="block w-full rounded-lg border border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           placeholder=" 2025 Your Company. All rights reserved."
                         />
-                        <p v-if="form.errors.footer_copyright" class="mt-2 text-sm text-red-600">{{ form.errors.footer_copyright }}</p>
+                        <p v-if="form.errors.footer_copyright" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.errors.footer_copyright }}</p>
                       </div>
                     </div>
                   </CardContent>
