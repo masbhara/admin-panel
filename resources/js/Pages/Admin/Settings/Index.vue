@@ -88,17 +88,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, inject } from 'vue'
-import { useForm, usePage } from '@inertiajs/vue3'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useForm, usePage, router } from '@inertiajs/vue3'
 import { useThemeClasses } from '@/Composables/useThemeClasses'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import GeneralSettings from './Partials/GeneralSettings.vue'
 import TrackingSettings from './Partials/TrackingSettings.vue'
 import FooterSettings from './Partials/FooterSettings.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
-
-// Inject route function
-const route = inject('route')
 
 const themeClasses = useThemeClasses()
 
@@ -169,7 +166,7 @@ const handleThumbnailChange = (e) => {
 }
 
 const submitForm = () => {
-  form.post(route('admin.settings.update'), {
+  form.post(router.route('admin.settings.update'), {
     preserveScroll: true,
     onSuccess: () => {
       if (page.props.flash && page.props.flash.message && page.props.flash.message !== lastFlashMessage) {

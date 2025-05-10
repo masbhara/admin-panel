@@ -1,0 +1,249 @@
+# Environment Variables Documentation
+
+import { Callout } from 'nextra/components'
+
+<Callout type="info">
+  File ini berisi seluruh environment variables yang digunakan di aplikasi Penulis, baik untuk development maupun production.
+</Callout>
+
+## Development Environment
+```env
+# Application
+APP_NAME=Penulis
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+# Logging
+LOG_CHANNEL=stack
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=penulis_dev
+DB_USERNAME=root
+DB_PASSWORD=
+
+# Cache & Session (Development)
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync
+BROADCAST_DRIVER=log
+FILESYSTEM_DISK=local
+
+# Redis (Optional for Development)
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+# Mail
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+# Development Tools
+DEBUGBAR_ENABLED=true
+TELESCOPE_ENABLED=true
+IDE_HELPER_GENERATE=true
+
+# Vite
+VITE_APP_NAME="${APP_NAME}"
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_HOST="${PUSHER_HOST}"
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+```
+
+## Production Environment
+```env
+# Application
+APP_NAME=Penulis
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=https://penulis.your-domain.com
+
+# Logging
+LOG_CHANNEL=stack
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=warning
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=penulis_prod
+DB_USERNAME=penulis_prod_user
+DB_PASSWORD=your-strong-db-password
+
+# Cache & Session
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+BROADCAST_DRIVER=redis
+FILESYSTEM_DISK=public
+
+# Redis Configuration
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=your-strong-redis-password
+REDIS_PORT=6379
+REDIS_CLIENT=predis
+REDIS_DB=0
+REDIS_CACHE_DB=1
+REDIS_QUEUE_DB=2
+REDIS_SESSION_DB=3
+REDIS_CACHE_TTL=3600
+
+# Cache Tags Configuration
+CACHE_PREFIX=penulis_prod_
+CACHE_TAGS_ENABLED=true
+CACHE_TAGS_STORE=redis
+
+# Session Configuration
+SESSION_LIFETIME=120
+SESSION_SECURE_COOKIE=true
+SESSION_DOMAIN=.penulis.your-domain.com
+SANCTUM_STATEFUL_DOMAINS=penulis.your-domain.com
+
+# Queue Configuration
+QUEUE_NAME=penulis_prod
+QUEUE_RETRY_AFTER=90
+QUEUE_TIMEOUT=30
+QUEUE_WORKER_SLEEP=3
+QUEUE_WORKER_TRIES=3
+QUEUE_WORKER_PROCESSES=2
+
+# Mail Configuration
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.your-mail-provider.com
+MAIL_PORT=587
+MAIL_USERNAME=your-mail-username
+MAIL_PASSWORD=your-mail-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@penulis.your-domain.com
+MAIL_FROM_NAME="${APP_NAME}"
+
+# Asset Configuration
+ASSET_URL=https://cdn.penulis.your-domain.com
+VITE_APP_URL="${APP_URL}"
+
+# Media Library Configuration
+MEDIA_DISK=public
+MEDIA_PATH=media
+MEDIA_CONVERSIONS_PATH=media-conversions
+QUEUE_MEDIA_CONVERSIONS=true
+MEDIA_LIBRARY_DISK=public
+MEDIA_LIBRARY_PATH=uploads
+MEDIA_LIBRARY_QUEUE_NAME=media-library
+MEDIA_LIBRARY_TEMPORARY_UPLOAD_DIRECTORY=temp-uploads
+
+# Spatie Permission Configuration
+PERMISSION_CACHE_EXPIRATION_TIME=86400
+PERMISSION_CACHE_KEY=spatie.permission.cache
+PERMISSION_REGISTER_PERMISSION_CHECK_METHOD=true
+
+# Activity Log Configuration
+ACTIVITY_LOGGER_DB_CONNECTION=mysql
+ACTIVITY_LOGGER_ENABLED=true
+ACTIVITY_LOGGER_DELETE_RECORDS_OLDER_THAN_DAYS=365
+ACTIVITY_LOGGER_TABLE_NAME=activity_log
+
+# Performance Configuration
+OPCACHE_ENABLE=1
+OPCACHE_REVALIDATE_FREQ=0
+OPCACHE_VALIDATE_TIMESTAMPS=0
+OPCACHE_MAX_ACCELERATED_FILES=10000
+OPCACHE_MEMORY_CONSUMPTION=256
+OPCACHE_MAX_WASTED_PERCENTAGE=10
+
+# Security Configuration
+CORS_ALLOWED_ORIGINS="${APP_URL}"
+CORS_ALLOWED_METHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+CORS_ALLOWED_HEADERS=X-Requested-With,Content-Type,Authorization,X-CSRF-TOKEN
+CORS_EXPOSED_HEADERS=
+CORS_MAX_AGE=0
+
+# Development Tools (Disabled in Production)
+DEBUGBAR_ENABLED=false
+TELESCOPE_ENABLED=false
+IDE_HELPER_GENERATE=false
+
+# Backup Configuration
+BACKUP_ARCHIVE_PASSWORD=your-secure-backup-password
+BACKUP_DB_DUMP_PATH="/usr/bin"
+BACKUP_NOTIFICATION_EMAIL=admin@penulis.your-domain.com
+BACKUP_DISK=s3
+BACKUP_DESTINATION_PATH=penulis-backups
+BACKUP_KEEP_ALL_BACKUPS_FOR_DAYS=7
+BACKUP_KEEP_DAILY_BACKUPS_FOR_DAYS=30
+BACKUP_KEEP_WEEKLY_BACKUPS_FOR_WEEKS=8
+BACKUP_KEEP_MONTHLY_BACKUPS_FOR_MONTHS=4
+BACKUP_KEEP_YEARLY_BACKUPS_FOR_YEARS=2
+
+# AWS S3 untuk Backup (Opsional)
+AWS_ACCESS_KEY_ID=your-aws-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret
+AWS_DEFAULT_REGION=ap-southeast-1
+AWS_BUCKET=your-bucket-name
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+# Additional Security Headers
+SECURE_HEADERS_ENABLED=true
+SECURE_HEADERS_STRICT_TRANSPORT=true
+SECURE_HEADERS_CONTENT_SECURITY_POLICY="default-src 'self' ${APP_URL}; script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.penulis.your-domain.com; style-src 'self' 'unsafe-inline' cdn.penulis.your-domain.com; img-src 'self' data: https: cdn.penulis.your-domain.com; font-src 'self' data: cdn.penulis.your-domain.com;"
+
+# Vite Configuration
+VITE_APP_NAME="${APP_NAME}"
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_HOST="${PUSHER_HOST}"
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+
+# Tailwind Configuration
+TAILWIND_PURGE_ENABLED=true
+TAILWIND_PURGE_CONTENT_PATHS="./resources/views/**/*.blade.php,./resources/js/**/*.vue"
+```
+
+<Callout type="warning">
+  Pastikan untuk mengganti semua nilai placeholder (contoh: your-domain.com, your-strong-password) dengan nilai yang sesuai untuk environment Anda.
+</Callout>
+
+## Variable Groups
+
+### Cache & Session
+- `CACHE_DRIVER`: File untuk development, Redis untuk production
+- `SESSION_DRIVER`: File untuk development, Redis untuk production
+- `QUEUE_CONNECTION`: Sync untuk development, Redis untuk production
+
+### Database
+- Development menggunakan credentials lokal
+- Production menggunakan user dengan privileges terbatas
+
+### Security
+- Production wajib menggunakan HTTPS
+- Session cookies harus secure di production
+- CSP headers wajib dikonfigurasi
+
+### Media Library
+- Gunakan queue untuk media conversions di production
+- Pisahkan storage untuk uploads
+
+### Monitoring
+- Disable semua development tools di production
+- Setup proper logging di production
+
+<Callout type="info">
+  Untuk development, Anda bisa menyalin bagian Development Environment dan simpan sebagai `.env`.
+  Untuk production, gunakan bagian Production Environment dan sesuaikan nilai-nilainya.
+</Callout> 

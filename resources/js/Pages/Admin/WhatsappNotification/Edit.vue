@@ -145,6 +145,14 @@ const submit = () => {
     form.variables = availableVariables.map(variable => variable.name.replace('{{', '').replace('}}', ''));
   }
   
-  form.put(route('admin.whatsapp-notifications.update', props.notification.id));
+  form.post(`/admin/whatsapp-notifications/${props.notification.id}`, {
+    preserveScroll: true,
+    onSuccess: () => {
+      // Handle success if needed
+    },
+    headers: {
+      'X-HTTP-Method-Override': 'PATCH'
+    }
+  });
 };
 </script> 

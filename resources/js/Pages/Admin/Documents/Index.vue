@@ -397,15 +397,14 @@
           <button @click="showDeleteModal = false" class="px-4 py-2 text-sm font-medium text-text-primary bg-background-tertiary border border-border-light rounded-md shadow-sm hover:bg-background-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
             Batal
           </button>
-          <Link
-            :href="route('admin.documents.destroy', documentToDelete?.id)"
-            method="delete"
-            as="button"
+          <button
+            @click="handleDelete"
+            :disabled="deleteForm.processing"
             class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-            @click="showDeleteModal = false"
           >
-            Hapus
-          </Link>
+            <span v-if="deleteForm.processing">Menghapus...</span>
+            <span v-else>Hapus</span>
+          </button>
         </div>
       </div>
     </modal-dialog>
@@ -586,6 +585,8 @@ const importFileInput = ref(null);
 const processingStatus = ref(false);
 const processingDocumentId = ref(null);
 const processingStatusType = ref(null);
+
+const deleteForm = useForm({});
 
 const handleSearch = () => {
   router.get(route('admin.documents.index'), { search: search.value }, {
@@ -1002,6 +1003,15 @@ const updateDocumentStatus = (document, status) => {
       processingDocumentId.value = null;
       processingStatusType.value = null;
     }
+  });
+};
+
+const handleDelete = () => {
+  deleteForm.delete(route('admin.documents.destroy', documentToDelete.value.id), {
+    onSuccess: () => {
+      showDeleteModal.value = false;
+      documentToDelete.value = null;
+    },
   });
 };
 

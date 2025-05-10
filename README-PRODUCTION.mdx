@@ -1,0 +1,332 @@
+# Penulis - Production Configuration Guide
+
+import { Callout } from 'nextra/components'
+
+<Callout type="info">
+  Dokumen ini berisi panduan lengkap untuk mengkonfigurasi aplikasi Penulis di environment production.
+</Callout>
+
+## Table of Contents
+- [Persiapan Server](#persiapan-server)
+- [Konfigurasi Environment](#konfigurasi-environment)
+- [Cache System](#cache-system)
+- [Queue System](#queue-system)
+- [Media Library](#media-library)
+- [Security](#security)
+- [Backup System](#backup-system)
+- [Monitoring](#monitoring)
+
+## Persiapan Server
+
+### Kebutuhan Sistem
+```bash
+PHP >= 8.2
+MySQL >= 8.0
+Redis >= 6.2
+Node.js >= 18.0
+Nginx/Apache
+Supervisor
+```
+
+### Ekstensi PHP yang Diperlukan
+```bash
+php-fpm
+php-mysql
+php-redis
+php-curl
+php-zip
+php-gd
+php-mbstring
+php-xml
+php-bcmath
+```
+
+## Konfigurasi Environment
+
+### File .env Production
+
+<Callout type="warning">
+  Pastikan untuk mengganti semua nilai placeholder dengan nilai yang sesuai untuk environment production Anda.
+</Callout>
+
+```env
+# Application
+APP_NAME=Penulis
+APP_ENV=production
+APP_KEY=base64:your-production-key
+APP_DEBUG=false
+APP_URL=https://penulis.your-domain.com
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=penulis_prod
+DB_USERNAME=penulis_prod_user
+DB_PASSWORD=your-strong-db-password
+
+# Cache & Session
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+BROADCAST_DRIVER=redis
+FILESYSTEM_DISK=public
+
+# Redis Configuration
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=your-strong-redis-password
+REDIS_PORT=6379
+REDIS_CLIENT=predis
+REDIS_DB=0
+REDIS_CACHE_DB=1
+REDIS_QUEUE_DB=2
+REDIS_SESSION_DB=3
+REDIS_CACHE_TTL=3600
+
+# Media Library
+MEDIA_DISK=public
+MEDIA_PATH=media
+MEDIA_CONVERSIONS_PATH=media-conversions
+QUEUE_MEDIA_CONVERSIONS=true
+```
+
+## Cache System
+
+### Redis Setup
+
+<Callout type="info">
+  Redis digunakan untuk cache, session, dan queue system.
+</Callout>
+
+1. **Install Redis**
+```bash
+sudo apt update
+sudo apt install redis-server
+```
+
+2. **Konfigurasi Redis**
+```bash
+# /etc/redis/redis.conf
+requirepass your-strong-redis-password
+bind 127.0.0.1
+protected-mode yes
+maxmemory 512mb
+maxmemory-policy allkeys-lru
+```
+
+3. **Database Separation**
+```text
+DB 0: Default/General
+DB 1: Cache Storage
+DB 2: Queue System
+DB 3: Session Storage
+```
+
+## Queue System
+
+### Supervisor Setup
+
+<Callout type="warning">
+  Queue worker harus selalu running untuk media conversions dan background jobs.
+</Callout>
+
+```ini
+# /etc/supervisor/conf.d/penulis-worker.conf
+[program:penulis-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/penulis/artisan queue:work redis --sleep=3 --tries=3
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/path/to/penulis/storage/logs/worker.log
+stopwaitsecs=3600
+```
+
+## Media Library
+
+### Storage Setup
+
+```php
+// config/filesystems.php
+'disks' => [
+    'public' => [
+        'driver' => 'local',
+        'root' => storage_path('app/public'),
+        'url' => env('APP_URL').'/storage',
+        'visibility' => 'public',
+        'throw' => false,
+    ],
+]
+```
+
+### Symbolic Link
+```bash
+php artisan storage:link
+```
+
+## Security
+
+### SSL/TLS Configuration
+
+<Callout type="error">
+  HTTPS wajib diaktifkan di production!
+</Callout>
+
+```nginx
+# Nginx configuration
+server {
+    listen 443 ssl http2;
+    server_name penulis.your-domain.com;
+    
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+    
+    # ... rest of configuration
+}
+```
+
+### Security Headers
+```env
+SECURE_HEADERS_ENABLED=true
+SECURE_HEADERS_STRICT_TRANSPORT=true
+SECURE_HEADERS_CONTENT_SECURITY_POLICY="default-src 'self'"
+```
+
+## Backup System
+
+### Konfigurasi Backup
+
+<Callout type="info">
+  Backup dilakukan setiap hari dan disimpan di S3 atau storage lainnya.
+</Callout>
+
+```env
+BACKUP_ARCHIVE_PASSWORD=your-secure-backup-password
+BACKUP_NOTIFICATION_EMAIL=admin@your-domain.com
+BACKUP_DISK=s3
+BACKUP_DESTINATION_PATH=penulis-backups
+```
+
+### Cron Jobs
+```bash
+# Backup setiap hari jam 1 pagi
+0 1 * * * /usr/bin/php /path/to/penulis/artisan backup:run
+
+# Cleanup backup lama setiap hari jam 2 pagi
+0 2 * * * /usr/bin/php /path/to/penulis/artisan backup:clean
+```
+
+## Monitoring
+
+### Log Monitoring
+```env
+LOG_CHANNEL=stack
+LOG_LEVEL=warning
+```
+
+### Performance Monitoring
+```env
+OPCACHE_ENABLE=1
+OPCACHE_MEMORY_CONSUMPTION=256
+TELESCOPE_ENABLED=false
+```
+
+### Health Checks
+```bash
+# Check setiap 5 menit
+*/5 * * * * curl -s https://penulis.your-domain.com/health >> /var/log/penulis/health.log
+```
+
+## Deployment Steps
+
+1. **Persiapan**
+```bash
+# Clone repository
+git clone https://github.com/your-repo/penulis.git
+cd penulis
+
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+```
+
+2. **Konfigurasi**
+```bash
+# Copy dan sesuaikan .env
+cp .env.example .env
+php artisan key:generate
+
+# Setup permissions
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+```
+
+3. **Optimasi**
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
+```
+
+4. **Final Check**
+```bash
+# Test aplikasi
+php artisan test --env=production
+
+# Verify queue
+php artisan queue:monitor redis
+
+# Check cache
+php artisan cache:check
+```
+
+<Callout type="success">
+  Setelah semua langkah di atas selesai, aplikasi Anda siap untuk production!
+</Callout>
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Redis Connection Failed**
+```bash
+# Check Redis service
+sudo systemctl status redis
+
+# Test koneksi
+redis-cli ping
+```
+
+2. **Queue Not Processing**
+```bash
+# Check supervisor status
+sudo supervisorctl status
+
+# Restart workers
+sudo supervisorctl restart all
+```
+
+3. **Permission Issues**
+```bash
+# Fix storage permissions
+sudo chown -R www-data:www-data storage
+sudo chmod -R 775 storage
+```
+
+### Monitoring Tools
+
+- Redis Commander untuk monitoring Redis
+- Supervisor Web Interface untuk monitoring queue
+- Laravel Telescope untuk debugging (development only)
+
+## Additional Resources
+
+- [Laravel Production Best Practices](https://laravel.com/docs/10.x/deployment)
+- [Redis Documentation](https://redis.io/documentation)
+- [Spatie Media Library](https://spatie.be/docs/laravel-medialibrary/v10/introduction)
+- [Supervisor Configuration](http://supervisord.org/configuration.html) 
