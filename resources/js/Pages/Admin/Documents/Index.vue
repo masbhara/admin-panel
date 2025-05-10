@@ -71,7 +71,7 @@
             </div>
 
             <!-- Statistik Dokumen -->
-            <div class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="bg-white dark:bg-background-secondary p-4 rounded-lg border border-border-light shadow-sm">
                 <h3 class="text-sm font-medium text-text-secondary mb-1">Total Dokumen</h3>
                 <p class="text-2xl font-bold text-primary-600">{{ documents.total }}</p>
@@ -83,6 +83,10 @@
               <div class="bg-white dark:bg-background-secondary p-4 rounded-lg border border-border-light shadow-sm">
                 <h3 class="text-sm font-medium text-text-secondary mb-1">Dokumen Pending</h3>
                 <p class="text-2xl font-bold text-yellow-600">{{ documents.data.filter(doc => doc.status === 'pending').length }}</p>
+              </div>
+              <div class="bg-white dark:bg-background-secondary p-4 rounded-lg border border-border-light shadow-sm">
+                <h3 class="text-sm font-medium text-text-secondary mb-1">Dokumen Ditolak</h3>
+                <p class="text-2xl font-bold text-red-600">{{ documents.data.filter(doc => doc.status === 'rejected').length }}</p>
               </div>
             </div>
 
