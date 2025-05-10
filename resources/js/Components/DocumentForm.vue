@@ -1,8 +1,8 @@
 <template>
   <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
     <div class="bg-gradient-to-r from-primary-600 to-primary-800 px-6 py-4">
-      <h3 class="text-xl font-bold text-white">Kirim Dokumen Anda</h3>
-      <p class="text-white text-sm">Unggah dokumen Anda, dan kami akan memprosesnya untuk Anda</p>
+      <h3 class="text-lg font-bold text-white text-center">Semangat! Antum akan Jadi Penulis Handal</h3>
+      <!-- <p class="text-white text-sm text-center">Unggah dokumen Anda, dan kami akan memprosesnya untuk Anda</p> -->
     </div>
     
     <!-- Notification Popup -->

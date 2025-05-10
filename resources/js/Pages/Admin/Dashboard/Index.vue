@@ -60,13 +60,13 @@
 
       <!-- Activity List dengan UI yang ditingkatkan -->
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <!-- Recent Activities -->
+        <!-- Recent Document Submissions -->
         <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
           <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Aktivitas Terbaru</h3>
+              <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Pengiriman Dokumen Terbaru</h3>
               <span class="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-300 px-2.5 py-0.5 rounded-full text-xs font-medium">
-                {{ activities.length }} aktivitas
+                {{ activities.length }} dokumen
               </span>
             </div>
           </div>
@@ -77,24 +77,17 @@
                   <span v-if="activities.indexOf(activity) !== activities.length - 1" class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden="true" />
                   <div class="relative flex space-x-3">
                     <div>
-                      <span
-                        :class="[
-                          getActivityColor(activity.type),
-                          'h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white dark:ring-gray-800'
-                        ]"
-                      >
-                        <component
-                          :is="getActivityIcon(activity.type)"
-                          class="h-5 w-5 text-white"
-                          aria-hidden="true"
-                        />
-                      </span>
+                      <UserAvatar 
+                        :name="activity.user?.name || 'Unknown User'" 
+                        :image-url="activity.user?.avatar_url" 
+                      />
                     </div>
                     <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                       <div>
                         <p class="text-sm text-gray-600 dark:text-gray-300">
-                          {{ activity.description }}
-                          <Link :href="activity.href" class="font-medium text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400">
+                          <span class="font-medium text-gray-900 dark:text-white">{{ activity.user?.name || 'Unknown User' }}</span>
+                          mengirim dokumen
+                          <Link :href="activity.href" class="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
                             {{ activity.target }}
                           </Link>
                         </p>
@@ -108,8 +101,8 @@
               </ul>
             </div>
             <div class="mt-6">
-              <Link :href="route('admin.activities.index')" class="flex w-full items-center justify-center rounded-md bg-white dark:bg-gray-700 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
-                Lihat semua aktivitas
+              <Link :href="route('admin.documents.index')" class="flex w-full items-center justify-center rounded-md bg-white dark:bg-gray-700 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
+                Lihat semua dokumen
                 <ArrowRightIcon class="ml-2 h-4 w-4" />
               </Link>
             </div>
@@ -131,11 +124,14 @@
               <li v-for="user in recentUsers" :key="user.id" class="py-4">
                 <div class="flex items-center space-x-4">
                   <div class="flex-shrink-0">
-                    <img class="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-700" :src="user.avatar_url" :alt="user.name" />
+                    <UserAvatar 
+                      :name="user.name || 'Unknown User'" 
+                      :image-url="user.avatar_url" 
+                    />
                   </div>
                   <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ user.name }}</p>
-                    <p class="truncate text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</p>
+                    <p class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ user.name || 'Unknown User' }}</p>
+                    <p class="truncate text-sm text-gray-500 dark:text-gray-400">{{ user.email || '-' }}</p>
                   </div>
                   <StatusBadge :status="user.status" />
                 </div>
@@ -158,6 +154,7 @@
 import { Link } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import StatusBadge from '@/Components/StatusBadge.vue'
+import UserAvatar from '@/Components/UserAvatar.vue'
 import {
   ArrowUpIcon,
   ArrowDownIcon,
