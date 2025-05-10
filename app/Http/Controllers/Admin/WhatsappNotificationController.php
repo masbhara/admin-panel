@@ -16,10 +16,6 @@ class WhatsappNotificationController extends Controller
     public function __construct(DripsenderService $dripsenderService)
     {
         $this->dripsenderService = $dripsenderService;
-        $this->middleware('permission:view_whatsapp_notifications|create_whatsapp_notifications|edit_whatsapp_notifications|delete_whatsapp_notifications', ['only' => ['index', 'show']]);
-        $this->middleware('permission:create_whatsapp_notifications', ['only' => ['create', 'store']]);
-        $this->middleware('permission:edit_whatsapp_notifications', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:delete_whatsapp_notifications', ['only' => ['destroy']]);
     }
 
     /**

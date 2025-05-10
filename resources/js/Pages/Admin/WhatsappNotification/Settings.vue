@@ -109,7 +109,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeftIcon } from '@heroicons/vue/solid';
+import { ArrowLeftIcon } from '@heroicons/vue/24/solid';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';

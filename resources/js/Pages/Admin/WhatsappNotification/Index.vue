@@ -116,8 +116,8 @@ import {
   TrashIcon, 
   EyeIcon,
   BellIcon,
-  CogIcon
-} from '@heroicons/vue/solid';
+  Cog6ToothIcon as CogIcon
+} from '@heroicons/vue/24/solid';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';

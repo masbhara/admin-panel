@@ -78,7 +78,7 @@
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { PencilIcon, ArrowLeftIcon } from '@heroicons/vue/solid';
+import { PencilIcon, ArrowLeftIcon } from '@heroicons/vue/24/solid';
 
 const props = defineProps({
   notification: Object,
