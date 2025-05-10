@@ -42,6 +42,18 @@
             />
           </div>
 
+          <!-- Judul Halaman Home -->
+          <div>
+            <Input
+              v-model="form.document_home_title"
+              type="text"
+              label="Judul Halaman Home (Public)"
+              required
+              :error="form.errors.document_home_title"
+              placeholder="Masukkan judul halaman Home yang akan tampil di publik"
+            />
+          </div>
+
           <!-- Submit Button -->
           <div class="flex justify-end">
             <button
@@ -71,13 +83,19 @@ const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  document_home_title: {
+    type: String,
+    required: false,
+    default: 'Pengiriman Dokumen Online'
   }
 });
 
 const form = useForm({
-  submission_deadline: props.settings.submission_deadline || '',
+  submission_deadline: props.settings.formatted_submission_deadline || '',
   closed_message: props.settings.closed_message || 'Maaf, waktu pengumpulan dokumen telah berakhir.',
-  is_active: props.settings.is_active ?? true
+  is_active: props.settings.is_active ?? true,
+  document_home_title: props.document_home_title || 'Pengiriman Dokumen Online',
 });
 
 const submit = () => {

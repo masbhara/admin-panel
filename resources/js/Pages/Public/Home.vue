@@ -4,8 +4,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
       <!-- Hero Section -->
       <div class="text-center mb-8">
-        <h1 class="text-4xl md:text-5xl font-bold text-primary-600 dark:text-primary-400 mb-4">
-          Pengiriman Dokumen Online
+        <h1 class="text-3xl md:text-4xl font-bold text-primary-600 dark:text-primary-400 mb-4">
+          {{ settings.document_home_title || 'Pengiriman Dokumen Online' }}
         </h1>
         
         <!-- Countdown Timer -->

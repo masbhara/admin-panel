@@ -30,6 +30,20 @@ return new class extends Migration
                 }
             });
         }
+
+        // Tambahkan key document_home_title jika belum ada
+        $exists = DB::table('settings')->where('key', 'document_home_title')->exists();
+        if (!$exists) {
+            DB::table('settings')->insert([
+                'key' => 'document_home_title',
+                'value' => 'Pengiriman Dokumen Online',
+                'group' => 'document',
+                'type' => 'text',
+                'is_public' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 
     /**
@@ -49,5 +63,7 @@ return new class extends Migration
                 $table->dropColumn('metadata');
             }
         });
+
+        DB::table('settings')->where('key', 'document_home_title')->delete();
     }
 };
