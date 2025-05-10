@@ -202,7 +202,8 @@ const alertMessage = ref('');
 const form = useForm({
   dripsender_api_key: props.settings.dripsender_api_key ? props.settings.dripsender_api_key.value : '',
   dripsender_webhook_url: props.settings.dripsender_webhook_url ? props.settings.dripsender_webhook_url.value : '',
-  whatsapp_notification_enabled: props.settings.whatsapp_notification_enabled ? props.settings.whatsapp_notification_enabled.value : false,
+  whatsapp_notification_enabled: props.settings.whatsapp_notification_enabled && 
+    (props.settings.whatsapp_notification_enabled.value == 1 || props.settings.whatsapp_notification_enabled.value === true),
 });
 
 const saveSettings = () => {
