@@ -27,6 +27,7 @@ use App\Models\Document;
 use Illuminate\Support\Facades\Activity;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CaptchaController;
+use App\Http\Controllers\Admin\DocumentSettingController;
 
 // Public routes
 Route::get('/', function () {
@@ -309,6 +310,12 @@ Route::middleware(['auth'])->group(function () {
                     // Show route
                     Route::get('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'show'])->name('show');
                 });
+
+                // Document Settings Routes
+                Route::middleware('permission:manage-documents')->group(function () {
+                    Route::get('/document-settings', [DocumentSettingController::class, 'index'])->name('document-settings.index');
+                    Route::put('/document-settings', [DocumentSettingController::class, 'update'])->name('document-settings.update');
+                });
             });
         });
     });
@@ -317,4 +324,7 @@ Route::middleware(['auth'])->group(function () {
 // Routes untuk dokumen preview dan download
 Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
 Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
+
+// Public Document Settings Route
+Route::get('/api/document-settings', [DocumentSettingController::class, 'getSettings'])->name('document-settings.get');
 

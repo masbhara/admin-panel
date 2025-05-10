@@ -158,9 +158,22 @@ const navigation = ref([
   },
   {
     name: 'Dokumen',
-    href: route('admin.documents.index'),
-    active: 'admin.documents.*',
     icon: DocumentTextIcon,
+    isOpen: true,
+    children: [
+      {
+        name: 'Daftar Dokumen',
+        href: route('admin.documents.index'),
+        active: 'admin.documents.*',
+        icon: DocumentDuplicateIcon,
+      },
+      {
+        name: 'Pengaturan Dokumen',
+        href: route('admin.document-settings.index'),
+        active: 'admin.document-settings.*',
+        icon: Cog6ToothIcon,
+      },
+    ],
   },
   {
     name: 'Manajemen',
