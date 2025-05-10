@@ -3,22 +3,22 @@
     <div class="py-6">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-6">
-          <h1 class="text-3xl font-semibold text-gray-900">Tambah Template Notifikasi WhatsApp</h1>
-          <p class="mt-1 text-sm text-gray-600">
+          <h1 class="text-3xl font-semibold text-gray-900 dark:text-white">Tambah Template Notifikasi WhatsApp</h1>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Buat template notifikasi WhatsApp baru yang akan dikirim ke pengguna.
           </p>
         </div>
 
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div class="p-6 bg-white border-b border-gray-200">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+          <div class="p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <form @submit.prevent="submit">
               <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-4">
-                  <InputLabel for="name" value="Nama Template" />
+                  <InputLabel for="name" value="Nama Template" class="text-gray-700 dark:text-gray-300" />
                   <TextInput
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     v-model="form.name"
                     required
                     autofocus
@@ -27,10 +27,10 @@
                 </div>
 
                 <div class="sm:col-span-4">
-                  <InputLabel for="event_type" value="Tipe Event" />
+                  <InputLabel for="event_type" value="Tipe Event" class="text-gray-700 dark:text-gray-300" />
                   <SelectInput
                     id="event_type"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     v-model="form.event_type"
                     required
                   >
@@ -44,16 +44,16 @@
                 </div>
 
                 <div class="sm:col-span-6">
-                  <InputLabel for="template" value="Template Pesan" />
+                  <InputLabel for="template" value="Template Pesan" class="text-gray-700 dark:text-gray-300" />
                   <textarea
                     id="template"
                     v-model="form.template"
                     rows="6"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                     required
                   ></textarea>
                   <InputError class="mt-2" :message="form.errors.template" />
-                  <p class="mt-2 text-sm text-gray-500">
+                  <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Gunakan variabel seperti {{name}}, {{file_name}}, {{status}}, dan {{uploaded_at}} dalam template Anda.
                   </p>
                 </div>
@@ -64,22 +64,22 @@
                       id="is_active"
                       type="checkbox"
                       v-model="form.is_active"
-                      class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 dark:text-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:bg-gray-700"
                     />
-                    <label for="is_active" class="ml-2 block text-sm text-gray-900">Aktifkan template</label>
+                    <label for="is_active" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Aktifkan template</label>
                   </div>
                 </div>
 
                 <div class="sm:col-span-6">
-                  <div class="bg-gray-50 p-4 rounded-md">
-                    <h3 class="text-sm font-medium text-gray-900">Variabel yang Tersedia</h3>
+                  <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md">
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">Variabel yang Tersedia</h3>
                     <div class="mt-2 grid grid-cols-1 gap-y-2 gap-x-4 sm:grid-cols-3">
                       <div v-for="(variable, index) in availableVariables" :key="index">
                         <div class="flex items-center">
-                          <span class="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                          <span class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
                             {{ variable.name }}
                           </span>
-                          <span class="ml-2 text-xs text-gray-500">{{ variable.description }}</span>
+                          <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">{{ variable.description }}</span>
                         </div>
                       </div>
                     </div>
@@ -90,7 +90,7 @@
               <div class="flex justify-end mt-6 space-x-3">
                 <Link
                   :href="route('admin.whatsapp-notifications.index')"
-                  class="inline-flex justify-center rounded-md border border-gray-300 py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                 >
                   Batal
                 </Link>
