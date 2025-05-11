@@ -150,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, watch, inject } from 'vue';
+import { ref, watch } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { 
   ArrowLeftIcon,
@@ -164,18 +164,24 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-
-// Inject route function dari plugin Ziggy
-const route = inject('route');
+import route from 'ziggy-js';
 
 const props = defineProps({
-  settings: Object,
+  settings: {
+    type: Object,
+    required: true,
+    default: () => ({
+      dripsender_api_key: { value: '' },
+      dripsender_webhook_url: { value: '' },
+      whatsapp_notification_enabled: { value: false }
+    })
+  },
   flash: Object,
 });
 
 // Watch flash messages dari server
 watch(() => props.flash, (newFlash) => {
-  if (newFlash.success) {
+  if (newFlash?.success) {
     showAlert.value = true;
     alertType.value = 'success';
     alertMessage.value = newFlash.success;
@@ -184,7 +190,7 @@ watch(() => props.flash, (newFlash) => {
     }, 5000);
   }
   
-  if (newFlash.error) {
+  if (newFlash?.error) {
     showAlert.value = true;
     alertType.value = 'error';
     alertMessage.value = newFlash.error;
@@ -200,10 +206,10 @@ const alertType = ref('success');
 const alertMessage = ref('');
 
 const form = useForm({
-  dripsender_api_key: props.settings.dripsender_api_key ? props.settings.dripsender_api_key.value : '',
-  dripsender_webhook_url: props.settings.dripsender_webhook_url ? props.settings.dripsender_webhook_url.value : '',
-  whatsapp_notification_enabled: props.settings.whatsapp_notification_enabled && 
-    (props.settings.whatsapp_notification_enabled.value == 1 || props.settings.whatsapp_notification_enabled.value === true),
+  dripsender_api_key: props.settings?.dripsender_api_key?.value || '',
+  dripsender_webhook_url: props.settings?.dripsender_webhook_url?.value || '',
+  whatsapp_notification_enabled: props.settings?.whatsapp_notification_enabled?.value === 1 || 
+    props.settings?.whatsapp_notification_enabled?.value === true || false,
 });
 
 const saveSettings = () => {
