@@ -167,7 +167,9 @@ class DocumentPreviewController extends Controller
         $filePath = $filePath ?? $document->file_path;
         $baseUrl = config('app.url');
         $fileUrl = Storage::url($filePath);
-        $publicUrl = $baseUrl . $fileUrl;
+        
+        // Pastikan URL tidak mengandung domain ganda
+        $publicUrl = $baseUrl . preg_replace('/^' . preg_quote($baseUrl, '/') . '/', '', $fileUrl);
         $encodedUrl = urlencode($publicUrl);
         
         // Cek apakah URL adalah localhost
@@ -186,7 +188,7 @@ class DocumentPreviewController extends Controller
         ]);
         
         // Google Docs Viewer
-        $googleViewerUrl = 'https://docs.google.com/viewer?url=' . $encodedUrl . '&embedded=true';
+        $googleViewerUrl = 'https://docs.google.com/viewerng/viewer?url=' . $encodedUrl . '&embedded=true';
         
         // Office Online Viewer
         $officeViewerUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' . $encodedUrl;
