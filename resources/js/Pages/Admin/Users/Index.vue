@@ -276,13 +276,38 @@ const cancelDelete = () => {
 
 const submitForm = () => {
   if (showEditModal.value) {
-    form.patch(route('admin.users.update', selectedUser.value.id), {
-      onSuccess: () => closeModal(),
-    })
+    // Gunakan axios.post dengan method spoofing PUT untuk update
+    const formData = {
+      _method: 'PUT',
+      name: form.name,
+      email: form.email,
+      roles: form.roles
+    };
+    
+    isProcessing.value = true;
+    
+    axios.post(route('admin.users.update', selectedUser.value.id), formData)
+      .then(response => {
+        closeModal();
+        window.location.reload();
+      })
+      .catch(error => {
+        if (error.response && error.response.data && error.response.data.errors) {
+          const errors = error.response.data.errors;
+          Object.keys(errors).forEach(key => {
+            form.errors[key] = errors[key][0];
+          });
+        } else {
+          console.error('Update error:', error);
+        }
+      })
+      .finally(() => {
+        isProcessing.value = false;
+      });
   } else {
     form.post(route('admin.users.store'), {
       onSuccess: () => closeModal(),
-    })
+    });
   }
 }
 
