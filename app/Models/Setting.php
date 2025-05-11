@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -11,19 +12,44 @@ use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model implements HasMedia
 {
-    use InteractsWithMedia, LogsActivity;
+    use HasFactory, InteractsWithMedia, LogsActivity;
 
     protected $fillable = [
         'key',
         'value',
         'group',
         'type',
-        'is_public'
+        'is_public',
     ];
 
     protected $casts = [
         'is_public' => 'boolean',
     ];
+
+    protected function getCastType($key)
+    {
+        if ($key === 'value' && $this->type === 'boolean') {
+            return 'boolean';
+        }
+        return parent::getCastType($key);
+    }
+
+    public function getValueAttribute($value)
+    {
+        if ($this->type === 'boolean') {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+        return $value;
+    }
+
+    public function setValueAttribute($value)
+    {
+        if ($this->type === 'boolean') {
+            $this->attributes['value'] = $value ? '1' : '0';
+        } else {
+            $this->attributes['value'] = $value;
+        }
+    }
 
     protected static function booted()
     {

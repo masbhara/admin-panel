@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Activity;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CaptchaController;
 use App\Http\Controllers\Admin\DocumentSettingController;
+use App\Http\Controllers\Admin\WhatsAppNotificationController;
 
 // Public routes
 Route::get('/', function () {
@@ -147,6 +148,14 @@ Route::middleware(['auth'])->group(function () {
             Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
                 Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
                 
+                // WhatsApp Notification routes
+                Route::prefix('whatsapp-notifications')->name('whatsapp-notifications.')->group(function () {
+                    Route::get('/', [WhatsAppNotificationController::class, 'index'])->name('index');
+                    Route::get('/settings', [WhatsAppNotificationController::class, 'settings'])->name('settings');
+                    Route::post('/settings', [WhatsAppNotificationController::class, 'updateSettings'])->name('settings.update');
+                    Route::post('/test-connection', [WhatsAppNotificationController::class, 'testConnection'])->name('test-connection');
+                });
+                
                 // Activities routes
                 Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
@@ -225,22 +234,6 @@ Route::middleware(['auth'])->group(function () {
                 
                 Route::middleware('permission:manage user status')->group(function () {
                     Route::post('users/{user}/status', [\App\Http\Controllers\Admin\UserController::class, 'updateStatus'])->name('users.updateStatus');
-                });
-                
-                // WhatsApp Notifications routes
-                Route::prefix('whatsapp-notifications')->name('whatsapp-notifications.')->group(function () {
-                    Route::get('/', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'index'])->name('index');
-                    Route::get('/settings', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'settings'])->name('settings');
-                    Route::post('/settings', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'updateSettings'])->name('settings.update');
-                    Route::post('/test-connection', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'testConnection'])->name('test-connection');
-                    Route::get('/create', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'create'])->name('create');
-                    Route::post('/', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'store'])->name('store');
-                    Route::get('/{whatsappNotification}/edit', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'edit'])->name('edit');
-                    Route::post('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'update']);
-                    Route::put('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'update'])->name('update');
-                    Route::patch('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'update']);
-                    Route::delete('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'destroy'])->name('destroy');
-                    Route::get('/{whatsappNotification}', [\App\Http\Controllers\Admin\WhatsappNotificationController::class, 'show'])->name('show');
                 });
                 
                 // Roles routes with middleware

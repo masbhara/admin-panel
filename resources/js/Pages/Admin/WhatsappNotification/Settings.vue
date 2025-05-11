@@ -5,7 +5,7 @@
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-3xl font-semibold text-gray-900 dark:text-white">Pengaturan Notifikasi WhatsApp</h1>
           <div class="flex space-x-3">
-            <Link :href="route('admin.whatsapp-notifications.index')" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+            <Link href="/admin/whatsapp-notifications" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
               <ArrowLeftIcon class="h-4 w-4 mr-2" />
               Kembali
             </Link>
@@ -164,7 +164,6 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import route from 'ziggy-js';
 
 const props = defineProps({
   settings: {
@@ -208,12 +207,11 @@ const alertMessage = ref('');
 const form = useForm({
   dripsender_api_key: props.settings?.dripsender_api_key?.value || '',
   dripsender_webhook_url: props.settings?.dripsender_webhook_url?.value || '',
-  whatsapp_notification_enabled: props.settings?.whatsapp_notification_enabled?.value === 1 || 
-    props.settings?.whatsapp_notification_enabled?.value === true || false,
+  whatsapp_notification_enabled: Boolean(props.settings?.whatsapp_notification_enabled?.value),
 });
 
 const saveSettings = () => {
-  form.post(route('admin.whatsapp-notifications.settings.update'), {
+  form.post('/admin/whatsapp-notifications/settings', {
     preserveScroll: true,
     onSuccess: () => {
       showAlert.value = true;
@@ -236,7 +234,7 @@ const saveSettings = () => {
 
 const testConnection = () => {
   testingConnection.value = true;
-  form.post(route('admin.whatsapp-notifications.test-connection'), {
+  form.post('/admin/whatsapp-notifications/test-connection', {
     preserveScroll: true,
     onSuccess: () => {
       showAlert.value = true;

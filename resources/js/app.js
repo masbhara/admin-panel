@@ -5,6 +5,7 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ThemePlugin from '@/Plugins/theme';
+import { ZiggyVue } from 'ziggy-js';
 
 // Import semua weight Manrope
 import '@fontsource/manrope/200.css';
@@ -35,6 +36,10 @@ createInertiaApp({
         
         app.use(plugin);
         app.use(ThemePlugin);
+        app.use(ZiggyVue, {
+            ...window.Ziggy,
+            location: window.location,
+        });
         
         // Mendaftarkan route helper global
         app.config.globalProperties.route = window.route;
