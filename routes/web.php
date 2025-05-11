@@ -296,7 +296,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // Document Settings Routes
-                Route::middleware('permission:manage-documents')->group(function () {
+                Route::middleware('permission:manage document settings')->group(function () {
                     Route::get('/document-settings', [DocumentSettingController::class, 'index'])->name('document-settings.index');
                     Route::put('/document-settings', [DocumentSettingController::class, 'update'])->name('document-settings.update');
                 });

@@ -62,6 +62,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit-documents',
             'delete-documents',
             'approve-documents',
+            
+            // Document Settings
+            'view document settings',
+            'create document settings',
+            'edit document settings',
+            'delete document settings',
+            'manage document settings',
         ];
 
         foreach ($permissions as $permission) {
