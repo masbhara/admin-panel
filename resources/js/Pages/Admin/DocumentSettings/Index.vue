@@ -8,6 +8,14 @@
           Pengaturan Waktu Pengumpulan Dokumen
         </h2>
 
+        <!-- Pesan sukses dan error -->
+        <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border border-green-200 text-green-800 rounded-lg">
+          {{ successMessage }}
+        </div>
+        <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-lg">
+          {{ errorMessage }}
+        </div>
+
         <form @submit.prevent="submit" class="space-y-6">
           <!-- Batas Waktu -->
           <div>
@@ -59,9 +67,15 @@
             <button
               type="submit"
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              :disabled="form.processing"
+              :disabled="isSubmitting"
             >
-              <span v-if="form.processing">Menyimpan...</span>
+              <span v-if="isSubmitting">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Menyimpan...
+              </span>
               <span v-else>Simpan Pengaturan</span>
             </button>
           </div>
@@ -78,6 +92,8 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Input from '@/Components/Forms/Input.vue';
 import Textarea from '@/Components/Forms/Textarea.vue';
 import Checkbox from '@/Components/Forms/Checkbox.vue';
+import axios from 'axios';
+import { ref } from 'vue';
 
 const props = defineProps({
   settings: {
@@ -98,7 +114,43 @@ const form = useForm({
   document_home_title: props.document_home_title || 'Pengiriman Dokumen Online',
 });
 
+const isSubmitting = ref(false);
+const successMessage = ref('');
+const errorMessage = ref('');
+
 const submit = () => {
-  form.put(route('admin.document-settings.update'));
+  isSubmitting.value = true;
+  successMessage.value = '';
+  errorMessage.value = '';
+  
+  // Gunakan axios.post dengan method spoofing PUT
+  axios.post(route('admin.document-settings.update'), {
+    _method: 'PUT',
+    submission_deadline: form.submission_deadline,
+    closed_message: form.closed_message,
+    is_active: form.is_active,
+    document_home_title: form.document_home_title
+  })
+  .then(response => {
+    successMessage.value = 'Pengaturan berhasil disimpan';
+    // Reset form errors
+    form.clearErrors();
+  })
+  .catch(error => {
+    errorMessage.value = 'Terjadi kesalahan saat menyimpan pengaturan';
+    
+    // Handle validation errors
+    if (error.response && error.response.data && error.response.data.errors) {
+      const errors = error.response.data.errors;
+      Object.keys(errors).forEach(key => {
+        form.errors[key] = errors[key][0];
+      });
+    }
+    
+    console.error('Error updating document settings:', error);
+  })
+  .finally(() => {
+    isSubmitting.value = false;
+  });
 };
 </script> 

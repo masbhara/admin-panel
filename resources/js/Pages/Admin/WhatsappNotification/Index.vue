@@ -125,6 +125,7 @@ import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import Pagination from '@/Components/Pagination.vue';
+import axios from 'axios';
 
 const props = defineProps({
   notifications: Object,
@@ -143,14 +144,21 @@ const confirmDelete = (notification) => {
 
 const deleteNotification = () => {
   isDeleting.value = true;
-  deleteForm.delete(route('admin.whatsapp-notifications.destroy', selectedNotification.value.id), {
-    onSuccess: () => {
-      deleteModalOpen.value = false;
-      isDeleting.value = false;
-    },
-    onError: () => {
-      isDeleting.value = false;
-    }
+  
+  // Gunakan axios.post dengan method spoofing DELETE
+  axios.post(route('admin.whatsapp-notifications.destroy', selectedNotification.value.id), {
+    _method: 'DELETE'
+  })
+  .then(response => {
+    deleteModalOpen.value = false;
+    // Reload halaman untuk memperbarui data
+    window.location.reload();
+  })
+  .catch(error => {
+    console.error('Error deleting notification:', error);
+  })
+  .finally(() => {
+    isDeleting.value = false;
   });
 };
 </script> 
