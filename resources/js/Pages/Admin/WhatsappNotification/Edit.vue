@@ -119,6 +119,7 @@ import TextInput from '@/Components/TextInput.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import axios from 'axios';
 
 const props = defineProps({
   notification: Object,
@@ -145,13 +146,23 @@ const submit = () => {
     form.variables = availableVariables.map(variable => variable.name.replace('{{', '').replace('}}', ''));
   }
   
-  form.post(`/admin/whatsapp-notifications/${props.notification.id}`, {
-    preserveScroll: true,
-    onSuccess: () => {
-      // Handle success if needed
-    },
-    headers: {
-      'X-HTTP-Method-Override': 'PATCH'
+  // Gunakan axios.post dengan method spoofing PUT
+  axios.post(`/admin/whatsapp-notifications/${props.notification.id}`, {
+    _method: 'PUT',
+    name: form.name,
+    template: form.template,
+    event_type: form.event_type,
+    is_active: form.is_active,
+    variables: form.variables,
+  })
+  .then(response => {
+    // Redirect ke halaman index dengan pesan sukses
+    window.location = route('admin.whatsapp-notifications.index');
+  })
+  .catch(error => {
+    if (error.response?.data?.errors) {
+      // Set form errors jika ada validasi error
+      form.setError(error.response.data.errors);
     }
   });
 };

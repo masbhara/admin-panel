@@ -34,6 +34,7 @@ class AddWhatsappNotificationPermissions extends Command
             'create_whatsapp_notifications',
             'edit_whatsapp_notifications',
             'delete_whatsapp_notifications',
+            'manage_whatsapp_settings',
         ];
 
         $createdPermissions = [];
