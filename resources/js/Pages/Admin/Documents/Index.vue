@@ -555,6 +555,7 @@ import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import ModalDialog from '@/Components/ModalDialog.vue';
+import axios from 'axios';
 
 const props = defineProps({
   documents: Object,
@@ -1007,11 +1008,18 @@ const updateDocumentStatus = (document, status) => {
 };
 
 const handleDelete = () => {
-  deleteForm.delete(route('admin.documents.destroy', documentToDelete.value.id), {
-    onSuccess: () => {
-      showDeleteModal.value = false;
-      documentToDelete.value = null;
-    },
+  axios.post(route('admin.documents.destroy', documentToDelete.value.id), {
+    _method: 'DELETE'
+  })
+  .then(response => {
+    showDeleteModal.value = false;
+    documentToDelete.value = null;
+    
+    // Reload halaman untuk memperbarui data
+    window.location.reload();
+  })
+  .catch(error => {
+    console.error('Error deleting document:', error);
   });
 };
 

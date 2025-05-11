@@ -65,64 +65,21 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Create roles and assign permissions
         // Super Admin has all permissions
-        $role = Role::create(['name' => 'super-admin']);
-        $role->givePermissionTo(Permission::all());
+        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
+        $superAdminRole->syncPermissions(Permission::all());
 
-        // Admin has most permissions except critical ones
-        $role = Role::create(['name' => 'admin']);
-        $role->givePermissionTo([
-            // Users
-            'view users',
-            'create users',
-            'edit users',
-            'delete users',
-            'manage user status',
-            
-            // Roles
-            'view roles',
-            'create roles',
-            'edit roles',
-            'delete roles',
-            
-            // Permissions
-            'view permissions',
-            'create permissions',
-            'edit permissions',
-            'delete permissions',
-            'assign permissions',
-            
-            // Activities
-            'view activities',
-            'manage activities',
-            
-            // Settings
-            'view settings',
-            'edit settings',
-            
-            // Profile
-            'edit profile',
-            'manage avatar',
-            
-            // Dashboard
-            'view dashboard',
-            'manage dashboard',
-            
-            // Documents
-            'view-documents',
-            'create-documents',
-            'edit-documents',
-            'delete-documents',
-            'approve-documents',
-        ]);
+        // Admin juga memiliki semua permission seperti super-admin
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole->syncPermissions(Permission::all());
 
         // Regular user has basic permissions
-        $role = Role::create(['name' => 'user']);
-        $role->givePermissionTo([
+        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $userRole->syncPermissions([
             'view activities',
             'edit profile',
             'manage avatar',

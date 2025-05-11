@@ -234,6 +234,7 @@ import { Head, useForm, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import Modal from '@/Components/Modal.vue'
 import Pagination from '@/Components/Pagination.vue'
+import axios from 'axios'
 
 const props = defineProps({
   users: Object,
@@ -302,26 +303,27 @@ const confirmDelete = () => {
     return
   }
   
-  // Gunakan method delete dari Inertia untuk menghapus user
-  router.delete(route('admin.users.destroy', userId), {
-    preserveScroll: true,
-    onSuccess: () => {
-      showDeleteModal.value = false
-      selectedUser.value = null
-    },
-    onError: (errors) => {
-      console.error('Delete errors:', errors)
-      if (typeof errors === 'string') {
-        errorMessage.value = errors
-      } else if (errors && errors.message) {
-        errorMessage.value = errors.message
-      } else {
-        errorMessage.value = 'Terjadi kesalahan saat menghapus pengguna.'
-      }
-    },
-    onFinish: () => {
-      isProcessing.value = false
+  // Gunakan axios.post dengan method spoofing DELETE yang lebih andal
+  axios.post(route('admin.users.destroy', userId), {
+    _method: 'DELETE'
+  })
+  .then(response => {
+    showDeleteModal.value = false
+    selectedUser.value = null
+    
+    // Reload halaman untuk memperbarui data
+    window.location.reload()
+  })
+  .catch(error => {
+    console.error('Delete errors:', error)
+    if (error.response && error.response.data && error.response.data.message) {
+      errorMessage.value = error.response.data.message
+    } else {
+      errorMessage.value = 'Terjadi kesalahan saat menghapus pengguna.'
     }
+  })
+  .finally(() => {
+    isProcessing.value = false
   })
 }
 

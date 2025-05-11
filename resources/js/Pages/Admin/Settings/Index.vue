@@ -89,7 +89,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useForm, usePage, router } from '@inertiajs/vue3'
+import { useForm, usePage } from '@inertiajs/vue3'
 import { useThemeClasses } from '@/Composables/useThemeClasses'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import GeneralSettings from './Partials/GeneralSettings.vue'
@@ -166,7 +166,7 @@ const handleThumbnailChange = (e) => {
 }
 
 const submitForm = () => {
-  form.post(router.route('admin.settings.update'), {
+  form.post(route('admin.settings.update'), {
     preserveScroll: true,
     onSuccess: () => {
       if (page.props.flash && page.props.flash.message && page.props.flash.message !== lastFlashMessage) {
