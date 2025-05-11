@@ -9,7 +9,7 @@ use App\Services\DripsenderService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class WhatsAppNotificationController extends Controller
+class WhatsappNotificationController extends Controller
 {
     protected $dripsenderService;
 
