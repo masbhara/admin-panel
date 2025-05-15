@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Models\User;
+use App\Notifications\DocumentSubmitted;
 use App\Services\WhatsappNotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class DocumentController extends Controller
 {
@@ -95,6 +98,20 @@ class DocumentController extends Controller
             activity()
                 ->performedOn($document)
                 ->log('uploaded by guest');
+
+            // Kirim notifikasi ke semua admin
+            $admins = User::whereHas('roles', function($query) {
+                $query->where('name', 'admin');
+            })->get();
+
+            // Buat objek sender untuk notifikasi
+            $sender = (object)[
+                'name' => $request->name ?: 'Pengunjung',
+                'id' => null
+            ];
+
+            // Kirim notifikasi ke semua admin dengan tipe yang benar
+            Notification::send($admins, new DocumentSubmitted($document, $sender));
 
             // Kirim notifikasi WhatsApp jika nomor tersedia
             if (!empty($request->whatsapp)) {

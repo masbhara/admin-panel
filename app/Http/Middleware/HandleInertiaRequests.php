@@ -34,9 +34,26 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $notifications = [];
+
+        if ($user) {
+            $isAdmin = $user->hasRole('admin');
+            $notifications = $user->notifications()
+                ->when($isAdmin, function($query) {
+                    return $query->where('type', 'App\\Notifications\\DocumentSubmitted');
+                })
+                ->when(!$isAdmin, function($query) {
+                    return $query->where('type', '!=', 'App\\Notifications\\DocumentSubmitted');
+                })
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+        }
+
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
@@ -50,6 +67,7 @@ class HandleInertiaRequests extends Middleware
                 'login' => fn () => !$request->user(),
                 'register' => fn () => !$request->user(),
             ],
+            'notifications' => $notifications,
         ]);
     }
 }

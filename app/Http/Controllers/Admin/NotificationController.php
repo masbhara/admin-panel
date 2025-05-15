@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,11 +12,11 @@ class NotificationController extends Controller
     {
         $user = auth()->user();
         $notifications = $user->notifications()
-            ->where('type', '!=', 'App\\Notifications\\DocumentSubmitted')
+            ->where('type', 'App\\Notifications\\DocumentSubmitted')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return Inertia::render('Notifications/Index', [
+        return Inertia::render('Admin/Notifications/Index', [
             'notifications' => $notifications
         ]);
     }

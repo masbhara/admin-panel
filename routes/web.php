@@ -118,7 +118,7 @@ Route::middleware(['auth'])->group(function () {
             // Activities route
             Route::get('/activities', [ActivityController::class, 'index'])->name('activities');
             
-            // Notifications routes
+            // User notifications
             Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
             Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
             Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
@@ -147,6 +147,12 @@ Route::middleware(['auth'])->group(function () {
             // Admin routes
             Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
                 Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+                
+                // Admin notifications
+                Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications');
+                Route::post('/notifications/{id}/mark-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+                Route::post('/notifications/mark-all-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+                Route::delete('/notifications/{id}', [App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('notifications.destroy');
                 
                 // WhatsApp Notification routes
                 Route::prefix('whatsapp-notifications')->name('whatsapp-notifications.')->middleware(['permission:view_whatsapp_notifications'])->group(function () {
