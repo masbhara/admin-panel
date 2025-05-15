@@ -326,10 +326,21 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-// Routes untuk dokumen preview dan download
+// Debugging: GET API untuk statistik dokumen
+Route::get('/api/document-stats', function() {
+    $stats = [
+        'total' => App\Models\Document::count(),
+        'approved' => App\Models\Document::where('status', 'approved')->count(),
+        'pending' => App\Models\Document::where('status', 'pending')->count(),
+        'rejected' => App\Models\Document::where('status', 'rejected')->count(),
+    ];
+    return response()->json($stats);
+});
+
+// Document preview & download routes
 Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
 Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
 
-// Public Document Settings Route
+// Document Settings API route for public access
 Route::get('/api/document-settings', [DocumentSettingController::class, 'getSettings'])->name('document-settings.get');
 

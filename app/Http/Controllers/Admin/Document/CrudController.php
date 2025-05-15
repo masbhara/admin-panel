@@ -52,9 +52,29 @@ class CrudController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // Hitung statistik dokumen
+        $stats = [
+            'total' => Document::count(),
+            'approved' => Document::where('status', 'approved')->count(),
+            'pending' => Document::where('status', 'pending')->count(),
+            'rejected' => Document::where('status', 'rejected')->count(),
+        ];
+
+        // Log statistik untuk debugging
+        \Log::info('Document Stats:', [
+            'stats' => $stats,
+            'total_documents' => $documents->total(),
+            'current_page' => $documents->currentPage(),
+            'per_page' => $perPage
+        ]);
+
+        // Tambahkan stats ke collection dokumen
+        $documents->stats = $stats;
+
         return Inertia::render('Admin/Documents/Index', [
             'documents' => $documents,
             'filters' => $request->only(['search', 'per_page']),
+            'stats' => $stats,
         ]);
     }
 

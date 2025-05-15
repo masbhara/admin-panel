@@ -711,6 +711,7 @@ import axios from 'axios';
 const props = defineProps({
   documents: Object,
   filters: Object,
+  stats: Object, // Tambahkan props stats
 });
 
 const page = usePage();
@@ -1286,25 +1287,12 @@ const resetSearch = () => {
 
 // Di bagian <script setup>, tambahkan computed properties
 const documentStats = computed(() => {
-  // DEBUG: Log semua data yang diterima
-  console.log('=== DEBUG STATISTIK DOKUMEN ===');
-  console.log('Raw props:', props);
-  console.log('Documents data:', props.documents);
-  console.log('Stats data:', props.documents?.stats);
-  console.log('=== END DEBUG ===');
-
-  const stats = props.documents?.stats;
-  const result = {
-    total: stats?.total ?? 0,
-    approved: stats?.approved ?? 0,
-    pending: stats?.pending ?? 0,
-    rejected: stats?.rejected ?? 0
+  return {
+    total: props.stats?.total ?? 0,
+    approved: props.stats?.approved ?? 0,
+    pending: props.stats?.pending ?? 0,
+    rejected: props.stats?.rejected ?? 0
   };
-
-  // DEBUG: Log hasil perhitungan
-  console.log('Hasil statistik:', result);
-  
-  return result;
 });
 
 // Tambahkan watch untuk debug perubahan props
