@@ -69,6 +69,79 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit document settings',
             'delete document settings',
             'manage document settings',
+
+            // WhatsApp Notifications - Updated to match route middleware
+            'view_whatsapp_notifications',
+            'create_whatsapp_notifications',
+            'edit_whatsapp_notifications',
+            'delete_whatsapp_notifications',
+            'manage_whatsapp_settings',
+            'send_whatsapp_notifications',
+
+            // Media Library
+            'view media',
+            'upload media',
+            'edit media',
+            'delete media',
+            'manage media',
+
+            // Logs
+            'view logs',
+            'manage logs',
+            'delete logs',
+
+            // Backups
+            'view backups',
+            'create backups',
+            'download backups',
+            'delete backups',
+
+            // API
+            'view api',
+            'manage api',
+            'create api tokens',
+            'revoke api tokens',
+
+            // Reports
+            'view reports',
+            'create reports',
+            'export reports',
+            'print reports',
+
+            // Indicators
+            'view indicators',
+            'create indicators',
+            'edit indicators',
+            'delete indicators',
+            'manage indicators',
+
+            // Templates
+            'view templates',
+            'create templates',
+            'edit templates',
+            'delete templates',
+            'manage templates',
+
+            // Comments
+            'view comments',
+            'create comments',
+            'edit comments',
+            'delete comments',
+            'manage comments',
+
+            // Categories
+            'view categories',
+            'create categories',
+            'edit categories',
+            'delete categories',
+            'manage categories',
+
+            // Tags
+            'view tags',
+            'create tags',
+            'edit tags',
+            'delete tags',
+            'manage tags',
         ];
 
         foreach ($permissions as $permission) {
@@ -93,6 +166,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view dashboard',
             'view-documents',
             'create-documents',
+            'view comments',
+            'create comments',
+            'edit comments',
+            'view templates',
+            'view categories',
+            'view tags',
         ]);
 
         // Assign super-admin role to user ID 1
