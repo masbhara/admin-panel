@@ -189,11 +189,15 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/export', [AdminDocumentExportController::class, 'export'])->name('export');
                     Route::get('/template', [AdminDocumentExportController::class, 'template'])->name('template');
                     
+                    // Import route
+                    Route::middleware('permission:create-documents')->group(function () {
+                        Route::post('/import', [AdminDocumentImportController::class, 'import'])->name('import');
+                    });
+                    
                     // Create
                     Route::middleware('permission:create-documents')->group(function () {
                         Route::get('/create', [AdminDocumentCrudController::class, 'create'])->name('create');
                         Route::post('/', [AdminDocumentCrudController::class, 'store'])->name('store');
-                        Route::post('/import', [AdminDocumentImportController::class, 'import'])->name('import');
                     });
                     
                     // Show
@@ -314,6 +318,9 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/document-settings', [DocumentSettingController::class, 'index'])->name('document-settings.index');
                     Route::put('/document-settings', [DocumentSettingController::class, 'update'])->name('document-settings.update');
                 });
+
+                // Bulk delete documents
+                Route::post('documents/bulk-destroy', [AdminDocumentCrudController::class, 'bulkDestroy'])->name('documents.bulk-destroy');
             });
         });
     });

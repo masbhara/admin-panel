@@ -11,102 +11,84 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Carbon\Carbon;
 
 class ExportController extends Controller
 {
     public function export(Request $request)
     {
         try {
-            // Set batas waktu eksekusi yang lebih lama untuk export besar
-            set_time_limit(300);
-            
-            // Query berdasarkan filter pencarian jika ada
-            $query = Document::query()
+            // Ambil data dokumen dengan filter jika ada
+            $documents = Document::query()
                 ->when($request->search, function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
                 })
-                ->with('user');
-                
-            // Untuk export yang lebih efisien, batasi jumlah records
-            $count = $query->count();
-            if ($count > 10000) {
-                return back()->with('error', 'Jumlah data terlalu banyak (lebih dari 10.000 records). Silakan gunakan filter pencarian untuk mempersempit data export.');
-            }
-            
-            // Ambil data
-            $documents = $query->get();
-            
+                ->with('user')
+                ->get();
+
             // Buat spreadsheet baru
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
-            
-            // Format header
+
+            // Set header kolom
+            $sheet->setCellValue('A1', 'Nama File Asli');
+            $sheet->setCellValue('B1', 'Pengirim');
+            $sheet->setCellValue('C1', 'WhatsApp Pengirim');
+            $sheet->setCellValue('D1', 'Asal Kota');
+            $sheet->setCellValue('E1', 'Deskripsi');
+            $sheet->setCellValue('F1', 'Tipe File');
+            $sheet->setCellValue('G1', 'Ukuran File');
+            $sheet->setCellValue('H1', 'Status');
+            $sheet->setCellValue('I1', 'Tanggal Upload');
+            $sheet->setCellValue('J1', 'Diproses Oleh');
+
+            // Style untuk header
             $headerStyle = [
                 'font' => [
                     'bold' => true,
-                    'color' => ['rgb' => '000000'],
                 ],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'EFEFEF'],
-                ],
-                'borders' => [
-                    'outline' => [
-                        'borderStyle' => Border::BORDER_THIN,
+                    'startColor' => [
+                        'rgb' => 'E2E8F0',
                     ],
                 ],
             ];
-            
-            $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
-            
-            // Set header kolom
-            $sheet->setCellValue('A1', 'Nama Dokumen');
-            $sheet->setCellValue('B1', 'Deskripsi');
-            $sheet->setCellValue('C1', 'Pengirim');
-            $sheet->setCellValue('D1', 'WhatsApp');
-            $sheet->setCellValue('E1', 'Asal Kota');
-            $sheet->setCellValue('F1', 'Status');
-            
-            // Sesuaikan lebar kolom
-            $sheet->getColumnDimension('A')->setWidth(40);
-            $sheet->getColumnDimension('B')->setWidth(50);
-            $sheet->getColumnDimension('C')->setWidth(25);
-            $sheet->getColumnDimension('D')->setWidth(15);
-            $sheet->getColumnDimension('E')->setWidth(20);
-            $sheet->getColumnDimension('F')->setWidth(15);
-            
-            // Isi data
+            $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
+
+            // Set data
             $row = 2;
             foreach ($documents as $document) {
-                // Ambil data metadata dengan safe navigation
-                $pengirim = $document->metadata['pengirim'] ?? '';
-                $whatsapp = $document->metadata['whatsapp'] ?? '';
-                $city = $document->metadata['city'] ?? '';
-                
-                // Jika pengirim tidak ada di metadata, coba ambil dari format lain
-                if (empty($pengirim)) {
-                    if (!empty($document->metadata['name'])) {
-                        $pengirim = $document->metadata['name'];
-                    } elseif (!empty($document->description) && strpos($document->description, 'pengunjung:') !== false) {
-                        $pengirim = trim(str_replace('Dari pengunjung:', '', $document->description));
-                    } elseif (!empty($document->user) && $document->user->name) {
-                        $pengirim = $document->user->name;
-                    }
+                // Format file size ke KB/MB
+                $fileSize = $document->file_size;
+                if ($fileSize >= 1024 * 1024) {
+                    $formattedSize = round($fileSize / (1024 * 1024), 2) . ' MB';
+                } else {
+                    $formattedSize = round($fileSize / 1024, 2) . ' KB';
                 }
-                
+
                 // Set nilai sel
-                $sheet->setCellValue('A' . $row, $document->name);
-                $sheet->setCellValue('B' . $row, $document->description);
-                $sheet->setCellValue('C' . $row, $pengirim);
-                $sheet->setCellValue('D' . $row, $whatsapp);
-                $sheet->setCellValue('E' . $row, $city);
-                $sheet->setCellValue('F' . $row, $document->status);
-                
+                $sheet->setCellValue('A' . $row, $document->file_name ?: $document->name);
+                $sheet->setCellValue('B' . $row, $document->metadata['pengirim'] ?? '');
+                $sheet->setCellValue('C' . $row, $document->metadata['whatsapp'] ?? '');
+                $sheet->setCellValue('D' . $row, $document->metadata['city'] ?? '');
+                $sheet->setCellValue('E' . $row, $document->description);
+                $sheet->setCellValue('F' . $row, $document->file_type);
+                $sheet->setCellValue('G' . $row, $formattedSize);
+                $sheet->setCellValue('H' . $row, $document->status);
+                $sheet->setCellValue('I' . $row, $document->uploaded_at ? Carbon::parse($document->uploaded_at)->format('d M Y') : '');
+                $sheet->setCellValue('J' . $row, $document->user ? $document->user->name : 'Sistem');
+
                 $row++;
             }
-            
-            // Simpan sebagai file CSV untuk performa yang lebih baik
+
+            // Auto-size columns
+            foreach (range('A', 'J') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+
+            // Simpan sebagai file CSV
             $filename = 'dokumen_export_' . date('Y-m-d_H-i-s') . '.csv';
             
             // Buat direktori temporary jika belum ada
@@ -117,7 +99,7 @@ class ExportController extends Controller
             
             $filePath = $tempDir . '/' . $filename;
             
-            // Gunakan writer CSV
+            // Gunakan writer CSV dengan pengaturan yang sesuai
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Csv($spreadsheet);
             $writer->setDelimiter(',');
             $writer->setEnclosure('"');
@@ -131,7 +113,6 @@ class ExportController extends Controller
                 ->withProperties(['count' => count($documents)])
                 ->log('exported documents to CSV');
             
-            // Return file untuk download
             return Response::download($filePath, $filename, [
                 'Content-Type' => 'text/csv',
             ])->deleteFileAfterSend(true);
@@ -145,61 +126,53 @@ class ExportController extends Controller
     public function template()
     {
         try {
-            // Buat spreadsheet dasar
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             
-            // Sesuaikan lebar kolom
-            $sheet->getColumnDimension('A')->setWidth(25);
-            $sheet->getColumnDimension('B')->setWidth(35);
-            $sheet->getColumnDimension('C')->setWidth(20);
-            $sheet->getColumnDimension('D')->setWidth(15);
-            $sheet->getColumnDimension('E')->setWidth(15);
-            $sheet->getColumnDimension('F')->setWidth(10);
+            // Set header kolom
+            $sheet->setCellValue('A1', 'Nama File Asli');
+            $sheet->setCellValue('B1', 'Pengirim');
+            $sheet->setCellValue('C1', 'WhatsApp Pengirim');
+            $sheet->setCellValue('D1', 'Asal Kota');
+            $sheet->setCellValue('E1', 'Deskripsi');
+            $sheet->setCellValue('F1', 'Tipe File');
+            $sheet->setCellValue('G1', 'Ukuran File');
+            $sheet->setCellValue('H1', 'Status');
+            $sheet->setCellValue('I1', 'Tanggal Upload');
+            $sheet->setCellValue('J1', 'Diproses Oleh');
             
-            // Format header
+            // Style untuk header
             $headerStyle = [
                 'font' => [
                     'bold' => true,
-                    'color' => ['rgb' => '000000'],
                 ],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'EFEFEF'],
-                ],
-                'borders' => [
-                    'outline' => [
-                        'borderStyle' => Border::BORDER_THIN,
+                    'startColor' => [
+                        'rgb' => 'E2E8F0',
                     ],
                 ],
             ];
+            $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
             
-            $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+            // Contoh data
+            $sheet->setCellValue('A2', 'Contoh-Dokumen-1.docx');
+            $sheet->setCellValue('B2', 'John Doe');
+            $sheet->setCellValue('C2', '081234567890');
+            $sheet->setCellValue('D2', 'Jakarta');
+            $sheet->setCellValue('E2', 'Ini adalah contoh dokumen pertama');
+            $sheet->setCellValue('F2', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+            $sheet->setCellValue('G2', '15.5 KB');
+            $sheet->setCellValue('H2', 'pending');
+            $sheet->setCellValue('I2', date('d M Y'));
+            $sheet->setCellValue('J2', 'Admin');
+
+            // Auto-size columns
+            foreach (range('A', 'J') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
             
-            // Tambahkan header
-            $sheet->setCellValue('A1', 'Nama Dokumen');
-            $sheet->setCellValue('B1', 'Deskripsi');
-            $sheet->setCellValue('C1', 'Pengirim');
-            $sheet->setCellValue('D1', 'WhatsApp');
-            $sheet->setCellValue('E1', 'Asal Kota');
-            $sheet->setCellValue('F1', 'Status');
-            
-            // Tambahkan contoh data
-            $sheet->setCellValue('A2', 'Contoh Dokumen 1');
-            $sheet->setCellValue('B2', 'Ini adalah contoh dokumen pertama');
-            $sheet->setCellValue('C2', 'John Doe');
-            $sheet->setCellValue('D2', '08123456789');
-            $sheet->setCellValue('E2', 'Jakarta');
-            $sheet->setCellValue('F2', 'pending');
-            
-            $sheet->setCellValue('A3', 'Contoh Dokumen 2');
-            $sheet->setCellValue('B3', 'Ini adalah contoh dokumen kedua');
-            $sheet->setCellValue('C3', 'Jane Smith');
-            $sheet->setCellValue('D3', '08987654321');
-            $sheet->setCellValue('E3', 'Surabaya');
-            $sheet->setCellValue('F3', 'approved');
-            
-            // Simpan sebagai CSV untuk performa yang lebih baik
+            // Simpan sebagai CSV
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Csv($spreadsheet);
             $writer->setDelimiter(',');
             $writer->setEnclosure('"');
@@ -221,7 +194,6 @@ class ExportController extends Controller
                 ->causedBy(auth()->user())
                 ->log('downloaded csv template');
             
-            // Header untuk download
             return Response::download($tempPath, $fileName, [
                 'Content-Type' => 'text/csv',
             ])->deleteFileAfterSend(true);

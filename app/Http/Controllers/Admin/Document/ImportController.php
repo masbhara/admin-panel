@@ -8,95 +8,192 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\Document;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class ImportController extends Controller
 {
     public function import(Request $request)
     {
         try {
-            // Log permulaan import
-            Log::info('Memulai proses import CSV');
+            // Pastikan direktori imported ada
+            if (!Storage::exists('public/imported')) {
+                Storage::makeDirectory('public/imported');
+            }
             
-            // Validasi file
-            $validationRules = [
+            // Log permulaan import dengan detail request
+            Log::info('=== MULAI PROSES IMPORT CSV ===', [
+                'user_id' => auth()->id(),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
+            // Validasi file dengan custom messages
+            $validator = Validator::make($request->all(), [
                 'file' => [
                     'required',
                     'file',
+                    'mimes:csv,txt',
                     'max:5120', // Max 5MB
                 ],
-            ];
-            
-            // Jalankan validasi
-            $request->validate($validationRules);
+            ], [
+                'file.required' => 'File CSV wajib diunggah.',
+                'file.file' => 'Upload harus berupa file yang valid.',
+                'file.mimes' => 'Format file tidak valid. Hanya file CSV atau TXT yang diperbolehkan.',
+                'file.max' => 'Ukuran file terlalu besar. Maksimal 5MB.',
+            ]);
+
+            if ($validator->fails()) {
+                Log::warning('Validasi import gagal', [
+                    'errors' => $validator->errors()->toArray()
+                ]);
+                throw new ValidationException($validator);
+            }
             
             $file = $request->file('file');
             
             // Verifikasi file secara manual
             if (!$file || !$file->isValid()) {
                 Log::error('File tidak valid atau kosong');
-                return redirect()->back()->withErrors(['file' => 'File tidak valid atau kosong.']);
+                throw ValidationException::withMessages([
+                    'file' => ['File tidak valid atau kosong.']
+                ]);
             }
             
-            // Cek ekstensi file secara manual dengan berbagai kemungkinan
-            $extension = strtolower($file->getClientOriginalExtension());
-            if (!in_array($extension, ['csv', 'txt'])) {
-                Log::error('Ekstensi file tidak valid: ' . $extension);
-                return redirect()->back()->withErrors(['file' => 'Format file tidak didukung. Hanya CSV atau TXT yang diperbolehkan.']);
-            }
-            
+            // Log informasi file
             $filePath = $file->getRealPath();
             $fileType = $file->getMimeType();
             $fileSize = $file->getSize();
+            $extension = strtolower($file->getClientOriginalExtension());
             
-            // Log informasi file dengan lebih detail
-            Log::info("File CSV diterima: {$file->getClientOriginalName()} ($fileSize bytes)");
-            Log::info("MIME Type: $fileType, Extension: $extension");
+            Log::info("Detail File CSV:", [
+                'name' => $file->getClientOriginalName(),
+                'size' => $fileSize,
+                'type' => $fileType,
+                'extension' => $extension,
+                'path' => $filePath
+            ]);
             
             // Set batas waktu eksekusi yang lebih lama untuk file besar
             set_time_limit(600); // 10 menit
             
             // Cek apakah file bisa dibaca
             if (!is_readable($filePath)) {
-                Log::error('File tidak dapat dibaca: ' . $filePath);
-                return redirect()->back()->withErrors(['file' => 'File tidak dapat dibaca.']);
+                Log::error('File tidak dapat dibaca', ['path' => $filePath]);
+                throw ValidationException::withMessages([
+                    'file' => ['File tidak dapat dibaca. Pastikan file tidak rusak.']
+                ]);
             }
             
-            // Coba baca file terlebih dahulu untuk memastikan formatnya benar
+            // Validasi format CSV
             try {
                 $fileHandle = fopen($filePath, 'r');
                 if ($fileHandle === false) {
                     throw new \Exception('Tidak dapat membuka file');
                 }
                 
-                // Coba baca baris pertama (header)
+                // Coba baca header
                 $header = fgetcsv($fileHandle, 0, ',', '"');
                 if ($header === false || count($header) < 2) {
                     fclose($fileHandle);
-                    Log::error('Format file CSV tidak valid atau kosong');
-                    return redirect()->back()->withErrors(['file' => 'Format file CSV tidak valid atau kosong. Pastikan file memiliki format yang benar.']);
+                    Log::error('Format CSV tidak valid', ['header' => $header]);
+                    throw ValidationException::withMessages([
+                        'file' => ['Format file CSV tidak valid. Pastikan file memiliki header dan data yang benar.']
+                    ]);
+                }
+                
+                // Validasi header minimal harus ada kolom nama
+                $hasNameColumn = false;
+                foreach ($header as $columnName) {
+                    $columnName = strtolower(trim($columnName));
+                    if (in_array($columnName, ['nama dokumen', 'nama', 'judul'])) {
+                        $hasNameColumn = true;
+                        break;
+                    }
+                }
+                
+                if (!$hasNameColumn) {
+                    fclose($fileHandle);
+                    Log::error('Header CSV tidak memiliki kolom nama');
+                    throw ValidationException::withMessages([
+                        'file' => ['File CSV harus memiliki kolom Nama Dokumen/Nama/Judul.']
+                    ]);
                 }
                 
                 fclose($fileHandle);
-                Log::info('File CSV valid, memiliki ' . count($header) . ' kolom');
+                Log::info('Validasi format CSV berhasil', ['columns' => count($header)]);
                 
             } catch (\Exception $e) {
-                Log::error('Error membaca file CSV: ' . $e->getMessage());
-                return redirect()->back()->withErrors(['file' => 'Gagal membaca file: ' . $e->getMessage()]);
+                Log::error('Error membaca file CSV', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw ValidationException::withMessages([
+                    'file' => ['Gagal membaca file: ' . $e->getMessage()]
+                ]);
             }
             
-            // Lanjutkan dengan proses import yang sesuai berdasarkan ukuran file
-            if ($fileSize > 1 * 1024 * 1024) { // Jika lebih dari 1MB
-                Log::info('Menggunakan metode import file besar untuk ' . $file->getClientOriginalName());
-                return $this->importLargeCSV($file);
+            // Mulai transaksi database
+            DB::beginTransaction();
+            
+            try {
+                // Pilih metode import berdasarkan ukuran file
+                if ($fileSize > 1 * 1024 * 1024) { // > 1MB
+                    Log::info('Menggunakan metode import file besar');
+                    $result = $this->importLargeCSV($file);
+                } else {
+                    Log::info('Menggunakan metode import file kecil');
+                    $result = $this->importSmallCSV($file);
+                }
+                
+                if ($result['imported'] > 0) {
+                    DB::commit();
+                    Log::info('Import CSV berhasil', [
+                        'total_imported' => $result['imported'],
+                        'errors' => $result['errors']
+                    ]);
+                    
+                    return redirect()
+                        ->back()
+                        ->with('success', $result['message'])
+                        ->with('importErrors', $result['errors'] ?? []);
+                } else {
+                    DB::rollBack();
+                    Log::warning('Import CSV tidak ada data yang diimport');
+                    throw ValidationException::withMessages([
+                        'file' => ['Tidak ada data yang berhasil diimport. Periksa format file CSV Anda.']
+                    ]);
+                }
+                    
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Error dalam proses import', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                throw ValidationException::withMessages([
+                    'file' => ['Terjadi kesalahan saat import: ' . $e->getMessage()]
+                ]);
             }
             
-            // Untuk file kecil, gunakan metode PhpSpreadsheet
-            return $this->importSmallCSV($file);
-            
+        } catch (ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+                
         } catch (\Exception $e) {
-            Log::error('Error dalam proses import: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            Log::error('Error tidak terduga dalam import', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()
+                ->back()
+                ->withErrors(['file' => 'Terjadi kesalahan yang tidak terduga: ' . $e->getMessage()])
+                ->withInput();
         }
     }
     
@@ -108,207 +205,160 @@ class ImportController extends Controller
         try {
             $filePath = $file->getRealPath();
             
-            Log::info('Memulai import file kecil: ' . $file->getClientOriginalName());
+            Log::info('=== MULAI IMPORT FILE KECIL ===');
+            Log::info('File: ' . $file->getClientOriginalName());
             
-            // Gunakan pembacaan CSV yang lebih efisien
-            try {
-                $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Csv');
-                $reader->setDelimiter(',');
-                $reader->setEnclosure('"');
-                $reader->setSheetIndex(0);
-                $reader->setReadDataOnly(true); // Hanya baca data, abaikan formatting
-                
-                Log::info('Mencoba membaca file CSV dengan PhpSpreadsheet');
-                $spreadsheet = $reader->load($filePath);
-                $worksheet = $spreadsheet->getActiveSheet();
-                $rows = $worksheet->toArray(null, true, false, true);
-                
-                Log::info('Berhasil membaca file CSV. Jumlah baris: ' . count($rows));
-                
-                // Log contoh beberapa baris pertama untuk debugging
-                if (count($rows) > 0) {
-                    Log::info('Contoh header: ' . json_encode(reset($rows)));
-                    
-                    // Log sampel baris data jika ada
-                    if (count($rows) > 1) {
-                        $sampleDataRow = array_values($rows)[1] ?? null;
-                        if ($sampleDataRow) {
-                            Log::info('Contoh baris data: ' . json_encode($sampleDataRow));
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('Error saat membaca file CSV: ' . $e->getMessage());
-                Log::error('Stack trace: ' . $e->getTraceAsString());
-                return redirect()->back()->withErrors(['file' => 'Gagal membaca file CSV: ' . $e->getMessage()]);
+            // Baca file CSV
+            $fileHandle = fopen($filePath, 'r');
+            if ($fileHandle === false) {
+                throw new \Exception('Tidak dapat membuka file untuk dibaca');
             }
             
-            // Header ada di baris pertama
-            $header = array_shift($rows);
-            Log::info('Header CSV: ' . json_encode($header));
+            // Baca header
+            $header = fgetcsv($fileHandle);
+            if ($header === false) {
+                fclose($fileHandle);
+                throw new \Exception('Tidak dapat membaca header CSV');
+            }
+            
+            Log::info('Header CSV:', ['columns' => $header]);
             
             // Mapping kolom dengan header
             $columnMap = [];
-            foreach ($header as $column => $columnName) {
+            foreach ($header as $index => $columnName) {
                 if (empty($columnName)) continue;
                 
                 $columnName = strtolower(trim($columnName));
                 
                 if (in_array($columnName, ['nama dokumen', 'nama', 'judul'])) {
-                    $columnMap['name'] = $column;
+                    $columnMap['name'] = $index;
                 } elseif (in_array($columnName, ['deskripsi', 'keterangan'])) {
-                    $columnMap['description'] = $column;
+                    $columnMap['description'] = $index;
                 } elseif (in_array($columnName, ['pengirim', 'nama pengirim'])) {
-                    $columnMap['pengirim'] = $column;
+                    $columnMap['pengirim'] = $index;
                 } elseif (in_array($columnName, ['whatsapp', 'no whatsapp', 'nomor whatsapp', 'telepon', 'hp'])) {
-                    $columnMap['whatsapp'] = $column;
+                    $columnMap['whatsapp'] = $index;
                 } elseif (in_array($columnName, ['asal kota', 'kota', 'kota asal'])) {
-                    $columnMap['city'] = $column;
+                    $columnMap['city'] = $index;
                 } elseif (in_array($columnName, ['status'])) {
-                    $columnMap['status'] = $column;
+                    $columnMap['status'] = $index;
                 }
             }
             
-            Log::info('Column mapping: ' . json_encode($columnMap));
+            Log::info('Column mapping:', $columnMap);
             
             // Validasi header minimal harus ada kolom nama
             if (!isset($columnMap['name'])) {
-                Log::warning('Import gagal: Tidak ada kolom Nama Dokumen');
-                return back()->withErrors(['file' => 'Format file tidak valid. Kolom Nama Dokumen wajib ada.']);
+                fclose($fileHandle);
+                throw new \Exception('Format file tidak valid. Kolom Nama Dokumen wajib ada.');
             }
             
-            // Gunakan transaksi database untuk efisiensi
-            Log::info('Memulai transaksi database');
-            DB::beginTransaction();
+            $imported = 0;
+            $errors = [];
+            $batch = [];
+            $batchSize = 100;
+            $rowNum = 1;
             
-            try {
-                $imported = 0;
-                $errors = [];
+            // Proses baris per baris
+            while (($row = fgetcsv($fileHandle)) !== false) {
+                $rowNum++;
                 
-                // Siapkan batch untuk insert yang lebih efisien
-                $batchSize = 100;
-                $batch = [];
+                // Skip baris kosong
+                if (empty(array_filter($row))) {
+                    continue;
+                }
                 
-                foreach ($rows as $rowIndex => $row) {
-                    $rowNum = $rowIndex + 1; // +1 karena array dimulai dari indexing alfanumerik dalam Excel
-                    
-                    // Skip baris kosong
-                    if (empty(array_filter($row))) {
-                        continue;
+                Log::info("Memproses baris {$rowNum}:", ['data' => $row]);
+                
+                $name = isset($columnMap['name']) && isset($row[$columnMap['name']]) ? 
+                        trim($row[$columnMap['name']]) : null;
+                
+                // Validasi nama tidak boleh kosong
+                if (empty($name)) {
+                    $errors[] = "Baris {$rowNum}: Nama dokumen tidak boleh kosong.";
+                    continue;
+                }
+                
+                // Siapkan metadata
+                $metadata = [];
+                
+                // Tambahkan metadata pengirim jika ada
+                if (isset($columnMap['pengirim']) && isset($row[$columnMap['pengirim']]) && !empty($row[$columnMap['pengirim']])) {
+                    $metadata['pengirim'] = trim($row[$columnMap['pengirim']]);
+                }
+                
+                // Tambahkan metadata whatsapp jika ada
+                if (isset($columnMap['whatsapp']) && isset($row[$columnMap['whatsapp']]) && !empty($row[$columnMap['whatsapp']])) {
+                    $metadata['whatsapp'] = trim($row[$columnMap['whatsapp']]);
+                }
+                
+                // Tambahkan metadata kota jika ada
+                if (isset($columnMap['city']) && isset($row[$columnMap['city']]) && !empty($row[$columnMap['city']])) {
+                    $metadata['city'] = trim($row[$columnMap['city']]);
+                }
+                
+                // Tentukan status (default: pending)
+                $status = 'pending';
+                if (isset($columnMap['status']) && isset($row[$columnMap['status']]) && !empty($row[$columnMap['status']])) {
+                    $statusValue = strtolower(trim($row[$columnMap['status']]));
+                    if (in_array($statusValue, ['pending', 'approved', 'rejected'])) {
+                        $status = $statusValue;
                     }
-                    
-                    $name = isset($columnMap['name']) && isset($row[$columnMap['name']]) ? 
-                            trim($row[$columnMap['name']]) : null;
-                    
-                    // Validasi nama tidak boleh kosong
-                    if (empty($name)) {
-                        $errors[] = "Baris {$rowNum}: Nama dokumen tidak boleh kosong.";
-                        continue;
-                    }
-                    
-                    // Siapkan metadata
-                    $metadata = [];
-                    
-                    // Tambahkan metadata pengirim jika ada
-                    if (isset($columnMap['pengirim']) && isset($row[$columnMap['pengirim']]) && !empty($row[$columnMap['pengirim']])) {
-                        $metadata['pengirim'] = trim($row[$columnMap['pengirim']]);
-                    }
-                    
-                    // Tambahkan metadata whatsapp jika ada
-                    if (isset($columnMap['whatsapp']) && isset($row[$columnMap['whatsapp']]) && !empty($row[$columnMap['whatsapp']])) {
-                        $metadata['whatsapp'] = trim($row[$columnMap['whatsapp']]);
-                    }
-                    
-                    // Tambahkan metadata kota jika ada
-                    if (isset($columnMap['city']) && isset($row[$columnMap['city']]) && !empty($row[$columnMap['city']])) {
-                        $metadata['city'] = trim($row[$columnMap['city']]);
-                    }
-                    
-                    // Tentukan status (default: pending)
-                    $status = 'pending';
-                    if (isset($columnMap['status']) && isset($row[$columnMap['status']]) && !empty($row[$columnMap['status']])) {
-                        $statusValue = strtolower(trim($row[$columnMap['status']]));
-                        if (in_array($statusValue, ['pending', 'approved', 'rejected'])) {
-                            $status = $statusValue;
-                        }
-                    }
-                    
-                    // Siapkan data dokumen
-                    $documentData = [
-                        'name' => $name,
-                        'description' => isset($columnMap['description']) && isset($row[$columnMap['description']]) ? 
-                                        trim($row[$columnMap['description']]) : null,
-                        'user_id' => auth()->id(),
-                        'file_path' => null, // Placeholder untuk dokumen tanpa file
-                        'file_name' => null,
-                        'file_size' => 0,
-                        'file_type' => null,
-                        'uploaded_at' => Carbon::now(),
-                        'status' => $status,
-                        'metadata' => $metadata,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    
-                    // Tambahkan ke batch
-                    $batch[] = $documentData;
+                }
+                
+                // Siapkan data dokumen
+                $documentData = [
+                    'name' => $name,
+                    'description' => isset($columnMap['description']) && isset($row[$columnMap['description']]) ? 
+                                    trim($row[$columnMap['description']]) : null,
+                    'user_id' => auth()->id(),
+                    'file_path' => 'imported/no-file.txt', // Default path untuk dokumen imported
+                    'file_name' => $name . '.txt', // Gunakan nama dokumen sebagai nama file
+                    'file_size' => 0, // Size 0 untuk dokumen tanpa file
+                    'file_type' => 'text/plain', // Default type untuk dokumen imported
+                    'uploaded_at' => Carbon::now(),
+                    'status' => $status,
+                    'metadata' => json_encode($metadata),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                Log::info("Data dokumen yang akan diinsert:", $documentData);
+                
+                try {
+                    // Insert langsung per baris untuk debugging
+                    Document::create($documentData);
                     $imported++;
                     
-                    // Jika batch sudah mencapai ukuran tertentu, insert ke database
-                    if (count($batch) >= $batchSize) {
-                        try {
-                            $this->handleBatchImport($batch);
-                            $batch = [];
-                        } catch (\Exception $e) {
-                            Log::error('Error saat inserting batch: ' . $e->getMessage());
-                            Log::error('Data batch yang gagal: ' . json_encode(array_slice($batch, 0, 2)) . '...');
-                            throw $e;
-                        }
-                    }
+                    Log::info("Berhasil insert dokumen: {$name}");
+                } catch (\Exception $e) {
+                    Log::error("Gagal insert dokumen: {$name}", [
+                        'error' => $e->getMessage(),
+                        'data' => $documentData
+                    ]);
+                    $errors[] = "Baris {$rowNum}: Gagal menyimpan dokumen - " . $e->getMessage();
+                    continue;
                 }
-                
-                // Insert sisa data yang belum di-batch
-                if (!empty($batch)) {
-                    try {
-                        $this->handleBatchImport($batch);
-                    } catch (\Exception $e) {
-                        Log::error('Error saat inserting remaining batch: ' . $e->getMessage());
-                        Log::error('Data batch yang gagal: ' . json_encode(array_slice($batch, 0, 2)) . '...');
-                        throw $e;
-                    }
-                }
-                
-                Log::info('Commit transaksi database');
-                DB::commit();
-                
-                // Log aktivitas
-                activity()
-                    ->causedBy(auth()->user())
-                    ->withProperties(['count' => $imported])
-                    ->log('imported documents from CSV');
-                
-                $message = "Berhasil mengimpor {$imported} dokumen.";
-                if (!empty($errors)) {
-                    $message .= " Terdapat " . count($errors) . " baris yang dilewati karena error.";
-                    
-                    // Tambahkan detail error ke session flash untuk ditampilkan
-                    session()->flash('importErrors', $errors);
-                }
-                
-                Log::info($message);
-                return redirect()->route('admin.documents.index')->with('success', $message);
-                
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Error dalam import CSV (kecil): ' . $e->getMessage());
-                Log::error('Stack trace: ' . $e->getTraceAsString());
-                return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan saat import: ' . $e->getMessage()]);
             }
+            
+            fclose($fileHandle);
+            
+            Log::info('=== IMPORT SELESAI ===', [
+                'total_imported' => $imported,
+                'total_errors' => count($errors)
+            ]);
+            
+            return [
+                'message' => "Berhasil mengimpor {$imported} dokumen" . 
+                            (!empty($errors) ? ". Terdapat " . count($errors) . " baris yang dilewati karena error." : "."),
+                'errors' => $errors,
+                'imported' => $imported
+            ];
             
         } catch (\Exception $e) {
             Log::error('Error dalam importSmallCSV: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan umum: ' . $e->getMessage()]);
+            throw new \Exception('Terjadi kesalahan saat import: ' . $e->getMessage());
         }
     }
     
@@ -359,157 +409,161 @@ class ImportController extends Controller
             // Validasi header minimal harus ada kolom nama
             if (!isset($columnMap['name'])) {
                 fclose($handle);
-                Log::warning('Import gagal: Tidak ada kolom Nama Dokumen di file besar');
-                return back()->withErrors(['file' => 'Format file tidak valid. Kolom Nama Dokumen wajib ada.']);
+                throw new \Exception('Format file tidak valid. Kolom Nama Dokumen wajib ada.');
             }
             
-            // Mulai transaksi database
-            DB::beginTransaction();
+            $batchSize = 100;
+            $batch = [];
+            $imported = 0;
+            $errors = [];
+            $rowNum = 1;
             
-            try {
-                $batchSize = 100;
-                $batch = [];
-                $imported = 0;
-                $errors = [];
-                $rowNum = 1;
+            // Proses baris per baris
+            while (($row = fgetcsv($handle, 0, ',', '"')) !== false) {
+                $rowNum++;
                 
-                // Proses baris per baris
-                while (($row = fgetcsv($handle, 0, ',', '"')) !== false) {
-                    $rowNum++;
-                    
-                    // Skip baris kosong
-                    if (empty(array_filter($row))) {
-                        continue;
+                // Skip baris kosong
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+                
+                $name = isset($columnMap['name']) && isset($row[$columnMap['name']]) ? 
+                        trim($row[$columnMap['name']]) : null;
+                
+                // Validasi nama tidak boleh kosong
+                if (empty($name)) {
+                    $errors[] = "Baris {$rowNum}: Nama dokumen tidak boleh kosong.";
+                    continue;
+                }
+                
+                // Siapkan metadata
+                $metadata = [];
+                
+                // Tambahkan metadata pengirim jika ada
+                if (isset($columnMap['pengirim']) && isset($row[$columnMap['pengirim']]) && !empty($row[$columnMap['pengirim']])) {
+                    $metadata['pengirim'] = trim($row[$columnMap['pengirim']]);
+                }
+                
+                // Tambahkan metadata whatsapp jika ada
+                if (isset($columnMap['whatsapp']) && isset($row[$columnMap['whatsapp']]) && !empty($row[$columnMap['whatsapp']])) {
+                    $metadata['whatsapp'] = trim($row[$columnMap['whatsapp']]);
+                }
+                
+                // Tambahkan metadata kota jika ada
+                if (isset($columnMap['city']) && isset($row[$columnMap['city']]) && !empty($row[$columnMap['city']])) {
+                    $metadata['city'] = trim($row[$columnMap['city']]);
+                }
+                
+                // Tentukan status (default: pending)
+                $status = 'pending';
+                if (isset($columnMap['status']) && isset($row[$columnMap['status']]) && !empty($row[$columnMap['status']])) {
+                    $statusValue = strtolower(trim($row[$columnMap['status']]));
+                    if (in_array($statusValue, ['pending', 'approved', 'rejected'])) {
+                        $status = $statusValue;
                     }
-                    
-                    $name = isset($columnMap['name']) && isset($row[$columnMap['name']]) ? 
-                            trim($row[$columnMap['name']]) : null;
-                    
-                    // Validasi nama tidak boleh kosong
-                    if (empty($name)) {
-                        $errors[] = "Baris {$rowNum}: Nama dokumen tidak boleh kosong.";
-                        continue;
-                    }
-                    
-                    // Siapkan metadata
-                    $metadata = [];
-                    
-                    // Tambahkan metadata pengirim jika ada
-                    if (isset($columnMap['pengirim']) && isset($row[$columnMap['pengirim']]) && !empty($row[$columnMap['pengirim']])) {
-                        $metadata['pengirim'] = trim($row[$columnMap['pengirim']]);
-                    }
-                    
-                    // Tambahkan metadata whatsapp jika ada
-                    if (isset($columnMap['whatsapp']) && isset($row[$columnMap['whatsapp']]) && !empty($row[$columnMap['whatsapp']])) {
-                        $metadata['whatsapp'] = trim($row[$columnMap['whatsapp']]);
-                    }
-                    
-                    // Tambahkan metadata kota jika ada
-                    if (isset($columnMap['city']) && isset($row[$columnMap['city']]) && !empty($row[$columnMap['city']])) {
-                        $metadata['city'] = trim($row[$columnMap['city']]);
-                    }
-                    
-                    // Tentukan status (default: pending)
-                    $status = 'pending';
-                    if (isset($columnMap['status']) && isset($row[$columnMap['status']]) && !empty($row[$columnMap['status']])) {
-                        $statusValue = strtolower(trim($row[$columnMap['status']]));
-                        if (in_array($statusValue, ['pending', 'approved', 'rejected'])) {
-                            $status = $statusValue;
+                }
+                
+                // Siapkan data dokumen
+                $documentData = [
+                    'name' => $name,
+                    'description' => isset($columnMap['description']) && isset($row[$columnMap['description']]) ? 
+                                    trim($row[$columnMap['description']]) : null,
+                    'user_id' => auth()->id(),
+                    'file_path' => 'imported/no-file.txt', // Default path untuk dokumen imported
+                    'file_name' => $name . '.txt', // Gunakan nama dokumen sebagai nama file
+                    'file_size' => 0, // Size 0 untuk dokumen tanpa file
+                    'file_type' => 'text/plain', // Default type untuk dokumen imported
+                    'uploaded_at' => Carbon::now(),
+                    'status' => $status,
+                    'metadata' => json_encode($metadata),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                // Tambahkan ke batch
+                $batch[] = $documentData;
+                $imported++;
+                
+                // Jika batch sudah mencapai ukuran tertentu, insert ke database
+                if (count($batch) >= $batchSize) {
+                    try {
+                        Document::insert($batch);
+                        Log::info("Berhasil insert batch dokumen, jumlah: " . count($batch));
+                    } catch (\Exception $e) {
+                        Log::error("Gagal insert batch dokumen", [
+                            'error' => $e->getMessage(),
+                            'batch_size' => count($batch)
+                        ]);
+                        // Coba insert satu per satu untuk menangani kasus partial failure
+                        foreach ($batch as $data) {
+                            try {
+                                Document::create($data);
+                                Log::info("Berhasil insert dokumen tunggal: {$data['name']}");
+                            } catch (\Exception $innerE) {
+                                Log::error("Gagal insert dokumen tunggal: {$data['name']}", [
+                                    'error' => $innerE->getMessage()
+                                ]);
+                                $errors[] = "Gagal menyimpan dokumen {$data['name']} - " . $innerE->getMessage();
+                                $imported--; // Kurangi counter karena gagal
+                            }
                         }
                     }
+                    $batch = [];
                     
-                    // Siapkan data dokumen
-                    $documentData = [
-                        'name' => $name,
-                        'description' => isset($columnMap['description']) && isset($row[$columnMap['description']]) ? 
-                                        trim($row[$columnMap['description']]) : null,
-                        'user_id' => auth()->id(),
-                        'file_path' => null, // Placeholder untuk dokumen tanpa file
-                        'file_name' => null,
-                        'file_size' => 0,
-                        'file_type' => null,
-                        'uploaded_at' => Carbon::now(),
-                        'status' => $status,
-                        'metadata' => $metadata,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    
-                    // Tambahkan ke batch
-                    $batch[] = $documentData;
-                    $imported++;
-                    
-                    // Jika batch sudah mencapai ukuran tertentu, insert ke database
-                    if (count($batch) >= $batchSize) {
-                        $this->handleBatchImport($batch);
-                        $batch = [];
-                        
-                        // Sedikit jeda untuk mengurangi beban CPU
-                        usleep(10000); // 10ms
-                    }
+                    // Sedikit jeda untuk mengurangi beban CPU
+                    usleep(10000); // 10ms
                 }
-                
-                // Proses sisa batch
-                if (!empty($batch)) {
-                    $this->handleBatchImport($batch);
-                }
-                
-                // Commit transaksi
-                DB::commit();
-                
-                // Tutup file
-                fclose($handle);
-                
-                // Log aktivitas
-                activity()
-                    ->causedBy(auth()->user())
-                    ->withProperties(['count' => $imported])
-                    ->log('imported documents from large CSV');
-                
-                $message = "Berhasil mengimpor {$imported} dokumen.";
-                if (!empty($errors)) {
-                    $message .= " Terdapat " . count($errors) . " baris yang dilewati karena error.";
-                    
-                    // Tambahkan detail error ke session flash untuk ditampilkan
-                    session()->flash('importErrors', $errors);
-                }
-                
-                Log::info($message);
-                return redirect()->route('admin.documents.index')->with('success', $message);
-                
-            } catch (\Exception $e) {
-                DB::rollBack();
-                if (isset($handle) && is_resource($handle)) {
-                    fclose($handle);
-                }
-                
-                Log::error('Error dalam import CSV (besar): ' . $e->getMessage());
-                Log::error('Stack trace: ' . $e->getTraceAsString());
-                return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan saat import file besar: ' . $e->getMessage()]);
             }
             
+            // Proses sisa batch
+            if (!empty($batch)) {
+                try {
+                    Document::insert($batch);
+                    Log::info("Berhasil insert sisa batch dokumen, jumlah: " . count($batch));
+                } catch (\Exception $e) {
+                    Log::error("Gagal insert sisa batch dokumen", [
+                        'error' => $e->getMessage(),
+                        'batch_size' => count($batch)
+                    ]);
+                    // Coba insert satu per satu untuk menangani kasus partial failure
+                    foreach ($batch as $data) {
+                        try {
+                            Document::create($data);
+                            Log::info("Berhasil insert dokumen tunggal: {$data['name']}");
+                        } catch (\Exception $innerE) {
+                            Log::error("Gagal insert dokumen tunggal: {$data['name']}", [
+                                'error' => $innerE->getMessage()
+                            ]);
+                            $errors[] = "Gagal menyimpan dokumen {$data['name']} - " . $innerE->getMessage();
+                            $imported--; // Kurangi counter karena gagal
+                        }
+                    }
+                }
+            }
+            
+            // Tutup file
+            fclose($handle);
+            
+            // Log aktivitas
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties(['count' => $imported])
+                ->log('imported documents from large CSV');
+            
+            return [
+                'message' => "Berhasil mengimpor {$imported} dokumen" . 
+                            (!empty($errors) ? ". Terdapat " . count($errors) . " baris yang dilewati karena error." : "."),
+                'errors' => $errors,
+                'imported' => $imported
+            ];
+            
         } catch (\Exception $e) {
+            if (isset($handle) && is_resource($handle)) {
+                fclose($handle);
+            }
             Log::error('Error dalam importLargeCSV: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-            return redirect()->back()->withErrors(['file' => 'Terjadi kesalahan umum dalam import file besar: ' . $e->getMessage()]);
+            throw new \Exception('Terjadi kesalahan saat import: ' . $e->getMessage());
         }
-    }
-    
-    /**
-     * Menangani insert batch dokumen ke database
-     */
-    private function handleBatchImport(array $batch)
-    {
-        // Persiapkan metadata untuk database
-        foreach ($batch as &$document) {
-            if (isset($document['metadata'])) {
-                $document['metadata'] = json_encode($document['metadata']);
-            }
-        }
-        
-        // Insert batch
-        Document::insert($batch);
-        
-        return true;
     }
 } 

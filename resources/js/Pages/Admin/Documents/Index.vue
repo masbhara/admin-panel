@@ -27,6 +27,15 @@
                   placeholder="Cari dokumen..." 
                   @keyup.enter="handleSearch"
                 />
+                <button 
+                  v-if="search"
+                  @click="resetSearch"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-secondary"
+                >
+                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
               </div>
 
               <div class="flex items-center gap-2">
@@ -45,7 +54,7 @@
                     class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                   >
                     <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-4 12V8m0 0l-4 4m4-4l4 4" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     Export
                   </button>
@@ -74,38 +83,73 @@
             <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="bg-white dark:bg-background-secondary p-4 rounded-lg border border-border-light shadow-sm">
                 <h3 class="text-sm font-medium text-text-secondary mb-1">Total Dokumen</h3>
-                <p class="text-2xl font-bold text-primary-600">{{ documents.total }}</p>
+                <p class="text-2xl font-bold text-primary-600">{{ documentStats.total }}</p>
               </div>
               <div class="bg-white dark:bg-background-secondary p-4 rounded-lg border border-border-light shadow-sm">
                 <h3 class="text-sm font-medium text-text-secondary mb-1">Dokumen Disetujui</h3>
-                <p class="text-2xl font-bold text-green-600">{{ documents.data.filter(doc => doc.status === 'approved').length }}</p>
+                <p class="text-2xl font-bold text-green-600">{{ documentStats.approved }}</p>
               </div>
               <div class="bg-white dark:bg-background-secondary p-4 rounded-lg border border-border-light shadow-sm">
                 <h3 class="text-sm font-medium text-text-secondary mb-1">Dokumen Pending</h3>
-                <p class="text-2xl font-bold text-yellow-600">{{ documents.data.filter(doc => doc.status === 'pending').length }}</p>
+                <p class="text-2xl font-bold text-yellow-600">{{ documentStats.pending }}</p>
               </div>
               <div class="bg-white dark:bg-background-secondary p-4 rounded-lg border border-border-light shadow-sm">
                 <h3 class="text-sm font-medium text-text-secondary mb-1">Dokumen Ditolak</h3>
-                <p class="text-2xl font-bold text-red-600">{{ documents.data.filter(doc => doc.status === 'rejected').length }}</p>
+                <p class="text-2xl font-bold text-red-600">{{ documentStats.rejected }}</p>
               </div>
             </div>
 
             <!-- Tabel dokumen -->
-            <div v-if="documents.data.length > 0" class="overflow-x-auto rounded-lg border border-border-light bg-background-primary shadow-sm relative mt-4">
+            <div v-if="props.documents.data.length > 0" class="overflow-x-auto rounded-lg border border-border-light bg-background-primary shadow-sm relative mt-4">
               <table class="min-w-full text-sm">
                 <thead class="bg-background-secondary dark:bg-background-tertiary">
                   <tr>
+                    <th scope="col" class="px-4 py-4 border-b border-border-light">
+                      <div class="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                          v-model="selectAll"
+                          @change="toggleSelectAll"
+                        />
+                        <span v-if="selectedDocuments.length > 0" class="text-sm text-text-secondary whitespace-nowrap">
+                          {{ selectedDocuments.length }} dari {{ props.documents.data.length }}
+                        </span>
+                      </div>
+                    </th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Nama Dokumen</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Pengirim</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">WhatsApp</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Asal Kota</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Status</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-text-primary uppercase tracking-wider border-b border-border-light">Tanggal Upload</th>
-                    <th scope="col" class="px-4 py-4 w-10 border-b border-border-light"><span class="sr-only">Aksi</span></th>
+                    <th scope="col" class="px-4 py-4 w-10 border-b border-border-light">
+                      <button
+                        v-if="selectedDocuments.length > 0"
+                        @click="confirmBulkDelete"
+                        class="inline-flex items-center justify-center p-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                        title="Hapus dokumen terpilih"
+                      >
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="document in documents.data" :key="document.id" class="border-b border-border-light last:border-0 bg-white dark:bg-background-secondary hover:bg-primary-50 dark:hover:bg-background-tertiary/60 transition-colors group">
+                  <tr v-for="document in props.documents.data" :key="document.id" class="border-b border-border-light last:border-0 bg-white dark:bg-background-secondary hover:bg-primary-50 dark:hover:bg-background-tertiary/60 transition-colors group">
+                    <td class="px-4 py-4">
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                          v-model="selectedDocuments"
+                          :value="document.id"
+                          @change="handleCheckboxChange"
+                        />
+                      </div>
+                    </td>
                     <td class="px-6 py-4 font-medium text-text-primary max-w-[220px] break-words group-hover:text-primary-700 dark:group-hover:text-primary-400">{{ document?.file_name || document?.name || 'Tanpa Nama' }}</td>
                     <td class="px-6 py-4 text-text-secondary break-words">{{ getPengirimName(document) }}</td>
                     <td class="px-6 py-4 text-text-secondary break-words">{{ document?.metadata?.whatsapp || '-' }}</td>
@@ -271,8 +315,74 @@
               </Link>
             </div>
 
+            <!-- Bulk Action Bar -->
+            <div v-if="selectedDocuments.length > 0" 
+                class="fixed bottom-0 inset-x-0 pb-6 z-50">
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-primary-600 rounded-lg shadow-lg px-6 py-4">
+                  <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex-1 flex items-center">
+                      <span class="text-white font-medium">
+                        {{ selectedDocuments.length }} dokumen dipilih
+                      </span>
+                    </div>
+                    <div class="flex-shrink-0 flex items-center gap-4">
+                      <button
+                        @click="confirmBulkDelete"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-600 focus:ring-white transition-colors"
+                      >
+                        <svg class="h-5 w-5 mr-2 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Hapus Dokumen Terpilih
+                      </button>
+                      <button
+                        @click="clearSelection"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-500 hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-600 focus:ring-white transition-colors"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Konfirmasi Bulk Delete Modal -->
+            <modal-dialog :show="showBulkDeleteModal" @close="showBulkDeleteModal = false">
+              <div class="p-6 bg-background-primary">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-medium leading-6 text-text-primary">
+                    Konfirmasi Hapus Dokumen
+                  </h3>
+                  <button @click="showBulkDeleteModal = false" class="text-text-tertiary hover:text-text-secondary transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm text-text-secondary mb-4">
+                  Anda akan menghapus {{ selectedDocuments.length }} dokumen. Aksi ini tidak dapat dibatalkan.
+                </p>
+                <div class="mt-6 flex justify-end gap-3">
+                  <button
+                    @click="showBulkDeleteModal = false"
+                    class="px-4 py-2 text-sm font-medium text-text-primary bg-background-secondary border border-border-light rounded-lg hover:bg-background-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    @click="executeBulkDelete"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                  >
+                    Ya, Hapus Dokumen
+                  </button>
+                </div>
+              </div>
+            </modal-dialog>
+
             <!-- Pagination dan Per-Page Options -->
-            <div v-if="documents.data.length > 0" class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div v-if="props.documents.data.length > 0" class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div class="flex items-center gap-2">
                 <label for="perPage" class="text-sm text-text-secondary">Tampilkan:</label>
                 <select 
@@ -286,9 +396,9 @@
                   <option :value="50">50</option>
                   <option :value="100">100</option>
                 </select>
-                <span class="text-sm text-text-secondary">dari {{ documents.total }} dokumen</span>
+                <span class="text-sm text-text-secondary">dari {{ props.documents.total }} dokumen</span>
               </div>
-              <Pagination :links="documents.links" />
+              <Pagination :links="props.documents.links" />
             </div>
           </div>
         </div>
@@ -426,6 +536,47 @@
           Unggah file CSV untuk mengimpor daftar dokumen. Format CSV memberikan performa import yang lebih cepat dan efisien.
         </p>
         
+        <!-- Debug Info Panel -->
+        <div v-if="$page.props.errors || $page.props.flash" class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
+          <h4 class="font-medium mb-2 text-text-primary">Debug Information:</h4>
+          
+          <!-- Request Info -->
+          <div class="mb-2">
+            <p class="text-text-secondary">Request Status:</p>
+            <pre class="mt-1 p-2 bg-gray-100 dark:bg-gray-900 rounded text-xs overflow-auto">
+              {{ JSON.stringify({
+                processing: importProcessing,
+                hasFile: !!importFile,
+                fileName: importFile?.name,
+                fileSize: importFile ? formatFileSize(importFile.size) : null,
+                fileType: importFile?.type
+              }, null, 2) }}
+            </pre>
+          </div>
+          
+          <!-- Error Messages -->
+          <div v-if="$page.props.errors" class="mb-2">
+            <p class="text-red-600 dark:text-red-400">Error Details:</p>
+            <pre class="mt-1 p-2 bg-gray-100 dark:bg-gray-900 rounded text-xs overflow-auto">
+              {{ JSON.stringify($page.props.errors, null, 2) }}
+            </pre>
+          </div>
+          
+          <!-- Flash Messages -->
+          <div v-if="$page.props.flash" class="mb-2">
+            <p class="text-text-secondary">Flash Messages:</p>
+            <pre class="mt-1 p-2 bg-gray-100 dark:bg-gray-900 rounded text-xs overflow-auto">
+              {{ JSON.stringify($page.props.flash, null, 2) }}
+            </pre>
+          </div>
+          
+          <!-- Import Errors -->
+          <div v-if="importError" class="mb-2">
+            <p class="text-red-600 dark:text-red-400">Import Error:</p>
+            <pre class="mt-1 p-2 bg-gray-100 dark:bg-gray-900 rounded text-xs overflow-auto">{{ importError }}</pre>
+          </div>
+        </div>
+
         <form @submit.prevent="submitImport" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-text-primary mb-1">
@@ -507,7 +658,7 @@
               :disabled="importProcessing"
             >
               <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               Download Template
             </a>
@@ -532,7 +683,7 @@
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <svg v-else class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 {{ importProcessing ? 'Mengimpor...' : 'Import' }}
               </button>
@@ -550,7 +701,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -561,6 +712,8 @@ const props = defineProps({
   documents: Object,
   filters: Object,
 });
+
+const page = usePage();
 
 const search = ref(props.filters.search || '');
 const showPreviewModal = ref(false);
@@ -888,26 +1041,45 @@ const submitImport = () => {
   importProcessing.value = true;
   importError.value = null;
   
+  // Debug log
+  console.log('=== DEBUG: Memulai proses import ===');
+  console.log('File info:', {
+    name: importFile.value.name,
+    size: formatFileSize(importFile.value.size),
+    type: importFile.value.type,
+    lastModified: new Date(importFile.value.lastModified).toISOString()
+  });
+  
   // Buat form data baru
   const form = new FormData();
   form.append('file', importFile.value);
+  
+  // Debug log form data
+  console.log('Form data entries:');
+  for (let [key, value] of form.entries()) {
+    console.log('- ', key, ':', value instanceof File ? `File(${value.name})` : value);
+  }
   
   // Gunakan router.post dari Inertia dengan penanganan error yang lebih baik
   router.post(route('admin.documents.import'), form, {
     forceFormData: true,
     preserveScroll: true,
     onBefore: () => {
-      console.log('Memulai proses import file:', importFile.value.name);
-      return true; // Lanjutkan proses
+      console.log('=== DEBUG: Mengirim request ke server ===');
+      console.log('Route:', route('admin.documents.import'));
+      return true;
     },
     onSuccess: (page) => {
+      console.log('=== DEBUG: Response sukses ===');
+      console.log('Page props:', page.props);
+      
       importProcessing.value = false;
       importFile.value = null;
       
-      // Gunakan optional chaining saat mengakses flash message
+      // Gunakan optional chaining untuk flash message
       const successMessage = page.props?.flash?.success;
       if (successMessage) {
-        console.log('Import berhasil:', successMessage);
+        console.log('Pesan sukses:', successMessage);
         // Tampilkan pesan sukses sebelum menutup modal
         setTimeout(() => {
           showImportModal.value = false;
@@ -915,17 +1087,21 @@ const submitImport = () => {
           router.reload({ only: ['documents'] });
         }, 1000);
       } else {
+        console.log('Import selesai tanpa pesan sukses');
         showImportModal.value = false;
         router.reload({ only: ['documents'] });
       }
     },
     onError: (errors) => {
-      importProcessing.value = false;
+      console.log('=== DEBUG: Response error ===');
       console.error('Import errors:', errors);
+      
+      importProcessing.value = false;
       
       // Tampilkan error dengan lebih spesifik
       if (errors.file) {
         importError.value = Array.isArray(errors.file) ? errors.file[0] : errors.file;
+        console.error('File error:', importError.value);
       } else if (Object.keys(errors).length > 0) {
         // Jika ada error lain, tampilkan error pertama
         const firstErrorKey = Object.keys(errors)[0];
@@ -933,21 +1109,32 @@ const submitImport = () => {
           ? errors[firstErrorKey][0] 
           : errors[firstErrorKey];
         importError.value = `Error pada ${firstErrorKey}: ${firstError}`;
+        console.error('Other error:', importError.value);
       } else {
         importError.value = 'Terjadi kesalahan yang tidak diketahui saat mengimpor data. Silahkan coba lagi.';
+        console.error('Unknown error');
       }
       
-      // Reset file input sehingga pengguna dapat mencoba lagi dengan file yang sama
+      // Reset file input untuk memungkinkan upload ulang file yang sama
       if (importFileInput.value) {
         importFileInput.value.value = '';
       }
     },
     onFinish: () => {
+      console.log('=== DEBUG: Request selesai ===');
+      
       // Jika masih processing setelah 1 menit, kemungkinan ada timeout
       const timeoutCheck = setTimeout(() => {
         if (importProcessing.value) {
+          console.error('Import timeout setelah 60 detik');
           importProcessing.value = false;
           importError.value = 'Waktu proses import terlalu lama. Silahkan coba lagi atau gunakan file yang lebih kecil.';
+          
+          // Reset form
+          if (importFileInput.value) {
+            importFileInput.value.value = '';
+          }
+          importFile.value = null;
         }
       }, 60000); // 1 menit
       
@@ -1045,4 +1232,86 @@ onMounted(() => {
     }
   }, { passive: true });
 });
+
+// Bulk selection state
+const selectedDocuments = ref([]);
+const selectAll = ref(false);
+const showBulkDeleteModal = ref(false);
+
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedDocuments.value = props.documents.data.map(doc => doc.id);
+  } else {
+    selectedDocuments.value = [];
+  }
+};
+
+const handleCheckboxChange = () => {
+  selectAll.value = selectedDocuments.value.length === props.documents.data.length;
+};
+
+// Watch perubahan pada documents untuk reset selection
+watch(() => props.documents.data, () => {
+  selectedDocuments.value = [];
+  selectAll.value = false;
+}, { deep: true });
+
+// Confirm bulk delete
+const confirmBulkDelete = () => {
+  showBulkDeleteModal.value = true;
+};
+
+// Execute bulk delete
+const executeBulkDelete = () => {
+  if (selectedDocuments.value.length === 0) return;
+
+  axios.post(route('admin.documents.bulk-destroy'), {
+    ids: selectedDocuments.value
+  }).then(() => {
+    showBulkDeleteModal.value = false;
+    window.location.reload();
+  });
+};
+
+const clearSelection = () => {
+  selectedDocuments.value = [];
+  selectAll.value = false;
+};
+
+// Tambahkan method resetSearch di bagian <script setup>
+const resetSearch = () => {
+  search.value = '';
+  handleSearch();
+};
+
+// Di bagian <script setup>, tambahkan computed properties
+const documentStats = computed(() => {
+  // DEBUG: Log semua data yang diterima
+  console.log('=== DEBUG STATISTIK DOKUMEN ===');
+  console.log('Raw props:', props);
+  console.log('Documents data:', props.documents);
+  console.log('Stats data:', props.documents?.stats);
+  console.log('=== END DEBUG ===');
+
+  const stats = props.documents?.stats;
+  const result = {
+    total: stats?.total ?? 0,
+    approved: stats?.approved ?? 0,
+    pending: stats?.pending ?? 0,
+    rejected: stats?.rejected ?? 0
+  };
+
+  // DEBUG: Log hasil perhitungan
+  console.log('Hasil statistik:', result);
+  
+  return result;
+});
+
+// Tambahkan watch untuk debug perubahan props
+watch(() => props.documents, (newVal, oldVal) => {
+  console.log('=== DOCUMENTS CHANGED ===');
+  console.log('Old value:', oldVal);
+  console.log('New value:', newVal);
+  console.log('=== END WATCH ===');
+}, { deep: true });
 </script> 

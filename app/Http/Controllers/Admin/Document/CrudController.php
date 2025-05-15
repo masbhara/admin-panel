@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Log;
 use App\Services\WhatsappNotificationService;
+use Illuminate\Support\Facades\DB;
 
 class CrudController extends Controller
 {
@@ -27,10 +28,26 @@ class CrudController extends Controller
         
         $documents = Document::query()
             ->when($request->search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                $query->where(function($q) use ($search) {
+                    // Pencarian di kolom utama
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhere('file_name', 'like', "%{$search}%")
+                      ->orWhere('file_type', 'like', "%{$search}%")
+                      ->orWhere('status', 'like', "%{$search}%");
+
+                    // Pencarian di metadata (JSON)
+                    $q->orWhereRaw("LOWER(JSON_EXTRACT(metadata, '$.pengirim')) LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(JSON_EXTRACT(metadata, '$.whatsapp')) LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(JSON_EXTRACT(metadata, '$.city')) LIKE ?", ['%' . strtolower($search) . '%']);
+
+                    // Pencarian berdasarkan user
+                    $q->orWhereHas('user', function($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%");
+                    });
+                });
             })
-            ->with('user') // Assuming documents are linked to users
+            ->with('user')
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
@@ -334,6 +351,72 @@ class CrudController extends Controller
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Bulk delete documents
+     */
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            $ids = $request->input('ids', []);
+            
+            if (empty($ids)) {
+                return response()->json([
+                    'message' => 'Tidak ada dokumen yang dipilih'
+                ], 400);
+            }
+
+            // Mulai transaksi
+            DB::beginTransaction();
+            
+            try {
+                // Ambil dokumen yang akan dihapus
+                $documents = Document::whereIn('id', $ids)->get();
+                $deletedCount = 0;
+                
+                foreach ($documents as $document) {
+                    // Hapus file fisik jika ada
+                    if ($document->file_path && Storage::exists($document->file_path)) {
+                        Storage::delete($document->file_path);
+                    }
+                    
+                    // Hapus file preview jika ada
+                    $previewPath = 'public/previews/' . pathinfo($document->file_path, PATHINFO_FILENAME) . '.pdf';
+                    if (Storage::exists($previewPath)) {
+                        Storage::delete($previewPath);
+                    }
+                    
+                    // Log aktivitas
+                    activity()
+                        ->causedBy(auth()->user())
+                        ->performedOn($document)
+                        ->log('deleted document in bulk operation');
+                        
+                    // Hapus dokumen
+                    $document->delete();
+                    $deletedCount++;
+                }
+                
+                DB::commit();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => $deletedCount . ' dokumen berhasil dihapus'
+                ]);
+                
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error bulk deleting documents: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghapus dokumen: ' . $e->getMessage()
+            ], 500);
         }
     }
 } 
