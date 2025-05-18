@@ -14,7 +14,7 @@ class DocumentSettingsController extends Controller
 {
     public function index()
     {
-        $settings = DocumentSetting::first() ?? new DocumentSetting();
+        $documentSettings = DocumentSetting::first() ?? new DocumentSetting();
         $documentHomeTitle = Setting::where('key', 'document_home_title')->first();
         
         // Tidak perlu mengambil pengaturan lagi, karena sudah disediakan
@@ -22,7 +22,7 @@ class DocumentSettingsController extends Controller
         Log::info('DocumentSettingsController: Loading index page');
         
         return Inertia::render('Admin/DocumentSettings/Index', [
-            'settings' => $settings,
+            'documentSettings' => $documentSettings,
             'document_home_title' => $documentHomeTitle ? $documentHomeTitle->value : 'Pengiriman Dokumen Online',
         ]);
     }

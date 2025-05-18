@@ -8,21 +8,6 @@
     </template>
 
     <div class="py-6">
-      <!-- Debug info -->
-      <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 mb-4">
-        <div class="p-4 bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300 rounded-lg">
-          <h3 class="font-bold">Debug Info:</h3>
-          <div>Document Settings tersedia: {{ $page.props.settings ? 'Ya' : 'Tidak' }}</div>
-          <div>App Settings tersedia: {{ $page.props.appSettings ? 'Ya' : 'Tidak' }}</div>
-          <div v-if="$page.props.appSettings">
-            <div>Logo: {{ $page.props.appSettings.logo || 'Tidak ada' }}</div>
-            <div>Site Title: {{ $page.props.appSettings.site_title || 'Tidak ada' }}</div>
-          </div>
-          <div>URL saat ini: {{ $page.url }}</div>
-          <div>Route saat ini: {{ route().current() }}</div>
-        </div>
-      </div>
-
       <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
           <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
@@ -122,11 +107,10 @@ import Input from '@/Components/Forms/Input.vue';
 import Textarea from '@/Components/Forms/Textarea.vue';
 import Checkbox from '@/Components/Forms/Checkbox.vue';
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const props = defineProps({
-  settings: {
+  documentSettings: {
     type: Object,
     required: true
   },
@@ -138,9 +122,9 @@ const props = defineProps({
 });
 
 const form = useForm({
-  submission_deadline: props.settings.formatted_submission_deadline || '',
-  closed_message: props.settings.closed_message || 'Maaf, waktu pengumpulan dokumen telah berakhir.',
-  is_active: props.settings.is_active ?? true,
+  submission_deadline: props.documentSettings.formatted_submission_deadline || '',
+  closed_message: props.documentSettings.closed_message || 'Maaf, waktu pengumpulan dokumen telah berakhir.',
+  is_active: props.documentSettings.is_active ?? true,
   document_home_title: props.document_home_title || 'Pengiriman Dokumen Online',
 });
 
@@ -183,11 +167,4 @@ const submit = () => {
     isSubmitting.value = false;
   });
 };
-
-// Debugging
-onMounted(() => {
-  console.log('Document Settings Page Props:', usePage().props);
-  console.log('Settings available:', usePage().props.settings);
-  console.log('Current route:', route().current());
-});
 </script> 
