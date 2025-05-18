@@ -9,10 +9,10 @@
         </h2>
 
         <!-- Pesan sukses dan error -->
-        <div v-if="successMessage" class="mb-4 p-4 bg-green-100 border border-green-200 text-green-800 rounded-lg">
+        <div v-if="successMessage" class="mb-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-300 rounded-lg">
           {{ successMessage }}
         </div>
-        <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-lg">
+        <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-300 rounded-lg">
           {{ errorMessage }}
         </div>
 
@@ -66,7 +66,7 @@
           <div class="flex justify-end">
             <button
               type="submit"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400 dark:focus:ring-primary-400 dark:ring-offset-gray-800"
               :disabled="isSubmitting"
             >
               <span v-if="isSubmitting">

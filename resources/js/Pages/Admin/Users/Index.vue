@@ -5,11 +5,11 @@
         <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
           <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
             <!-- Flash messages -->
-            <div v-if="$page.props.flash && $page.props.flash.success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+            <div v-if="$page.props.flash && $page.props.flash.success" class="mb-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative">
               <span class="block sm:inline">{{ $page.props.flash.success }}</span>
             </div>
             
-            <div v-if="$page.props.flash && $page.props.flash.error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <div v-if="$page.props.flash && $page.props.flash.error" class="mb-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative">
               <span class="block sm:inline">{{ $page.props.flash.error }}</span>
             </div>
             
@@ -25,26 +25,26 @@
             </div>
 
             <!-- Users Table -->
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
               <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-primary-700">
+                <thead class="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Nama
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Email
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Peran
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Aksi
                     </th>
                   </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-primary-600 divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr v-for="user in users.data" :key="user.id">
+                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr v-for="user in users.data" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">
                         <div class="h-10 w-10 flex-shrink-0">
@@ -55,39 +55,39 @@
                           />
                           <div
                             v-else
-                            class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-500 flex items-center justify-center"
+                            class="h-10 w-10 rounded-full bg-primary-100 dark:bg-gray-700 flex items-center justify-center"
                           >
-                            <span class="text-primary-600 dark:text-white font-medium text-sm">
+                            <span class="text-primary-600 dark:text-primary-400 font-medium text-sm">
                               {{ user.name.charAt(0).toUpperCase() }}
                             </span>
                           </div>
                         </div>
                         <div class="ml-4">
-                          <div class="text-sm font-medium text-gray-900 dark:text-white">
+                          <div class="text-sm font-medium text-gray-900 dark:text-gray-200">
                             {{ user.name }}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900 dark:text-white">{{ user.email }}</div>
+                      <div class="text-sm text-gray-900 dark:text-gray-200">{{ user.email }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex flex-wrap gap-1">
                         <span
                           v-for="role in user.roles"
                           :key="role.id"
-                          class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-500 dark:text-white"
+                          class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-gray-700 dark:text-primary-300"
                         >
                           {{ role.name }}
                         </span>
-                        <span v-if="user.roles.length === 0" class="text-gray-400 dark:text-gray-300 italic text-xs">Belum ada peran</span>
+                        <span v-if="user.roles.length === 0" class="text-gray-400 dark:text-gray-500 italic text-xs">Belum ada peran</span>
                       </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         @click="editUser(user)"
-                        class="text-primary-600 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-100 mr-3 font-medium"
+                        class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 mr-3 font-medium"
                       >
                         Edit
                       </button>
@@ -194,23 +194,23 @@
 
       <!-- Delete Confirmation Modal -->
       <Modal v-if="showDeleteModal" @close="cancelDelete" :paddingInner="false">
-        <div class="bg-gray-800 rounded-t-lg">
+        <div class="bg-gray-800 dark:bg-gray-900 rounded-t-lg">
           <div class="p-4 text-white">
             <h3 class="text-lg font-medium leading-6 text-white">Hapus Pengguna</h3>
             <p class="mt-2 text-sm text-gray-300">
               Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.
             </p>
-            <div v-if="errorMessage" class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <div v-if="errorMessage" class="mt-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative">
               <span class="block sm:inline">{{ errorMessage }}</span>
             </div>
           </div>
         </div>
-        <div class="bg-gray-800 rounded-b-lg px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700">
+        <div class="bg-gray-800 dark:bg-gray-900 rounded-b-lg px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-700 dark:border-gray-800">
           <button
             type="button"
             @click="confirmDelete"
             :disabled="isProcessing"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900 sm:ml-3 sm:w-auto sm:text-sm"
           >
             <span v-if="isProcessing">Memproses...</span>
             <span v-else>Hapus</span>
@@ -218,7 +218,7 @@
           <button
             type="button"
             @click="cancelDelete"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-500 shadow-sm px-4 py-2 bg-gray-800 text-base font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-500 shadow-sm px-4 py-2 bg-gray-800 dark:bg-gray-900 text-base font-medium text-gray-300 hover:bg-gray-700 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 dark:focus:ring-offset-gray-900 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
           >
             Batal
           </button>

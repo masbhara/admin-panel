@@ -6,8 +6,8 @@
         :checked="modelValue"
         type="checkbox"
         :class="[
-          'h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500',
-          error ? 'border-red-300' : '',
+          'h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700 dark:checked:bg-primary-500',
+          error ? 'border-red-300 dark:border-red-500' : '',
           className
         ]"
         :disabled="disabled"
@@ -17,14 +17,14 @@
       >
     </div>
     <div class="ml-3 text-sm">
-      <label v-if="label" :for="id" :class="['font-medium', disabled ? 'text-gray-400' : 'text-gray-700']">
+      <label v-if="label" :for="id" :class="['font-medium', disabled ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300']">
         {{ label }}
         <span v-if="required" class="text-red-500">*</span>
       </label>
-      <p v-if="description" :class="['text-gray-500', { 'mt-1': label }]">{{ description }}</p>
+      <p v-if="description" :class="['text-gray-500 dark:text-gray-400', { 'mt-1': label }]">{{ description }}</p>
     </div>
   </div>
-  <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
+  <p v-if="error" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
 </template>
 
 <script setup>

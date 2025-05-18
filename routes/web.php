@@ -282,6 +282,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
                     Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
                     Route::post('roles/toggle-permission', [RoleController::class, 'togglePermission'])->name('roles.toggle-permission');
+                    Route::post('roles/toggle-all-permissions', [RoleController::class, 'toggleAllPermissions'])->name('roles.toggle-all-permissions');
                 });
 
                 Route::middleware('permission:delete roles')->group(function () {

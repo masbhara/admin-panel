@@ -133,8 +133,6 @@ class RoleController extends Controller
 
     public function togglePermission(Request $request)
     {
-        $this->authorize('update', Role::class);
-        
         $request->validate([
             'role' => ['required', 'exists:roles,id'],
             'permission' => ['required', 'exists:permissions,id'],
@@ -143,6 +141,8 @@ class RoleController extends Controller
 
         $role = Role::findOrFail($request->role);
         $permission = Permission::findOrFail($request->permission);
+
+        $this->authorize('update', $role);
 
         if ($role->name === 'super-admin') {
             return back()->with('error', 'Super Admin role permissions cannot be modified.');
@@ -155,5 +155,37 @@ class RoleController extends Controller
         }
 
         return back()->with('message', 'Permission updated successfully.');
+    }
+
+    public function toggleAllPermissions(Request $request)
+    {
+        $request->validate([
+            'role' => ['required', 'exists:roles,id'],
+            'action' => ['required', 'in:give,revoke'],
+        ]);
+
+        $role = Role::findOrFail($request->role);
+        
+        $this->authorize('update', $role);
+        
+        if ($role->name === 'super-admin') {
+            return response()->json([
+                'message' => 'Super Admin role permissions cannot be modified.'
+            ], 422);
+        }
+
+        $permissions = Permission::all();
+        
+        if ($request->action === 'give') {
+            // Berikan semua permission
+            $role->syncPermissions($permissions);
+        } else {
+            // Cabut semua permission
+            $role->syncPermissions([]);
+        }
+
+        return response()->json([
+            'message' => 'Permissions updated successfully.'
+        ]);
     }
 }

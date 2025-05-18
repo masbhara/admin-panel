@@ -18,14 +18,14 @@
       leave-from-class="transform opacity-100 scale-100"
       leave-to-class="transform opacity-0 scale-95"
     >
-      <MenuItems class="absolute right-0 z-10 mt-2 w-80 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-        <div class="px-4 py-2 border-b border-gray-100">
+      <MenuItems class="absolute right-0 z-10 mt-2 w-80 origin-top-right rounded-md bg-white dark:bg-gray-800 py-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-medium text-gray-900">Notifikasi</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white">Notifikasi</h3>
             <button
               v-if="unreadCount > 0"
               @click="markAllAsRead"
-              class="text-xs font-medium text-primary-600 hover:text-primary-500"
+              class="text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
             >
               Tandai semua dibaca
             </button>
@@ -33,33 +33,33 @@
         </div>
 
         <div class="max-h-96 overflow-y-auto">
-          <div v-if="!notifications || notifications.length === 0" class="px-4 py-6 text-center">
-            <BellSlashIcon class="mx-auto h-8 w-8 text-gray-400" />
-            <p class="mt-1 text-sm text-gray-500">Tidak ada notifikasi</p>
+          <div v-if="!notificationList || notificationList.length === 0" class="px-4 py-6 text-center">
+            <BellSlashIcon class="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500" />
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tidak ada notifikasi</p>
           </div>
 
-          <MenuItem v-for="notification in notifications" :key="notification.id" v-slot="{ active }">
+          <MenuItem v-for="notification in notificationList" :key="notification.id" v-slot="{ active }">
             <div
               :class="[
-                active ? 'bg-gray-50' : '',
-                !notification.read_at ? 'bg-primary-50' : '',
+                active ? 'bg-gray-50 dark:bg-gray-700/50' : '',
+                !notification.read_at ? 'bg-primary-50 dark:bg-primary-900/20' : '',
                 'block px-4 py-3'
               ]"
             >
               <div class="flex items-start">
                 <div class="flex-shrink-0">
-                  <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-                    <DocumentIcon class="h-4 w-4 text-primary-600" />
+                  <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center">
+                    <DocumentIcon class="h-4 w-4 text-primary-600 dark:text-primary-400" />
                   </div>
                 </div>
                 <div class="ml-3 flex-1">
-                  <p class="text-sm font-medium text-gray-900">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
                     {{ notification.data?.sender_name || 'Pengirim tidak diketahui' }}
                   </p>
-                  <p class="mt-1 text-sm text-gray-500">
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">
                     {{ notification.data?.message || 'Tidak ada pesan' }}
                   </p>
-                  <p class="mt-1 text-xs text-gray-400">
+                  <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                     {{ formatTime(notification.data?.time) }}
                   </p>
                 </div>
@@ -67,13 +67,13 @@
                   <button
                     v-if="!notification.read_at"
                     @click.stop="markAsRead(notification.id)"
-                    class="text-primary-600 hover:text-primary-900"
+                    class="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300"
                   >
                     <CheckIcon class="h-4 w-4" />
                   </button>
                   <button
                     @click.stop="removeNotification(notification.id)"
-                    class="ml-2 text-gray-400 hover:text-gray-600"
+                    class="ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
                   >
                     <XMarkIcon class="h-4 w-4" />
                   </button>
@@ -83,10 +83,10 @@
           </MenuItem>
         </div>
 
-        <div class="border-t border-gray-100 px-4 py-2">
+        <div class="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
           <Link
             :href="notificationsRoute"
-            class="block text-center text-xs font-medium text-primary-600 hover:text-primary-500"
+            class="block text-center text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
           >
             Lihat semua notifikasi
           </Link>
@@ -105,7 +105,7 @@ import axios from 'axios'
 
 const props = defineProps({
   notifications: {
-    type: Array,
+    type: [Array, Object],
     default: () => [],
     required: false
   }
@@ -125,9 +125,16 @@ const getApiEndpoint = (endpoint) => {
   return `${prefix}${endpoint}`
 }
 
+// Convert notifications to array if needed
+const notificationList = computed(() => {
+  if (!props.notifications) return [];
+  if (Array.isArray(props.notifications)) return props.notifications;
+  if (props.notifications.data && Array.isArray(props.notifications.data)) return props.notifications.data;
+  return [];
+})
+
 const unreadCount = computed(() => {
-  if (!props.notifications) return 0
-  return props.notifications.filter(n => !n.read_at).length
+  return notificationList.value.filter(n => !n.read_at).length
 })
 
 const formatTime = (time) => {

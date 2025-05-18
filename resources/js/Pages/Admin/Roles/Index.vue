@@ -25,39 +25,39 @@
             </div>
 
             <!-- Roles Table -->
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
               <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-primary-700">
+                <thead class="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Name
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Permissions
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Users
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-primary-600 divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr v-for="role in roles.data" :key="role.id">
+                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr v-for="role in roles.data" :key="role.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm font-medium text-gray-900 dark:text-white">{{ role.name }}</div>
+                      <div class="text-sm font-medium text-gray-900 dark:text-gray-200">{{ role.name }}</div>
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex flex-wrap gap-1">
                         <span
                           v-for="permission in role.permissions"
                           :key="permission.id"
-                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-500 dark:text-white mb-1"
+                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-gray-700 dark:text-primary-300 mb-1"
                         >
                           {{ permission.name }}
                         </span>
-                        <span v-if="role.permissions.length === 0" class="text-gray-500 dark:text-gray-300 text-sm">No permissions</span>
+                        <span v-if="role.permissions.length === 0" class="text-gray-500 dark:text-gray-500 text-sm">No permissions</span>
                       </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -69,7 +69,7 @@
                       <Link
                         v-if="$page.props.can && $page.props.can.edit_roles && role.name !== 'super-admin'"
                         :href="route('admin.roles.edit', role)"
-                        class="text-primary-600 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-100 mr-3"
+                        class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 mr-3"
                       >
                         Edit
                       </Link>
@@ -96,16 +96,16 @@
 
       <!-- Delete Confirmation Modal -->
       <Modal v-if="showDeleteModal" @close="showDeleteModal = false">
-        <div class="p-6 bg-white dark:bg-primary-600">
+        <div class="p-6 bg-white dark:bg-gray-900">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">Delete Role</h3>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-300">
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Are you sure you want to delete this role? This action cannot be undone.
           </p>
           <div class="mt-6 flex justify-end">
             <button
               type="button"
               @click="showDeleteModal = false"
-              class="mr-3 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-white uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
+              class="mr-3 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-25 transition ease-in-out duration-150"
             >
               Cancel
             </button>
@@ -113,7 +113,7 @@
               type="button"
               @click="confirmDelete"
               :disabled="form.processing"
-              class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+              class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition ease-in-out duration-150"
             >
               Delete
             </button>
