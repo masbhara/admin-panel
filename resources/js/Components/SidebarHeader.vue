@@ -16,11 +16,21 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
-const settings = computed(() => page.props.settings || {})
+const settings = computed(() => {
+  // Log untuk debugging
+  console.log('SidebarHeader page props:', page.props);
+  console.log('SidebarHeader settings:', page.props.settings);
+  
+  return page.props.settings || {};
+})
+
+onMounted(() => {
+  console.log('SidebarHeader mounted, settings:', settings.value);
+})
 
 const getInitials = (text) => {
   return text

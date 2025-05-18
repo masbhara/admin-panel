@@ -27,8 +27,9 @@ use App\Models\Document;
 use Illuminate\Support\Facades\Activity;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CaptchaController;
-use App\Http\Controllers\Admin\DocumentSettingController;
+use App\Http\Controllers\Admin\DocumentSettingsController;
 use App\Http\Controllers\Admin\WhatsappNotificationController;
+use App\Http\Controllers\Admin\EmptyPageController;
 
 // Public routes
 Route::get('/', function () {
@@ -322,9 +323,12 @@ Route::middleware(['auth'])->group(function () {
 
                 // Document Settings Routes
                 Route::middleware('permission:manage document settings')->group(function () {
-                    Route::get('/document-settings', [DocumentSettingController::class, 'index'])->name('document-settings.index');
-                    Route::put('/document-settings', [DocumentSettingController::class, 'update'])->name('document-settings.update');
+                    Route::get('/document-settings', [DocumentSettingsController::class, 'index'])->name('document-settings.index');
+                    Route::put('/document-settings', [DocumentSettingsController::class, 'update'])->name('document-settings.update');
                 });
+                
+                // Empty Page Route - halaman kosong yang menduplikasi struktur documents
+                Route::get('/empty-page', [EmptyPageController::class, 'index'])->name('empty-page.index');
 
                 // Bulk delete documents
                 Route::post('documents/bulk-destroy', [AdminDocumentCrudController::class, 'bulkDestroy'])->name('documents.bulk-destroy');
@@ -349,5 +353,5 @@ Route::get('/documents/{document}/preview', [DocumentPreviewController::class, '
 Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
 
 // Document Settings API route for public access
-Route::get('/api/document-settings', [DocumentSettingController::class, 'getSettings'])->name('document-settings.get');
+Route::get('/api/document-settings', [DocumentSettingsController::class, 'getSettings'])->name('document-settings.get');
 

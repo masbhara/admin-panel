@@ -1,85 +1,114 @@
 <template>
-  <AdminLayout>
+  <AdminLayout title="Pengaturan Dokumen" :user="$page.props.auth?.user">
     <Head title="Pengaturan Dokumen" />
-    
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-          Pengaturan Waktu Pengumpulan Dokumen
-        </h2>
+    <template #header>
+      <h2 class="text-xl font-semibold leading-tight text-text-primary">
+        Pengaturan Dokumen
+      </h2>
+    </template>
 
-        <!-- Pesan sukses dan error -->
-        <div v-if="successMessage" class="mb-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-300 rounded-lg">
-          {{ successMessage }}
+    <div class="py-6">
+      <!-- Debug info -->
+      <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 mb-4">
+        <div class="p-4 bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300 rounded-lg">
+          <h3 class="font-bold">Debug Info:</h3>
+          <div>Document Settings tersedia: {{ $page.props.settings ? 'Ya' : 'Tidak' }}</div>
+          <div>App Settings tersedia: {{ $page.props.appSettings ? 'Ya' : 'Tidak' }}</div>
+          <div v-if="$page.props.appSettings">
+            <div>Logo: {{ $page.props.appSettings.logo || 'Tidak ada' }}</div>
+            <div>Site Title: {{ $page.props.appSettings.site_title || 'Tidak ada' }}</div>
+          </div>
+          <div>URL saat ini: {{ $page.url }}</div>
+          <div>Route saat ini: {{ route().current() }}</div>
         </div>
-        <div v-if="errorMessage" class="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-300 rounded-lg">
-          {{ errorMessage }}
+      </div>
+
+      <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="overflow-hidden bg-background-primary shadow-sm rounded-lg border border-border-light">
+          <div class="p-6 bg-background-secondary dark:bg-background-tertiary shadow-sm">
+            <!-- Flash Messages -->
+            <div v-if="$page.props.flash?.success" class="mb-6 p-4 bg-green-100 border border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-700 dark:text-green-300 rounded-lg">
+              {{ $page.props.flash.success }}
+            </div>
+            <div v-if="successMessage" class="mb-6 p-4 bg-green-100 border border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-700 dark:text-green-300 rounded-lg">
+              {{ successMessage }}
+            </div>
+            <div v-if="errorMessage" class="mb-6 p-4 bg-red-100 border border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-700 dark:text-red-300 rounded-lg">
+              {{ errorMessage }}
+            </div>
+
+            <form @submit.prevent="submit" class="space-y-6">
+              <div class="bg-white dark:bg-background-secondary p-6 rounded-lg border border-border-light shadow-sm">
+                <h3 class="text-lg font-semibold text-text-primary mb-4 dark:text-white">
+                  Pengaturan Waktu Pengumpulan Dokumen
+                </h3>
+
+                <!-- Batas Waktu -->
+                <div class="mb-4">
+                  <Input
+                    v-model="form.submission_deadline"
+                    type="datetime-local"
+                    label="Batas Waktu Pengumpulan"
+                    required
+                    :error="form.errors.submission_deadline"
+                  />
+                </div>
+
+                <!-- Pesan Ketika Ditutup -->
+                <div class="mb-4">
+                  <Textarea
+                    v-model="form.closed_message"
+                    label="Pesan Ketika Ditutup"
+                    required
+                    :error="form.errors.closed_message"
+                    placeholder="Masukkan pesan yang akan ditampilkan ketika waktu pengumpulan telah berakhir"
+                    rows="4"
+                  />
+                </div>
+
+                <!-- Status Aktif -->
+                <div class="mb-4">
+                  <Checkbox
+                    v-model="form.is_active"
+                    label="Aktifkan Pengumpulan Dokumen"
+                    :error="form.errors.is_active"
+                    description="Jika dinonaktifkan, form pengumpulan akan ditutup terlepas dari batas waktu"
+                  />
+                </div>
+
+                <!-- Judul Halaman Home -->
+                <div class="mb-4">
+                  <Input
+                    v-model="form.document_home_title"
+                    type="text"
+                    label="Judul Halaman Home (Public)"
+                    required
+                    :error="form.errors.document_home_title"
+                    placeholder="Masukkan judul halaman Home yang akan tampil di publik"
+                  />
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400 dark:focus:ring-primary-400 dark:ring-offset-gray-800 transition-colors"
+                  :disabled="isSubmitting"
+                >
+                  <span v-if="isSubmitting">
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Menyimpan...
+                  </span>
+                  <span v-else>Simpan Pengaturan</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-
-        <form @submit.prevent="submit" class="space-y-6">
-          <!-- Batas Waktu -->
-          <div>
-            <Input
-              v-model="form.submission_deadline"
-              type="datetime-local"
-              label="Batas Waktu Pengumpulan"
-              required
-              :error="form.errors.submission_deadline"
-            />
-          </div>
-
-          <!-- Pesan Ketika Ditutup -->
-          <div>
-            <Textarea
-              v-model="form.closed_message"
-              label="Pesan Ketika Ditutup"
-              required
-              :error="form.errors.closed_message"
-              placeholder="Masukkan pesan yang akan ditampilkan ketika waktu pengumpulan telah berakhir"
-              rows="4"
-            />
-          </div>
-
-          <!-- Status Aktif -->
-          <div>
-            <Checkbox
-              v-model="form.is_active"
-              label="Aktifkan Pengumpulan Dokumen"
-              :error="form.errors.is_active"
-              description="Jika dinonaktifkan, form pengumpulan akan ditutup terlepas dari batas waktu"
-            />
-          </div>
-
-          <!-- Judul Halaman Home -->
-          <div>
-            <Input
-              v-model="form.document_home_title"
-              type="text"
-              label="Judul Halaman Home (Public)"
-              required
-              :error="form.errors.document_home_title"
-              placeholder="Masukkan judul halaman Home yang akan tampil di publik"
-            />
-          </div>
-
-          <!-- Submit Button -->
-          <div class="flex justify-end">
-            <button
-              type="submit"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400 dark:focus:ring-primary-400 dark:ring-offset-gray-800"
-              :disabled="isSubmitting"
-            >
-              <span v-if="isSubmitting">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Menyimpan...
-              </span>
-              <span v-else>Simpan Pengaturan</span>
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </AdminLayout>
@@ -93,7 +122,8 @@ import Input from '@/Components/Forms/Input.vue';
 import Textarea from '@/Components/Forms/Textarea.vue';
 import Checkbox from '@/Components/Forms/Checkbox.vue';
 import axios from 'axios';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
   settings: {
@@ -153,4 +183,11 @@ const submit = () => {
     isSubmitting.value = false;
   });
 };
+
+// Debugging
+onMounted(() => {
+  console.log('Document Settings Page Props:', usePage().props);
+  console.log('Settings available:', usePage().props.settings);
+  console.log('Current route:', route().current());
+});
 </script> 

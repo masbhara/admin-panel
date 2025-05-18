@@ -169,11 +169,11 @@ const navigation = ref([
         icon: DocumentDuplicateIcon,
       },
       {
-        name: 'Pengaturan Waktu',
+        name: 'Pengaturan Dokumen',
         href: route('admin.document-settings.index'),
         active: 'admin.document-settings.*',
         icon: Cog6ToothIcon,
-      },
+      }
     ],
   },
   {
@@ -218,6 +218,12 @@ const navigation = ref([
     href: route('admin.whatsapp-notifications.index'),
     active: 'admin.whatsapp-notifications.*',
     icon: ChatBubbleLeftEllipsisIcon,
+  },
+  {
+    name: 'Halaman Kosong',
+    href: route('admin.empty-page.index'),
+    active: 'admin.empty-page.*',
+    icon: DocumentTextIcon,
   },
 ])
 

@@ -31,7 +31,8 @@ class AppServiceProvider extends ServiceProvider
         Inertia::share([
             'settings' => function () {
                 // Tambahkan logging untuk debugging
-                \Log::info('Sharing settings to Inertia');
+                $currentRoute = request()->route() ? request()->route()->getName() : 'unknown';
+                \Log::info("Sharing settings to Inertia for route: {$currentRoute}");
                 
                 return Cache::remember('app_settings', 3600, function () {
                     $settings = Setting::all()->mapWithKeys(function ($setting) {
