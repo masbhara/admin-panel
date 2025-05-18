@@ -290,7 +290,17 @@ const props = defineProps({
   successMessage: {
     type: String,
     default: ''
+  },
+  documentFormId: {
+    type: Number,
+    default: null
   }
+});
+
+// Logging untuk debugging
+console.log('DocumentForm component initialized with props:', {
+  documentFormId: props.documentFormId,
+  successMessage: props.successMessage
 });
 
 // Notification states
@@ -313,6 +323,17 @@ const touchedFields = ref({
   captcha: false
 });
 
+// Watch untuk successMessage dari props - otomatis tampilkan notif jika ada flash message
+watch(() => props.successMessage, (newVal) => {
+  if (newVal) {
+    showNotificationPopup(
+      'success', 
+      'Dokumen Berhasil Terkirim!', 
+      'Terima kasih! Dokumen Anda telah berhasil dikirim. Silakan periksa notifikasi WhatsApp Anda untuk informasi lebih lanjut.'
+    );
+  }
+}, { immediate: true }); // Tambah waktunya jadi 10 detik agar user punya waktu membaca
+
 // Show notification popup
 const showNotificationPopup = (type, title, message) => {
   notificationType.value = type;
@@ -320,10 +341,10 @@ const showNotificationPopup = (type, title, message) => {
   notificationMessage.value = message;
   showNotification.value = true;
   
-  // Auto close after 5 seconds
+  // Auto close after 8 seconds
   setTimeout(() => {
     showNotification.value = false;
-  }, 5000);
+  }, 10000); // Tambah waktunya jadi 10 detik agar user punya waktu membaca
 };
 
 const form = useForm({
@@ -562,12 +583,38 @@ const submitForm = () => {
     return;
   }
   
+  // Validasi document_form_id ada
+  if (!props.documentFormId) {
+    console.error('Error: document_form_id tidak tersedia');
+    showNotificationPopup('error', 'Gagal Mengirim', 'ID Form tidak tersedia. Silakan reload halaman dan coba lagi.');
+    return;
+  }
+  
   processing.value = true;
+  
+  // Tambahkan document_form_id ke form data
+  form.document_form_id = props.documentFormId;
+  console.log('Setting document_form_id:', props.documentFormId);
+  
+  console.log('Form data sebelum submit:', { 
+    name: form.name,
+    whatsapp: form.whatsapp,
+    city: form.city,
+    hasFile: !!form.file,
+    captcha: form.captcha?.length,
+    document_form_id: form.document_form_id
+  });
+
   form.post(route('public.documents.store'), {
     preserveScroll: true,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log('Form submission successful, response:', response);
       processing.value = false;
-      showNotificationPopup('success', 'Berhasil Terkirim', 'Dokumen Anda telah berhasil dikirim. Kami akan memprosesnya segera.');
+      showNotificationPopup(
+        'success', 
+        'Dokumen Berhasil Terkirim!', 
+        'Terima kasih! Dokumen Anda telah berhasil dikirim. Silakan periksa notifikasi WhatsApp Anda untuk informasi lebih lanjut.'
+      );
       form.reset();
       selectedFile.value = null;
       citySearch.value = '';
@@ -590,6 +637,8 @@ const submitForm = () => {
         errorMessage = errors.captcha;
       } else if (errors.file) {
         errorMessage = errors.file;
+      } else if (errors.document_form_id) {
+        errorMessage = errors.document_form_id;
       } else if (errors.error) {
         errorMessage = errors.error;
       }

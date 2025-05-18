@@ -163,10 +163,10 @@ const navigation = ref([
     isOpen: false,
     children: [
       {
-        name: 'Daftar Dokumen',
-        href: route('admin.documents.index'),
-        active: 'admin.documents.*',
-        icon: DocumentDuplicateIcon,
+        name: 'Form Dokumen',
+        href: route('admin.document-forms.index'),
+        active: 'admin.document-forms.*',
+        icon: DocumentTextIcon,
       },
       {
         name: 'Pengaturan Dokumen',

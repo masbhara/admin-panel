@@ -27,6 +27,7 @@ class Document extends Model implements HasMedia
         'file_size',
         'file_type',
         'user_id',
+        'document_form_id',
         'uploaded_at',
         'status',
         'metadata',
@@ -88,6 +89,14 @@ class Document extends Model implements HasMedia
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    
+    /**
+     * Get the document form this document belongs to.
+     */
+    public function documentForm()
+    {
+        return $this->belongsTo(DocumentForm::class);
     }
 
     /**

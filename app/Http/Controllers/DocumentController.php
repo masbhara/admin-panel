@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\DB;
 
 class DocumentController extends Controller
 {
@@ -44,12 +45,22 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         try {
+            // Log data request untuk debugging
+            Log::info('Document upload attempt with data:', [
+                'document_form_id' => $request->document_form_id,
+                'name' => $request->name,
+                'has_file' => $request->hasFile('file'),
+                'request_data' => $request->all(),
+            ]);
+
+            // Tambahkan validasi khusus: document_form_id wajib ada
             $request->validate([
                 'name' => 'required|string|max:255',
                 'whatsapp' => 'nullable|string|max:20',
                 'city' => 'nullable|string|max:255',
                 'file' => 'required|file|max:10240',
                 'captcha' => 'required|captcha_api:' . $request->captcha_key . ',default',
+                'document_form_id' => 'required|exists:document_forms,id', // Wajib ada
             ], [
                 'captcha.captcha_api' => 'Kode captcha tidak valid. Silakan coba lagi.',
                 'name.required' => 'Nama lengkap wajib diisi.',
@@ -58,9 +69,12 @@ class DocumentController extends Controller
                 'file.required' => 'File dokumen wajib diunggah.',
                 'file.file' => 'Tipe file tidak valid. Silakan unggah file dokumen.',
                 'file.max' => 'Ukuran file tidak boleh lebih dari 10MB.',
+                'document_form_id.required' => 'Form ID tidak valid. Silakan reload halaman.',
+                'document_form_id.exists' => 'Form dokumen tidak valid.',
             ]);
 
             if (!$request->hasFile('file')) {
+                Log::error('File missing in request');
                 return redirect()->back()
                     ->withInput()
                     ->withErrors(['file' => 'File dokumen wajib diupload']);
@@ -75,24 +89,62 @@ class DocumentController extends Controller
             // Log penyimpanan file untuk debugging
             Log::info('Public dokumen stored: ' . $fileName . ' at path: ' . $filePath);
 
-            // Simpan dokumen ke database
-            $document = Document::create([
-                'name' => $request->name,
-                'description' => 'Dari pengunjung: ' . ($request->name ?: 'Tidak disebutkan'),
-                'file_path' => $filePath,
-                'file_name' => $file->getClientOriginalName(),
-                'file_size' => $file->getSize(),
-                'file_type' => $file->getClientMimeType(),
-                'user_id' => auth()->check() ? auth()->id() : null,
-                'whatsapp_number' => $request->whatsapp,
-                'notification_sent' => false,
-                'metadata' => [
-                    'whatsapp' => $request->whatsapp,
-                    'city' => $request->city,
-                ],
-                'uploaded_at' => now(),
-                'status' => 'pending',
-            ]);
+            // Pastikan document_form_id ada dan valid
+            $documentFormId = $request->input('document_form_id');
+            Log::info('Using document_form_id for document: ' . $documentFormId);
+
+            // Ambil document form untuk keperluan logging dan validasi
+            $documentForm = \App\Models\DocumentForm::find($documentFormId);
+            if (!$documentForm) {
+                Log::error('Form dokumen dengan ID ' . $documentFormId . ' tidak ditemukan');
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['error' => 'Form dokumen tidak valid. Silakan coba lagi.']);
+            }
+            
+            Log::info('Found document form: ' . $documentForm->title . ' (ID: ' . $documentForm->id . ')');
+
+            // Tentukan user_id (menggunakan user id=1 jika tidak terautentikasi)
+            $userId = auth()->check() ? auth()->id() : 1;
+
+            // Simpan dokumen ke database dengan transaction untuk memastikan konsistensi
+            DB::beginTransaction();
+            try {
+                $document = Document::create([
+                    'name' => $request->name,
+                    'description' => 'Dari pengunjung: ' . ($request->name ?: 'Tidak disebutkan'),
+                    'file_path' => $filePath,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                    'file_type' => $file->getClientMimeType(),
+                    'user_id' => $userId,
+                    'document_form_id' => $documentFormId,
+                    'whatsapp_number' => $request->whatsapp,
+                    'notification_sent' => false,
+                    'metadata' => [
+                        'name' => $request->name,
+                        'whatsapp' => $request->whatsapp,
+                        'city' => $request->city,
+                        'form_title' => $documentForm->title,
+                        'form_slug' => $documentForm->slug,
+                    ],
+                    'uploaded_at' => now(),
+                    'status' => 'pending',
+                ]);
+
+                Log::info('Document created successfully:', [
+                    'id' => $document->id,
+                    'document_form_id' => $document->document_form_id,
+                    'form_title' => $documentForm->title,
+                    'form_slug' => $documentForm->slug
+                ]);
+                
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollback();
+                Log::error('Failed to save document: ' . $e->getMessage());
+                throw $e;
+            }
 
             // Log aktivitas
             activity()
@@ -130,10 +182,14 @@ class DocumentController extends Controller
                 }
             }
 
-            // Redirect dengan sukses
-            return redirect()->back()->with('success', 'Dokumen berhasil diunggah! Terima kasih.');
+            // Redirect dengan sukses dan flash message jelas
+            return redirect()->back()->with('success', 'Dokumen berhasil diunggah! Terima kasih atas pengiriman Anda.');
         } catch (\Exception $e) {
-            Log::error('Error uploading public document: ' . $e->getMessage());
+            Log::error('Error uploading public document: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => 'Terjadi kesalahan saat mengunggah dokumen: ' . $e->getMessage()]);

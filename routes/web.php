@@ -30,11 +30,20 @@ use App\Http\Controllers\CaptchaController;
 use App\Http\Controllers\Admin\DocumentSettingsController;
 use App\Http\Controllers\Admin\WhatsappNotificationController;
 use App\Http\Controllers\Admin\EmptyPageController;
+use App\Http\Controllers\Admin\DocumentFormController;
 
 // Public routes
 Route::get('/', function () {
     return Inertia::render('Public/Home');
 })->name('public.home');
+
+// Form dokumen dengan slug
+Route::get('/form/{slug}', function ($slug) {
+    $documentForm = \App\Models\DocumentForm::where('slug', $slug)->firstOrFail();
+    return Inertia::render('Public/DocumentForm', [
+        'documentForm' => $documentForm
+    ]);
+})->name('public.document-form');
 
 Route::post('/documents', [DocumentController::class, 'store'])->name('public.documents.store');
 
@@ -187,43 +196,8 @@ Route::middleware(['auth'])->group(function () {
                 // Activities routes
                 Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
-                // Documents routes
-                Route::prefix('documents')->name('documents.')->middleware('permission:view-documents')->group(function () {
-                    // Index
-                    Route::get('/', [AdminDocumentCrudController::class, 'index'])->name('index');
-                    
-                    // Export dan template - harus berada SEBELUM rute dengan parameter {document}
-                    Route::get('/export', [AdminDocumentExportController::class, 'export'])->name('export');
-                    Route::get('/template', [AdminDocumentExportController::class, 'template'])->name('template');
-                    
-                    // Import route
-                    Route::middleware('permission:create-documents')->group(function () {
-                        Route::post('/import', [AdminDocumentImportController::class, 'import'])->name('import');
-                    });
-                    
-                    // Create
-                    Route::middleware('permission:create-documents')->group(function () {
-                        Route::get('/create', [AdminDocumentCrudController::class, 'create'])->name('create');
-                        Route::post('/', [AdminDocumentCrudController::class, 'store'])->name('store');
-                    });
-                    
-                    // Show
-                    Route::get('/{document}', [AdminDocumentCrudController::class, 'show'])->name('show');
-                    
-                    // Edit
-                    Route::middleware('permission:edit-documents')->group(function () {
-                        Route::get('/{document}/edit', [AdminDocumentCrudController::class, 'edit'])->name('edit');
-                        Route::put('/{document}', [AdminDocumentCrudController::class, 'update'])->name('update');
-                        Route::patch('/{document}', [AdminDocumentCrudController::class, 'update']);
-                        Route::put('/{document}/status', [AdminDocumentCrudController::class, 'updateStatus'])->name('update-status');
-                        Route::post('/{document}/status', [AdminDocumentCrudController::class, 'updateStatus']);
-                    });
-                    
-                    // Delete
-                    Route::middleware('permission:delete-documents')->group(function () {
-                        Route::delete('/{document}', [AdminDocumentCrudController::class, 'destroy'])->name('destroy');
-                    });
-                });
+                // Activities routes - Old Documents routes have been removed, use DocumentForms instead
+                Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
                 // Components demo page
                 Route::get('/components-demo', function () {
@@ -327,25 +301,24 @@ Route::middleware(['auth'])->group(function () {
                     Route::put('/document-settings', [DocumentSettingsController::class, 'update'])->name('document-settings.update');
                 });
                 
+                // Document Forms Routes
+                Route::resource('document-forms', DocumentFormController::class);
+                Route::get('document-forms/{documentForm}/public-url', [DocumentFormController::class, 'getPublicUrl'])->name('document-forms.public-url');
+                
                 // Empty Page Route - halaman kosong yang menduplikasi struktur documents
                 Route::get('/empty-page', [EmptyPageController::class, 'index'])->name('empty-page.index');
-
-                // Bulk delete documents
-                Route::post('documents/bulk-destroy', [AdminDocumentCrudController::class, 'bulkDestroy'])->name('documents.bulk-destroy');
             });
         });
     });
 });
 
-// Debugging: GET API untuk statistik dokumen
-Route::get('/api/document-stats', function() {
-    $stats = [
-        'total' => App\Models\Document::count(),
-        'approved' => App\Models\Document::where('status', 'approved')->count(),
-        'pending' => App\Models\Document::where('status', 'pending')->count(),
-        'rejected' => App\Models\Document::where('status', 'rejected')->count(),
-    ];
-    return response()->json($stats);
+// Debugging: Route untuk melihat dokumen berdasarkan document_form_id
+Route::get('/api/document-forms/{documentFormId}/documents', function($documentFormId) {
+    $documents = App\Models\Document::where('document_form_id', $documentFormId)->get();
+    return response()->json([
+        'count' => $documents->count(),
+        'documents' => $documents
+    ]);
 });
 
 // Document preview & download routes
