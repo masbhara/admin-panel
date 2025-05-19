@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Document;
-use App\Models\WhatsappNotification;
+use App\Models\DocumentFormNotificationSetting;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Log;
 
@@ -17,19 +17,26 @@ class WhatsappNotificationService
     }
 
     /**
+     * Get notification settings for document form
+     */
+    protected function getFormNotificationSettings(Document $document): ?DocumentFormNotificationSetting
+    {
+        return DocumentFormNotificationSetting::where('document_form_id', $document->document_form_id)
+            ->where('whatsapp_notification_enabled', true)
+            ->first();
+    }
+
+    /**
      * Send notification for document upload
-     *
-     * @param Document $document
-     * @return array
      */
     public function sendDocumentUploadNotification(Document $document): array
     {
-        // Check if WhatsApp notification is enabled
-        $enabled = Setting::where('key', 'whatsapp_notification_enabled')->value('value');
-        if (!$enabled || $enabled === 'false' || $enabled === '0') {
+        // Get form notification settings
+        $settings = $this->getFormNotificationSettings($document);
+        if (!$settings) {
             return [
                 'success' => false,
-                'message' => 'Notifikasi WhatsApp tidak diaktifkan'
+                'message' => 'Notifikasi WhatsApp tidak diaktifkan untuk form ini'
             ];
         }
 
@@ -50,10 +57,7 @@ class WhatsappNotificationService
         }
 
         // Get notification template
-        $template = WhatsappNotification::where('event_type', 'document_uploaded')
-            ->where('is_active', true)
-            ->first();
-
+        $template = $settings->getTemplate('document_uploaded');
         if (!$template) {
             return [
                 'success' => false,
@@ -70,12 +74,13 @@ class WhatsappNotificationService
         ];
 
         // Parse template
-        $message = $template->parseTemplate($data);
+        $message = $this->parseTemplate($template['template'], $data);
 
         // Format phone number (ensure it starts with 62)
         $phone = $this->formatPhoneNumber($document->whatsapp_number);
 
-        // Send WhatsApp notification
+        // Send WhatsApp notification using form's API key
+        $this->dripsenderService->setApiKey($settings->dripsender_api_key);
         $result = $this->dripsenderService->sendMessage($phone, $message);
 
         if ($result['success']) {
@@ -88,10 +93,107 @@ class WhatsappNotificationService
     }
 
     /**
+     * Send notification for document approval
+     */
+    public function sendDocumentApprovalNotification(Document $document): array
+    {
+        // Get form notification settings
+        $settings = $this->getFormNotificationSettings($document);
+        if (!$settings) {
+            return [
+                'success' => false,
+                'message' => 'Notifikasi WhatsApp tidak diaktifkan untuk form ini'
+            ];
+        }
+
+        // Check if document has WhatsApp number
+        if (empty($document->whatsapp_number)) {
+            return [
+                'success' => false,
+                'message' => 'Dokumen tidak memiliki nomor WhatsApp'
+            ];
+        }
+
+        // Get notification template
+        $template = $settings->getTemplate('document_approved');
+        if (!$template) {
+            return [
+                'success' => false,
+                'message' => 'Template notifikasi tidak ditemukan'
+            ];
+        }
+
+        // Prepare data for template parsing
+        $data = [
+            'name' => $document->name,
+            'file_name' => $document->file_name,
+            'status' => $document->status,
+            'uploaded_at' => $document->uploaded_at->format('d-m-Y H:i:s'),
+        ];
+
+        // Parse template
+        $message = $this->parseTemplate($template['template'], $data);
+
+        // Format phone number (ensure it starts with 62)
+        $phone = $this->formatPhoneNumber($document->whatsapp_number);
+
+        // Send WhatsApp notification using form's API key
+        $this->dripsenderService->setApiKey($settings->dripsender_api_key);
+        return $this->dripsenderService->sendMessage($phone, $message);
+    }
+
+    /**
+     * Send notification for document rejection
+     */
+    public function sendDocumentRejectionNotification(Document $document): array
+    {
+        // Get form notification settings
+        $settings = $this->getFormNotificationSettings($document);
+        if (!$settings) {
+            return [
+                'success' => false,
+                'message' => 'Notifikasi WhatsApp tidak diaktifkan untuk form ini'
+            ];
+        }
+
+        // Check if document has WhatsApp number
+        if (empty($document->whatsapp_number)) {
+            return [
+                'success' => false,
+                'message' => 'Dokumen tidak memiliki nomor WhatsApp'
+            ];
+        }
+
+        // Get notification template
+        $template = $settings->getTemplate('document_rejected');
+        if (!$template) {
+            return [
+                'success' => false,
+                'message' => 'Template notifikasi tidak ditemukan'
+            ];
+        }
+
+        // Prepare data for template parsing
+        $data = [
+            'name' => $document->name,
+            'file_name' => $document->file_name,
+            'status' => $document->status,
+            'uploaded_at' => $document->uploaded_at->format('d-m-Y H:i:s'),
+        ];
+
+        // Parse template
+        $message = $this->parseTemplate($template['template'], $data);
+
+        // Format phone number (ensure it starts with 62)
+        $phone = $this->formatPhoneNumber($document->whatsapp_number);
+
+        // Send WhatsApp notification using form's API key
+        $this->dripsenderService->setApiKey($settings->dripsender_api_key);
+        return $this->dripsenderService->sendMessage($phone, $message);
+    }
+
+    /**
      * Format phone number to ensure it starts with 62
-     *
-     * @param string $phone
-     * @return string
      */
     private function formatPhoneNumber(string $phone): string
     {
@@ -112,112 +214,14 @@ class WhatsappNotificationService
     }
 
     /**
-     * Send notification for document approval
-     *
-     * @param Document $document
-     * @return array
+     * Parse template with variables
      */
-    public function sendDocumentApprovalNotification(Document $document): array
+    private function parseTemplate(string $template, array $data): string
     {
-        // Check if WhatsApp notification is enabled
-        $enabled = Setting::where('key', 'whatsapp_notification_enabled')->value('value');
-        if (!$enabled || $enabled === 'false' || $enabled === '0') {
-            return [
-                'success' => false,
-                'message' => 'Notifikasi WhatsApp tidak diaktifkan'
-            ];
+        foreach ($data as $key => $value) {
+            $template = str_replace("{{" . $key . "}}", $value, $template);
         }
-
-        // Check if document has WhatsApp number
-        if (empty($document->whatsapp_number)) {
-            return [
-                'success' => false,
-                'message' => 'Dokumen tidak memiliki nomor WhatsApp'
-            ];
-        }
-
-        // Get notification template
-        $template = WhatsappNotification::where('event_type', 'document_approved')
-            ->where('is_active', true)
-            ->first();
-
-        if (!$template) {
-            return [
-                'success' => false,
-                'message' => 'Template notifikasi tidak ditemukan'
-            ];
-        }
-
-        // Prepare data for template parsing
-        $data = [
-            'name' => $document->name,
-            'file_name' => $document->file_name,
-            'status' => $document->status,
-            'uploaded_at' => $document->uploaded_at->format('d-m-Y H:i:s'),
-        ];
-
-        // Parse template
-        $message = $template->parseTemplate($data);
-
-        // Format phone number (ensure it starts with 62)
-        $phone = $this->formatPhoneNumber($document->whatsapp_number);
-
-        // Send WhatsApp notification
-        return $this->dripsenderService->sendMessage($phone, $message);
-    }
-
-    /**
-     * Send notification for document rejection
-     *
-     * @param Document $document
-     * @return array
-     */
-    public function sendDocumentRejectionNotification(Document $document): array
-    {
-        // Check if WhatsApp notification is enabled
-        $enabled = Setting::where('key', 'whatsapp_notification_enabled')->value('value');
-        if (!$enabled || $enabled === 'false' || $enabled === '0') {
-            return [
-                'success' => false,
-                'message' => 'Notifikasi WhatsApp tidak diaktifkan'
-            ];
-        }
-
-        // Check if document has WhatsApp number
-        if (empty($document->whatsapp_number)) {
-            return [
-                'success' => false,
-                'message' => 'Dokumen tidak memiliki nomor WhatsApp'
-            ];
-        }
-
-        // Get notification template
-        $template = WhatsappNotification::where('event_type', 'document_rejected')
-            ->where('is_active', true)
-            ->first();
-
-        if (!$template) {
-            return [
-                'success' => false,
-                'message' => 'Template notifikasi tidak ditemukan'
-            ];
-        }
-
-        // Prepare data for template parsing
-        $data = [
-            'name' => $document->name,
-            'file_name' => $document->file_name,
-            'status' => $document->status,
-            'uploaded_at' => $document->uploaded_at->format('d-m-Y H:i:s'),
-        ];
-
-        // Parse template
-        $message = $template->parseTemplate($data);
-
-        // Format phone number (ensure it starts with 62)
-        $phone = $this->formatPhoneNumber($document->whatsapp_number);
-
-        // Send WhatsApp notification
-        return $this->dripsenderService->sendMessage($phone, $message);
+        
+        return $template;
     }
 } 

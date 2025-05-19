@@ -27,6 +27,14 @@ class DripsenderService
     }
 
     /**
+     * Set API key manually
+     */
+    public function setApiKey(?string $apiKey): void
+    {
+        $this->apiKey = $apiKey;
+    }
+
+    /**
      * Send WhatsApp message
      *
      * @param string $phone
@@ -37,6 +45,10 @@ class DripsenderService
     public function sendMessage(string $phone, string $message, ?string $mediaUrl = null): array
     {
         try {
+            if (empty($this->apiKey)) {
+                throw new \Exception('API Key tidak ditemukan');
+            }
+
             $payload = [
                 'api_key' => $this->apiKey,
                 'phone' => $phone,
@@ -170,26 +182,36 @@ class DripsenderService
      */
     public function testConnection(): array
     {
+        if (empty($this->apiKey)) {
+            return [
+                'success' => false,
+                'message' => 'API Key belum dikonfigurasi'
+            ];
+        }
+
         try {
             $response = Http::withHeaders([
-                'api-key' => $this->apiKey
-            ])->get("{$this->apiUrl}/lists");
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json'
+            ])->get('https://api.dripsender.id/api/status');
 
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'message' => 'Koneksi ke Dripsender berhasil'
+                    'message' => 'Koneksi berhasil',
+                    'data' => $response->json()
                 ];
             }
 
             return [
                 'success' => false,
-                'message' => 'Gagal terhubung ke Dripsender: ' . $response->body(),
+                'message' => 'Koneksi gagal: ' . $response->body(),
+                'status' => $response->status()
             ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Error saat menghubungi Dripsender: ' . $e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage()
             ];
         }
     }

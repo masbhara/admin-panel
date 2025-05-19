@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\DocumentSettingsController;
 use App\Http\Controllers\Admin\WhatsappNotificationController;
 use App\Http\Controllers\Admin\EmptyPageController;
 use App\Http\Controllers\Admin\DocumentFormController;
+use App\Http\Controllers\Admin\DocumentFormNotificationController;
 
 // Public routes
 Route::get('/', function () {
@@ -327,6 +328,14 @@ Route::middleware(['auth'])->group(function () {
                 
                 // Empty Page Route - halaman kosong yang menduplikasi struktur documents
                 Route::get('/empty-page', [EmptyPageController::class, 'index'])->name('empty-page.index');
+
+                // Document Form Notification Routes
+                Route::get('/document-forms/{documentForm}/notifications', [DocumentFormNotificationController::class, 'show'])
+                    ->name('document-forms.notifications.show');
+                Route::put('/document-forms/{documentForm}/notifications', [DocumentFormNotificationController::class, 'update'])
+                    ->name('document-forms.notifications.update');
+                Route::post('/document-forms/{documentForm}/notifications/test-connection', [DocumentFormNotificationController::class, 'testConnection'])
+                    ->name('document-forms.notifications.test-connection');
             });
         });
     });

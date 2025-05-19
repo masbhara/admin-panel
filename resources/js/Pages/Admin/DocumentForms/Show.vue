@@ -1,9 +1,31 @@
 <template>
   <AdminLayout :title="'Detail Form: ' + documentForm.title">
     <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-        Detail Form: {{ documentForm.title }}
-      </h2>
+      <div class="flex justify-between items-center">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+          Detail Form: {{ documentForm.name || documentForm.title }}
+        </h2>
+        <div class="flex space-x-4">
+          <Link
+            :href="route('admin.document-forms.notifications.show', documentForm.id)"
+            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+          >
+            Pengaturan Notifikasi
+          </Link>
+          <Link
+            :href="route('admin.document-forms.edit', documentForm.id)"
+            class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150"
+          >
+            Edit
+          </Link>
+          <button
+            @click="showPublicUrl"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
+          >
+            URL Publik
+          </button>
+        </div>
+      </div>
     </template>
 
     <!-- Portal untuk dropdown menu -->
@@ -193,6 +215,12 @@
                 </button>
               </div>
               <div class="flex space-x-2">
+                <Link
+                  :href="route('admin.document-forms.notifications.show', documentForm.id)"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                >
+                  Pengaturan Notifikasi
+                </Link>
                 <Link :href="route('admin.document-forms.edit', documentForm.id)" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition">
                   Edit
                 </Link>
