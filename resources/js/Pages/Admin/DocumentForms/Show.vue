@@ -496,15 +496,15 @@
   
   <!-- Modals -->
   <!-- Preview Modal -->
-  <Modal :show="showPreviewModal" max-width="4xl" @close="showPreviewModal = false" :closeable="true">
-    <div class="p-6">
+  <ModalDialog :show="showPreviewModal" @close="showPreviewModal = false" max-width="4xl">
+    <div class="p-6 bg-white dark:bg-gray-800 rounded-lg">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
           Preview Dokumen: {{ previewDocument?.name || previewDocument?.file_name || 'Dokumen' }}
         </h3>
         <button
           @click="showPreviewModal = false"
-          class="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          class="rounded-md text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
         >
           <span class="sr-only">Close</span>
           <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -513,16 +513,16 @@
         </button>
       </div>
       
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
-        <svg class="animate-spin h-10 w-10 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <div v-if="isLoading" class="flex flex-col items-center justify-center py-12 bg-gray-50 dark:bg-gray-900 rounded-lg">
+        <svg class="animate-spin h-10 w-10 text-primary-600 dark:text-primary-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p class="text-gray-500 dark:text-gray-400">Memuat preview dokumen...</p>
+        <p class="text-gray-600 dark:text-gray-300">Memuat preview dokumen...</p>
       </div>
       
-      <div v-else-if="previewError" class="flex flex-col items-center justify-center py-12 bg-red-50 dark:bg-red-900/20 rounded-lg">
-        <svg class="h-16 w-16 text-red-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div v-else-if="previewError" class="flex flex-col items-center justify-center py-12 bg-red-50 dark:bg-gray-900 dark:border dark:border-red-800/50 rounded-lg">
+        <svg class="h-16 w-16 text-red-600 dark:text-red-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <h3 class="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Preview tidak tersedia</h3>
@@ -530,7 +530,7 @@
         <a 
           :href="currentOriginalUrl" 
           target="_blank" 
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800 transition-colors"
         >
           <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -539,14 +539,14 @@
         </a>
       </div>
       
-      <div v-else>
+      <div v-else class="rounded-lg overflow-hidden">
         <!-- Preview tools header -->
-        <div v-if="previewType === 'external'" class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div v-if="previewType === 'external'" class="flex flex-wrap items-center justify-between gap-2 mb-4 px-1">
           <div class="flex items-center space-x-4">
             <button 
               @click="switchViewer('google')" 
               class="px-3 py-1 text-sm rounded-md transition-colors"
-              :class="activeViewer === 'google' ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
+              :class="activeViewer === 'google' ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
             >
               Google Viewer
             </button>
@@ -554,7 +554,7 @@
               v-if="officeViewerUrl"
               @click="switchViewer('office')" 
               class="px-3 py-1 text-sm rounded-md transition-colors"
-              :class="activeViewer === 'office' ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
+              :class="activeViewer === 'office' ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200 font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
             >
               Office Viewer
             </button>
@@ -562,7 +562,7 @@
           <a 
             :href="currentOriginalUrl" 
             target="_blank" 
-            class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -572,7 +572,7 @@
         </div>
         
         <!-- PDF Preview -->
-        <div v-if="previewType === 'pdf'" class="bg-gray-800 rounded-lg overflow-hidden h-[75vh]">
+        <div v-if="previewType === 'pdf'" class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden h-[75vh]">
           <iframe 
             :src="currentPreviewUrl" 
             class="w-full h-full border-0"
@@ -581,7 +581,7 @@
         </div>
         
         <!-- External Preview (Google/Office) -->
-        <div v-else-if="previewType === 'external'" class="bg-gray-800 rounded-lg overflow-hidden h-[75vh]">
+        <div v-else-if="previewType === 'external'" class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden h-[75vh]">
           <iframe 
             :src="currentPreviewUrl"
             class="w-full h-full border-0"
@@ -590,12 +590,12 @@
         </div>
         
         <!-- Image Preview -->
-        <div v-else class="bg-gray-800 rounded-lg overflow-hidden text-center p-4 h-[75vh]">
+        <div v-else class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden text-center p-4 h-[75vh]">
           <img :src="currentPreviewUrl" alt="Preview dokumen" class="max-h-full max-w-full inline-block object-contain" />
         </div>
       </div>
     </div>
-  </Modal>
+  </ModalDialog>
 
   <!-- Delete Confirmation Modal -->
   <ModalDialog :show="showDeleteModal" @close="showDeleteModal = false">

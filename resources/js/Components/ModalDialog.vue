@@ -10,7 +10,7 @@
     >
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto transition-opacity bg-gray-500 bg-opacity-75"
+        class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-80"
       >
         <div 
           :class="{
@@ -25,7 +25,7 @@
             'sm:max-w-6xl': maxWidth === '6xl',
             'sm:max-w-7xl': maxWidth === '7xl',
           }"
-          class="w-full px-4 pt-5 pb-4 mx-auto overflow-hidden transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6"
+          class="w-full px-4 pt-5 pb-4 mx-auto overflow-hidden transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/30 sm:my-8 sm:align-middle sm:p-6"
           @click.stop
         >
           <slot />

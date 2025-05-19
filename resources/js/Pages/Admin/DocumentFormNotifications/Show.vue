@@ -69,59 +69,59 @@
           </div>
         </div>
 
-        <div class="bg-gray-900 dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
           <!-- Tabel Template -->
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-700">
-              <thead class="bg-gray-800 dark:bg-gray-700">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Nama
                   </th>
-                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Tipe Event
                   </th>
-                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Dibuat
                   </th>
-                  <th scope="col" class="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-4 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Aksi
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-700">
-                <tr v-for="(template, eventType) in notificationSettings.notification_templates" :key="eventType">
-                  <td class="px-6 py-4 text-sm font-medium text-white">
+              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tr v-for="(template, eventType) in notificationSettings.notification_templates" :key="eventType" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                     {{ template.name }}
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-300">
+                  <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {{ eventLabels[eventType] || eventType }}
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-300">
+                  <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     <span class="px-2 py-1 text-xs font-semibold rounded-full" 
-                          :class="{ 'bg-green-100 text-green-800': true }">
+                          :class="{ 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300': true }">
                       Aktif
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-300">
+                  <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {{ formatDate(notificationSettings.created_at) }}
                   </td>
                   <td class="px-6 py-4 text-right text-sm font-medium space-x-2 whitespace-nowrap">
-                    <button @click="viewTemplate(eventType, template)" class="text-blue-400 hover:text-blue-300">
+                    <button @click="viewTemplate(eventType, template)" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                         <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
                       </svg>
                     </button>
-                    <button @click="editTemplate(eventType, template)" class="text-indigo-400 hover:text-indigo-300">
+                    <button @click="editTemplate(eventType, template)" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                       </svg>
                     </button>
-                    <button @click="confirmDeleteTemplate(eventType)" class="text-red-400 hover:text-red-300">
+                    <button @click="confirmDeleteTemplate(eventType)" class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                       </svg>
