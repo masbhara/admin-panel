@@ -180,6 +180,9 @@
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
           Apakah Anda yakin ingin menghapus form dokumen "{{ formToDelete?.title }}"? Tindakan ini tidak dapat dibatalkan.
         </p>
+        <div v-if="errorMessage" class="mt-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative">
+          <span class="block sm:inline">{{ errorMessage }}</span>
+        </div>
         <div class="mt-6 flex justify-end space-x-4">
           <SecondaryButton @click="closeDeleteModal">Batal</SecondaryButton>
           <DangerButton @click="deleteForm" :class="{ 'opacity-25': processing }" :disabled="processing">
@@ -250,6 +253,7 @@ const statusFilter = ref(props.filters?.status || 'all');
 const deleteModal = ref(false);
 const formToDelete = ref(null);
 const processing = ref(false);
+const errorMessage = ref('');
 
 // Public URL functionality
 const publicUrlModal = ref(false);
@@ -295,20 +299,59 @@ const confirmDelete = (form) => {
 
 const closeDeleteModal = () => {
   deleteModal.value = false;
+  errorMessage.value = '';
   setTimeout(() => {
     formToDelete.value = null;
   }, 200);
 };
 
 const deleteForm = () => {
-  if (!formToDelete.value) return;
-  
+  if (!formToDelete.value || !formToDelete.value.id) {
+    errorMessage.value = 'ID form tidak valid';
+    return;
+  }
+
   processing.value = true;
-  router.delete(route('admin.document-forms.destroy', formToDelete.value.id), {
-    onFinish: () => {
-      processing.value = false;
-      closeDeleteModal();
-    },
+  errorMessage.value = '';
+  
+  // Pastikan ID tidak kosong dan numerik
+  const formId = parseInt(formToDelete.value.id);
+  if (isNaN(formId) || formId <= 0) {
+    errorMessage.value = 'ID form tidak valid';
+    processing.value = false;
+    return;
+  }
+  
+  // Gunakan axios.post dengan method spoofing DELETE
+  axios.post(route('admin.document-forms.destroy', formId), {
+    _method: 'DELETE'
+  })
+  .then(response => {
+    // Cek jika ada success message dari server
+    if (response.data && response.data.success) {
+      // Tutup modal dan reload halaman
+      deleteModal.value = false;
+      formToDelete.value = null;
+      window.location.reload();
+    } else {
+      // Jika tidak ada success message, mungkin ada pesan error
+      errorMessage.value = response.data?.message || 'Terjadi kesalahan saat menghapus form dokumen.';
+    }
+  })
+  .catch(error => {
+    console.error('Delete error:', error);
+    if (error.response?.data?.message) {
+      errorMessage.value = error.response.data.message;
+    } else if (error.response?.status === 403) {
+      errorMessage.value = 'Anda tidak memiliki izin untuk menghapus form ini.';
+    } else if (error.response?.status === 404) {
+      errorMessage.value = 'Form dokumen tidak ditemukan.';
+    } else {
+      errorMessage.value = 'Terjadi kesalahan saat menghapus form dokumen.';
+    }
+  })
+  .finally(() => {
+    processing.value = false;
   });
 };
 

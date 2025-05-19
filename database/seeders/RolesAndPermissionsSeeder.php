@@ -174,10 +174,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'view tags',
         ]);
 
-        // Assign super-admin role to user ID 1
+        // Assign super-admin role to user ID 1 if exists
         $user = User::find(1);
         if ($user) {
             $user->assignRole('super-admin');
+        }
+
+        // Assign admin role to user with email admin@example.com if exists
+        $adminUser = User::where('email', 'admin@example.com')->first();
+        if ($adminUser) {
+            $adminUser->assignRole('admin');
         }
     }
 }

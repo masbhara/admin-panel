@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
             UsersTableSeeder::class,
             DocumentSeeder::class,
             DripsenderSettingsSeeder::class,
-            WhatsappNotificationSeeder::class,
             DocumentSettingsPermissionSeeder::class,
         ]);
     }

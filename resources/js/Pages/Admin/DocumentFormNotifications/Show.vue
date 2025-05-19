@@ -499,7 +499,7 @@ const closeSettingsModal = () => {
 
 // Fungsi untuk menyimpan pengaturan
 const saveSettings = () => {
-  settingsForm.put(route('admin.document-forms.notifications.update', props.documentForm.id), {
+  settingsForm.post(route('admin.document-forms.notifications.update', props.documentForm.id), {
     preserveScroll: true,
     onSuccess: () => {
       showSettingsModal.value = false;
@@ -619,8 +619,8 @@ const saveTemplate = () => {
     notification_templates: updatedTemplates,
   });
   
-  // Kirim request ke server
-  updateForm.put(route('admin.document-forms.notifications.update', props.documentForm.id), {
+  // Kirim request ke server - Ubah dari PUT ke POST untuk menghindari masalah routing
+  updateForm.post(route('admin.document-forms.notifications.update', props.documentForm.id), {
     preserveScroll: true,
     onSuccess: () => {
       showTemplateModal.value = false;
@@ -661,11 +661,14 @@ const deleteTemplate = () => {
     
     // Update pengaturan
     deleteForm.notification_templates = updatedTemplates;
-    deleteForm.put(route('admin.document-forms.notifications.update', props.documentForm.id), {
+    deleteForm.post(route('admin.document-forms.notifications.update', props.documentForm.id), {
       preserveScroll: true,
       onSuccess: () => {
         showDeleteModal.value = false;
         showAlertMessage('Template notifikasi berhasil dihapus.');
+        
+        // Refresh halaman untuk memperbarui data
+        window.location.reload();
       },
       onError: (errors) => {
         const errorMessage = Object.values(errors).join(', ');

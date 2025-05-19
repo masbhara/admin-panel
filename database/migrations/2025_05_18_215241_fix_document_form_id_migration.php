@@ -54,41 +54,6 @@ return new class extends Migration
         });
         Log::info('Added foreign key constraint back');
 
-        // Periksa apakah ada form dokumen default
-        $defaultForm = DB::table('document_forms')->first();
-        if ($defaultForm) {
-            // Update semua dokumen yang tidak memiliki document_form_id
-            $updated = DB::table('documents')
-                ->whereNull('document_form_id')
-                ->update(['document_form_id' => $defaultForm->id]);
-            
-            Log::info('Updated documents without form_id', [
-                'default_form_id' => $defaultForm->id,
-                'updated_count' => $updated
-            ]);
-        } else {
-            // Buat form dokumen default jika tidak ada
-            $defaultFormId = DB::table('document_forms')->insertGetId([
-                'title' => 'Form Dokumen Default',
-                'description' => 'Form dokumen default untuk dokumen lama',
-                'slug' => 'default-form',
-                'is_active' => true,
-                'user_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-            
-            // Update semua dokumen yang tidak memiliki document_form_id
-            $updated = DB::table('documents')
-                ->whereNull('document_form_id')
-                ->update(['document_form_id' => $defaultFormId]);
-            
-            Log::info('Created default form and updated documents', [
-                'default_form_id' => $defaultFormId,
-                'updated_count' => $updated
-            ]);
-        }
-
         // Ubah kolom menjadi wajib setelah semua dokumen memiliki form_id
         Schema::table('documents', function (Blueprint $table) {
             $table->unsignedBigInteger('document_form_id')->nullable(false)->change();

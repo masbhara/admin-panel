@@ -146,6 +146,8 @@ import Textarea from '@/Components/Textarea.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Checkbox from '@/Components/Checkbox.vue';
+import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 
 const props = defineProps({
   documentForm: Object,
@@ -161,6 +163,31 @@ const form = useForm({
 });
 
 const submit = () => {
-  form.put(route('admin.document-forms.update', props.documentForm.id));
+  // Gunakan axios.post dengan method spoofing PUT
+  const formData = {
+    _method: 'PUT',
+    title: form.title,
+    description: form.description,
+    slug: form.slug,
+    submission_deadline: form.submission_deadline,
+    closed_message: form.closed_message,
+    is_active: form.is_active
+  };
+
+  axios.post(`/admin/document-forms/${props.documentForm.id}`, formData)
+    .then(response => {
+      // Redirect ke halaman detail setelah berhasil update
+      window.location.href = route('admin.document-forms.show', props.documentForm.id);
+    })
+    .catch(error => {
+      if (error.response && error.response.data && error.response.data.errors) {
+        const errors = error.response.data.errors;
+        Object.keys(errors).forEach(key => {
+          form.errors[key] = errors[key][0];
+        });
+      } else {
+        console.error('Error updating document form:', error);
+      }
+    });
 };
 </script> 

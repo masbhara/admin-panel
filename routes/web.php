@@ -167,6 +167,12 @@ Route::middleware(['auth'])->group(function () {
             Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
                 Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
                 
+                // Document Forms Routes
+                Route::resource('document-forms', DocumentFormController::class);
+                
+                Route::get('document-forms/{documentForm}/public-url', [DocumentFormController::class, 'getPublicUrl'])
+                    ->name('document-forms.public-url');
+                
                 // Admin notifications
                 Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications');
                 Route::post('/notifications/{id}/mark-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
@@ -275,12 +281,6 @@ Route::middleware(['auth'])->group(function () {
                     Route::delete('/{setting}', [SettingController::class, 'destroy'])->name('destroy');
                 });
 
-
-                
-                // Document Forms Routes
-                Route::resource('document-forms', DocumentFormController::class);
-                Route::get('document-forms/{documentForm}/public-url', [DocumentFormController::class, 'getPublicUrl'])->name('document-forms.public-url');
-                
                 // Document Routes di admin
                 Route::prefix('documents')->name('documents.')->group(function () {
                     Route::get('/{document}', [AdminDocumentCrudController::class, 'show'])->name('show');
@@ -298,7 +298,7 @@ Route::middleware(['auth'])->group(function () {
                 // Document Form Notification Routes
                 Route::get('/document-forms/{documentForm}/notifications', [DocumentFormNotificationController::class, 'show'])
                     ->name('document-forms.notifications.show');
-                Route::put('/document-forms/{documentForm}/notifications', [DocumentFormNotificationController::class, 'update'])
+                Route::post('/document-forms/{documentForm}/notifications', [DocumentFormNotificationController::class, 'update'])
                     ->name('document-forms.notifications.update');
                 Route::post('/document-forms/{documentForm}/notifications/test-connection', [DocumentFormNotificationController::class, 'testConnection'])
                     ->name('document-forms.notifications.test-connection');

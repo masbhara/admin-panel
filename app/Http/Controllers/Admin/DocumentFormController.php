@@ -287,23 +287,22 @@ class DocumentFormController extends Controller
      */
     public function destroy(DocumentForm $documentForm)
     {
-        $this->authorize('delete', $documentForm);
-        
-        $user = Auth::user();
-        
         try {
             DB::beginTransaction();
             
             // Periksa apakah ada dokumen yang terkait
             $documentsCount = Document::where('document_form_id', $documentForm->id)->count();
             if ($documentsCount > 0) {
-                return back()->withErrors(['error' => 'Form dokumen tidak dapat dihapus karena masih memiliki dokumen terkait.']);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Form dokumen tidak dapat dihapus karena masih memiliki dokumen terkait.'
+                ], 400);
             }
             
             // Log aktivitas sebelum menghapus
             activity()
                 ->performedOn($documentForm)
-                ->causedBy($user)
+                ->causedBy(auth()->user())
                 ->log('deleted document form');
             
             // Hapus form dokumen
@@ -311,16 +310,22 @@ class DocumentFormController extends Controller
             
             DB::commit();
 
-            return redirect()->route('admin.document-forms.index')
-                ->with('success', 'Form dokumen berhasil dihapus.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Form dokumen berhasil dihapus.'
+            ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error deleting document form: ' . $e->getMessage(), [
-                'user_id' => $user->id,
+                'user_id' => auth()->id(),
                 'document_form_id' => $documentForm->id,
             ]);
             
-            return back()->withErrors(['error' => 'Terjadi kesalahan saat menghapus form dokumen. ' . $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghapus form dokumen: ' . $e->getMessage()
+            ], 500);
         }
     }
 

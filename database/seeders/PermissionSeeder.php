@@ -16,17 +16,33 @@ class PermissionSeeder extends Seeder
             'create-documents',
             'edit-documents',
             'delete-documents',
-            'manage-documents'
+            'manage-documents',
+            'view document forms',
+            'create document forms',
+            'edit document forms',
+            'delete document forms'
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Assign permissions to admin role
-        $adminRole = Role::where('name', 'admin')->first();
-        if ($adminRole) {
-            $adminRole->givePermissionTo($permissions);
-        }
+        // Create roles
+        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $userRole = Role::firstOrCreate(['name' => 'user']);
+
+        // Assign all permissions to super-admin
+        $superAdminRole->givePermissionTo(Permission::all());
+
+        // Assign document permissions to admin role
+        $adminRole->givePermissionTo($permissions);
+
+        // Assign basic permissions to user role
+        $userRole->givePermissionTo([
+            'view-documents',
+            'create-documents',
+            'edit-documents'
+        ]);
     }
 } 
