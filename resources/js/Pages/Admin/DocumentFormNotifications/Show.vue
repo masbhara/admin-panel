@@ -136,13 +136,58 @@
     </div>
 
     <!-- Modal Pengaturan -->
-    <Modal :show="showSettingsModal" @close="closeSettingsModal" max-width="2xl">
-      <div class="p-6">
+    <Modal :show="showSettingsModal" @close="closeSettingsModal" max-width="sm:max-w-2xl">
+      <div class="p-6 relative">
+        <!-- Overlay loading -->
+        <div v-if="settingsForm.processing" class="absolute inset-0 bg-gray-900/60 rounded-lg flex items-center justify-center z-10">
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-5 flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-700 dark:text-gray-300 font-medium">Sedang menyimpan...</p>
+          </div>
+        </div>
+
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
           Pengaturan Notifikasi WhatsApp
         </h2>
         
-        <form @submit.prevent="saveSettings" class="space-y-4">
+        <!-- Alert status koneksi di dalam modal -->
+        <div v-if="showConnectionStatus" :class="[
+          'p-4 mb-4 rounded-md',
+          connectionStatus === 'success' 
+            ? 'bg-green-50 dark:bg-green-900/50 text-green-800 dark:text-green-300' 
+            : 'bg-red-50 dark:bg-red-900/50 text-red-800 dark:text-red-300'
+        ]">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <CheckCircleIcon v-if="connectionStatus === 'success'" class="h-5 w-5 text-green-400 dark:text-green-300" />
+              <XCircleIcon v-else class="h-5 w-5 text-red-400 dark:text-red-300" />
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium">{{ connectionMessage }}</p>
+            </div>
+            <div class="ml-auto pl-3">
+              <div class="-mx-1.5 -my-1.5">
+                <button
+                  type="button"
+                  @click="showConnectionStatus = false"
+                  class="inline-flex rounded-md p-1.5"
+                  :class="[
+                    connectionStatus === 'success' 
+                      ? 'bg-green-50 dark:bg-green-900/50 text-green-500 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900' 
+                      : 'bg-red-50 dark:bg-red-900/50 text-red-500 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900'
+                  ]"
+                >
+                  <XMarkIcon class="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <form @submit.prevent="saveSettings" class="space-y-4 max-w-xl mx-auto">
           <div>
             <div class="flex items-center mb-4">
               <input
@@ -208,19 +253,20 @@
               type="button"
               @click="closeSettingsModal"
               class="mr-2 inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:ring focus:ring-blue-200 active:text-gray-800 active:bg-gray-50 disabled:opacity-25 transition"
+              :disabled="settingsForm.processing"
             >
               Batal
             </button>
             <button
               type="submit"
-              class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring focus:ring-indigo-300 disabled:opacity-25 transition"
+              class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring focus:ring-indigo-300 disabled:opacity-25 transition min-w-[180px] justify-center"
               :disabled="settingsForm.processing"
             >
-              <svg v-if="settingsForm.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg v-if="settingsForm.processing" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Simpan Pengaturan
+              {{ settingsForm.processing ? 'Menyimpan...' : 'Simpan Pengaturan' }}
             </button>
           </div>
         </form>
@@ -228,14 +274,14 @@
     </Modal>
 
     <!-- Modal Template -->
-    <Modal :show="showTemplateModal" @close="closeTemplateModal" max-width="2xl">
+    <Modal :show="showTemplateModal" @close="closeTemplateModal" max-width="sm:max-w-lg">
       <div class="p-6">
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
           {{ templateModalMode === 'add' ? 'Tambah Template Notifikasi' : 
              templateModalMode === 'edit' ? 'Edit Template Notifikasi' : 'Detail Template Notifikasi' }}
         </h2>
         
-        <form @submit.prevent="saveTemplate" class="space-y-4">
+        <form @submit.prevent="saveTemplate" class="space-y-4 max-w-md mx-auto">
           <!-- Form fields -->
           <div v-if="templateModalMode !== 'view'">
             <label for="template_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -376,6 +422,11 @@ const showDeleteModal = ref(false);
 const templateModalMode = ref('view'); // 'view', 'add', 'edit'
 const selectedEventType = ref('');
 
+// State untuk notifikasi koneksi dalam modal
+const showConnectionStatus = ref(false);
+const connectionStatus = ref('success');
+const connectionMessage = ref('');
+
 // Label untuk tipe event
 const eventLabels = {
   'document_uploaded': 'Notifikasi Dokumen Diunggah',
@@ -443,6 +494,7 @@ const openSettingsModal = () => {
 // Fungsi untuk menutup modal pengaturan
 const closeSettingsModal = () => {
   showSettingsModal.value = false;
+  showConnectionStatus.value = false; // Reset status koneksi saat modal ditutup
 };
 
 // Fungsi untuk menyimpan pengaturan
@@ -464,11 +516,14 @@ const saveSettings = () => {
 const testConnection = () => {
   const apiKey = settingsForm.dripsender_api_key;
   if (!apiKey) {
-    showAlertMessage('Silakan masukkan API Key terlebih dahulu.', 'error');
+    connectionStatus.value = 'error';
+    connectionMessage.value = 'Silakan masukkan API Key terlebih dahulu.';
+    showConnectionStatus.value = true;
     return;
   }
 
   testingConnection.value = true;
+  showConnectionStatus.value = false; // Reset status saat memulai test baru
   
   const form = useForm({
     api_key: apiKey
@@ -478,16 +533,22 @@ const testConnection = () => {
     preserveScroll: true,
     onSuccess: (response) => {
       testingConnection.value = false;
+      connectionStatus.value = 'success';
+      
       if (response?.props?.flash?.success) {
-        showAlertMessage(response.props.flash.success);
+        connectionMessage.value = response.props.flash.success;
       } else {
-        showAlertMessage('Koneksi ke Dripsender berhasil.');
+        connectionMessage.value = 'Koneksi ke Dripsender berhasil.';
       }
+      
+      showConnectionStatus.value = true;
     },
     onError: (errors) => {
       testingConnection.value = false;
+      connectionStatus.value = 'error';
       const errorMessage = Object.values(errors).join(', ');
-      showAlertMessage(errorMessage || 'Koneksi ke Dripsender gagal.', 'error');
+      connectionMessage.value = errorMessage || 'Koneksi ke Dripsender gagal.';
+      showConnectionStatus.value = true;
     },
     onFinish: () => {
       testingConnection.value = false;
