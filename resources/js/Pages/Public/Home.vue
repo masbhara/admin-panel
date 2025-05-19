@@ -3,43 +3,68 @@
     <Head title="Beranda" />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
       <!-- Hero Section -->
-      <div class="text-center mb-8">
+      <div class="text-center mb-12">
         <h1 class="text-3xl md:text-4xl font-bold text-primary-600 dark:text-primary-400 mb-4">
-          {{ settings.document_home_title || 'Pengiriman Dokumen Online' }}
+          {{ appTitle }}
         </h1>
-        
-        <!-- Countdown Timer -->
-        <div v-if="settings.submission_deadline && settings.is_active" class="mb-6">
-          <div class="text-lg text-gray-600 dark:text-gray-300 mb-2">
-            Batas waktu pengumpulan:
-          </div>
-          <div class="flex justify-center gap-4">
-            <div v-for="(unit, index) in timeUnits" :key="index" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-              <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">
-                {{ countdown[unit.key] }}
-              </div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">
-                {{ unit.label }}
+        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          Silakan pilih salah satu form pengiriman dokumen di bawah ini untuk mulai mengunggah dokumen Anda.
+        </p>
+      </div>
+
+      <!-- Form Listing Section -->
+      <div v-if="documentForms.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-for="form in documentForms" :key="form.id" class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 transition-all hover:shadow-lg">
+          <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">{{ form.title }}</h2>
+            <p v-if="form.description" class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{{ form.description }}</p>
+            
+            <!-- Status -->
+            <div class="mb-4">
+              <span v-if="isFormOpen(form)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Terbuka
+              </span>
+              <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+                Ditutup
+              </span>
+            </div>
+            
+            <!-- Deadline if exists -->
+            <div v-if="form.submission_deadline" class="mb-5 text-sm text-gray-500 dark:text-gray-400">
+              <div class="flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Batas waktu: {{ formatDate(form.submission_deadline) }}</span>
               </div>
             </div>
+            
+            <Link :href="route('public.document-form', form.slug)" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+              Buka Form
+            </Link>
           </div>
         </div>
       </div>
-
-      <!-- Form Section -->
-      <div v-if="canSubmit" class="py-2">
-        <DocumentForm :success-message="$page.props.flash?.success || ''" />
-      </div>
       
-      <!-- Closed Message -->
-      <div v-else class="text-center py-8">
-        <div class="max-w-2xl mx-auto bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-          <svg class="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      <!-- Empty State -->
+      <div v-else class="text-center py-12">
+        <div class="max-w-md mx-auto">
+          <svg class="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
           </svg>
-          <h3 class="mt-4 text-lg font-medium text-red-800 dark:text-red-300">
-            {{ settings.closed_message || 'Pengumpulan dokumen sedang ditutup.' }}
-          </h3>
+          <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-white">Belum ada form dokumen yang tersedia</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Silakan cek kembali nanti untuk pengiriman dokumen baru.
+          </p>
         </div>
       </div>
     </div>
@@ -47,83 +72,63 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { ref, onMounted } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
-import DocumentForm from '@/Components/DocumentForm.vue';
 import axios from 'axios';
 
-const settings = ref({
-  submission_deadline: null,
-  closed_message: '',
-  is_active: true
-});
+const documentForms = ref([]);
+const appTitle = ref('Pengiriman Dokumen Online');
+const loading = ref(true);
 
-const countdown = ref({
-  days: '00',
-  hours: '00',
-  minutes: '00',
-  seconds: '00'
-});
-
-const timeUnits = [
-  { key: 'days', label: 'Hari' },
-  { key: 'hours', label: 'Jam' },
-  { key: 'minutes', label: 'Menit' },
-  { key: 'seconds', label: 'Detik' }
-];
-
-const canSubmit = computed(() => {
-  if (!settings.value.is_active) return false;
-  if (!settings.value.submission_deadline) return true;
-  
-  const deadline = new Date(settings.value.submission_deadline);
-  const now = new Date();
-  return now < deadline;
-});
-
-const updateCountdown = () => {
-  if (!settings.value.submission_deadline) return;
-
-  const deadline = new Date(settings.value.submission_deadline);
-  const now = new Date();
-  const diff = deadline - now;
-
-  if (diff <= 0) {
-    countdown.value = {
-      days: '00',
-      hours: '00',
-      minutes: '00',
-      seconds: '00'
-    };
-    return;
+// Fetch active document forms
+const fetchDocumentForms = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.get('/api/document-forms/active');
+    documentForms.value = response.data;
+  } catch (error) {
+    console.error('Failed to fetch document forms:', error);
+  } finally {
+    loading.value = false;
   }
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-  countdown.value = {
-    days: String(days).padStart(2, '0'),
-    hours: String(hours).padStart(2, '0'),
-    minutes: String(minutes).padStart(2, '0'),
-    seconds: String(seconds).padStart(2, '0')
-  };
 };
 
-const fetchSettings = async () => {
+// Format date for display
+const formatDate = (dateString) => {
+  const options = { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  return new Date(dateString).toLocaleDateString('id-ID', options);
+};
+
+// Check if form is open for submissions
+const isFormOpen = (form) => {
+  if (!form.is_active) return false;
+  if (!form.submission_deadline) return true;
+  
+  const deadline = new Date(form.submission_deadline);
+  const now = new Date();
+  return now < deadline;
+};
+
+// Fetch application name
+const fetchAppName = async () => {
   try {
-    const response = await axios.get(route('document-settings.get'));
-    settings.value = response.data;
+    const response = await axios.get('/api/settings/app-name');
+    if (response.data && response.data.value) {
+      appTitle.value = response.data.value;
+    }
   } catch (error) {
-    console.error('Failed to fetch document settings:', error);
+    console.error('Failed to fetch app name:', error);
   }
 };
 
 onMounted(async () => {
-  await fetchSettings();
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
+  await Promise.all([fetchDocumentForms(), fetchAppName()]);
 });
 </script> 

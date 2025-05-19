@@ -27,8 +27,7 @@ use App\Models\Document;
 use Illuminate\Support\Facades\Activity;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CaptchaController;
-use App\Http\Controllers\Admin\DocumentSettingsController;
-use App\Http\Controllers\Admin\WhatsappNotificationController;
+
 use App\Http\Controllers\Admin\EmptyPageController;
 use App\Http\Controllers\Admin\DocumentFormController;
 use App\Http\Controllers\Admin\DocumentFormNotificationController;
@@ -174,35 +173,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/notifications/mark-all-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
                 Route::delete('/notifications/{id}', [App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('notifications.destroy');
                 
-                // WhatsApp Notification routes
-                Route::prefix('whatsapp-notifications')->name('whatsapp-notifications.')->middleware(['permission:view_whatsapp_notifications'])->group(function () {
-                    // Settings routes (dipindah ke atas)
-                    Route::middleware('permission:manage_whatsapp_settings')->group(function () {
-                        Route::get('/settings', [WhatsappNotificationController::class, 'settings'])->name('settings');
-                        Route::post('/settings', [WhatsappNotificationController::class, 'updateSettings'])->name('settings.update');
-                        Route::post('/test-connection', [WhatsappNotificationController::class, 'testConnection'])->name('test-connection');
-                    });
-                    
-                    // CRUD routes
-                    Route::get('/', [WhatsappNotificationController::class, 'index'])->name('index');
-                    
-                    Route::middleware('permission:create_whatsapp_notifications')->group(function () {
-                        Route::get('/create', [WhatsappNotificationController::class, 'create'])->name('create');
-                        Route::post('/', [WhatsappNotificationController::class, 'store'])->name('store');
-                    });
-                    
-                    Route::get('/{whatsappNotification}', [WhatsappNotificationController::class, 'show'])->name('show');
-                    
-                    Route::middleware('permission:edit_whatsapp_notifications')->group(function () {
-                        Route::get('/{whatsappNotification}/edit', [WhatsappNotificationController::class, 'edit'])->name('edit');
-                        Route::put('/{whatsappNotification}', [WhatsappNotificationController::class, 'update'])->name('update');
-                    });
-                    
-                    Route::middleware('permission:delete_whatsapp_notifications')->group(function () {
-                        Route::delete('/{whatsappNotification}', [WhatsappNotificationController::class, 'destroy'])->name('destroy');
-                    });
-                });
-                
                 // Activities routes
                 Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
                 
@@ -305,11 +275,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::delete('/{setting}', [SettingController::class, 'destroy'])->name('destroy');
                 });
 
-                // Document Settings Routes
-                Route::middleware('permission:manage document settings')->group(function () {
-                    Route::get('/document-settings', [DocumentSettingsController::class, 'index'])->name('document-settings.index');
-                    Route::put('/document-settings', [DocumentSettingsController::class, 'update'])->name('document-settings.update');
-                });
+
                 
                 // Document Forms Routes
                 Route::resource('document-forms', DocumentFormController::class);
@@ -354,6 +320,18 @@ Route::get('/api/document-forms/{documentFormId}/documents', function($documentF
 Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
 Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
 
-// Document Settings API route for public access
-Route::get('/api/document-settings', [DocumentSettingsController::class, 'getSettings'])->name('document-settings.get');
+// API routes for public document forms
+Route::get('/api/document-forms/active', function() {
+    return App\Models\DocumentForm::where('is_active', true)
+        ->select(['id', 'title', 'description', 'slug', 'submission_deadline', 'is_active'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+});
+
+// API route for app name
+Route::get('/api/settings/app-name', function() {
+    return App\Models\Setting::where('key', 'document_home_title')
+        ->orWhere('key', 'app_name')
+        ->first() ?? ['value' => 'Pengiriman Dokumen Online'];
+});
 

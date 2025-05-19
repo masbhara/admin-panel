@@ -158,25 +158,12 @@ const navigation = ref([
     icon: HomeIcon,
   },
   {
-    name: 'Dokumen',
+    name: 'Form Dokumen',
+    href: route('admin.document-forms.index'),
+    active: 'admin.document-forms.*',
     icon: DocumentTextIcon,
-    isOpen: false,
-    children: [
-      {
-        name: 'Form Dokumen',
-        href: route('admin.document-forms.index'),
-        active: 'admin.document-forms.*',
-        icon: DocumentTextIcon,
       },
-      {
-        name: 'Pengaturan Dokumen',
-        href: route('admin.document-settings.index'),
-        active: 'admin.document-settings.*',
-        icon: Cog6ToothIcon,
-      }
-    ],
-  },
-  {
+    {
     name: 'Manajemen',
     icon: UsersIcon,
     isOpen: false,
@@ -212,12 +199,6 @@ const navigation = ref([
     href: route('admin.settings.index'),
     active: 'admin.settings.*',
     icon: Cog6ToothIcon,
-  },
-  {
-    name: 'Notifikasi WhatsApp',
-    href: route('admin.whatsapp-notifications.index'),
-    active: 'admin.whatsapp-notifications.*',
-    icon: ChatBubbleLeftEllipsisIcon,
   },
   {
     name: 'Halaman Kosong',
