@@ -1,6 +1,6 @@
 <template>
   <Head>
-    <title>{{ title ? `${title} - ${$page.props.settings?.site_title || 'Admin Panel'}` : $page.props.settings?.site_title || 'Admin Panel' }}</title>
+    <title>{{ title ? `${title} - ${settingsData?.site_title || 'Admin Panel'}` : settingsData?.site_title || 'Admin Panel' }}</title>
   </Head>
   <div class="min-h-screen bg-background-primary text-text-primary">
     <!-- Off-canvas menu for mobile -->
@@ -38,7 +38,7 @@
 
               <!-- Sidebar component for mobile -->
               <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-primary-600 px-6 pb-4">
-                <SidebarContent />
+                <SidebarContent :settings="settingsData" />
               </div>
             </DialogPanel>
           </TransitionChild>
@@ -49,7 +49,7 @@
     <!-- Static sidebar for desktop -->
     <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
       <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-primary-600 px-6 pb-4">
-        <SidebarContent />
+        <SidebarContent :settings="settingsData" />
       </div>
     </div>
 
@@ -132,11 +132,23 @@ const props = defineProps({
   user: {
     type: Object,
     default: null
+  },
+  settings: {
+    type: Object,
+    default: null
   }
 })
 
 const page = usePage()
 const sidebarOpen = ref(false)
+
+// Data settings: prioritaskan dari props jika ada
+const settingsData = computed(() => {
+  const fromProps = props.settings
+  const fromGlobal = page.props.settings || {}
+  
+  return fromProps || fromGlobal
+})
 
 // Prioritaskan user dari props, fallback ke $page.props
 const userToDisplay = computed(() => {

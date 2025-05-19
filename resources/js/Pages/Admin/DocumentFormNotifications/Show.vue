@@ -1,5 +1,11 @@
 <template>
-  <AdminLayout>
+  <AdminLayout title="Template Notifikasi WhatsApp" :user="$page.props.auth?.user">
+    <template #header>
+      <h2 class="text-xl font-semibold leading-tight text-text-primary">
+        Template Notifikasi WhatsApp: {{ documentForm.name || documentForm.title }}
+      </h2>
+    </template>
+
     <div class="py-6">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <!-- Alert untuk feedback -->
@@ -87,7 +93,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-700">
-                <tr v-for="(template, eventType) in settings.notification_templates" :key="eventType">
+                <tr v-for="(template, eventType) in notificationSettings.notification_templates" :key="eventType">
                   <td class="px-6 py-4 text-sm font-medium text-white">
                     {{ template.name }}
                   </td>
@@ -101,7 +107,7 @@
                     </span>
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-300">
-                    {{ formatDate(settings.created_at) }}
+                    {{ formatDate(notificationSettings.created_at) }}
                   </td>
                   <td class="px-6 py-4 text-right text-sm font-medium space-x-2 whitespace-nowrap">
                     <button @click="viewTemplate(eventType, template)" class="text-blue-400 hover:text-blue-300">
@@ -340,7 +346,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { 
@@ -351,7 +357,7 @@ import {
 
 const props = defineProps({
   documentForm: Object,
-  settings: Object,
+  notificationSettings: Object,
   flash: Object,
 });
 
@@ -379,9 +385,9 @@ const eventLabels = {
 
 // Form untuk pengaturan notifikasi
 const settingsForm = useForm({
-  whatsapp_notification_enabled: props.settings.whatsapp_notification_enabled,
-  dripsender_api_key: props.settings.dripsender_api_key,
-  dripsender_webhook_url: props.settings.dripsender_webhook_url,
+  whatsapp_notification_enabled: props.notificationSettings.whatsapp_notification_enabled,
+  dripsender_api_key: props.notificationSettings.dripsender_api_key,
+  dripsender_webhook_url: props.notificationSettings.dripsender_webhook_url,
 });
 
 // Form untuk template notifikasi
@@ -429,9 +435,9 @@ onMounted(() => {
 // Fungsi untuk membuka modal pengaturan
 const openSettingsModal = () => {
   showSettingsModal.value = true;
-  settingsForm.whatsapp_notification_enabled = props.settings.whatsapp_notification_enabled;
-  settingsForm.dripsender_api_key = props.settings.dripsender_api_key;
-  settingsForm.dripsender_webhook_url = props.settings.dripsender_webhook_url;
+  settingsForm.whatsapp_notification_enabled = props.notificationSettings.whatsapp_notification_enabled;
+  settingsForm.dripsender_api_key = props.notificationSettings.dripsender_api_key;
+  settingsForm.dripsender_webhook_url = props.notificationSettings.dripsender_webhook_url;
 };
 
 // Fungsi untuk menutup modal pengaturan
@@ -529,7 +535,7 @@ const saveTemplate = () => {
   }
 
   // Buat salinan dari notification_templates yang ada
-  const updatedTemplates = { ...props.settings.notification_templates };
+  const updatedTemplates = { ...props.notificationSettings.notification_templates };
   
   if (templateModalMode.value === 'add') {
     // Tambahkan template baru
@@ -586,7 +592,7 @@ const confirmDeleteTemplate = (eventType) => {
 // Fungsi untuk menghapus template
 const deleteTemplate = () => {
   // Buat salinan dari notification_templates yang ada
-  const updatedTemplates = { ...props.settings.notification_templates };
+  const updatedTemplates = { ...props.notificationSettings.notification_templates };
   
   // Hapus template
   if (updatedTemplates[selectedEventType.value]) {

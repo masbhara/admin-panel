@@ -36,12 +36,6 @@
           :success-message="$page.props.flash?.success || ''" 
           :document-form-id="documentForm.id" 
         />
-        
-        <!-- Perbaikan kondisional baris yang error -->
-        <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-          <!-- Debug info hanya ditampilkan jika isDev true -->
-          <p v-if="isDev">Form ID: {{ documentForm.id }}</p>
-        </div>
       </div>
       
       <!-- Closed Message -->

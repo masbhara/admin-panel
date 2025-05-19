@@ -24,18 +24,21 @@ class DocumentFormNotificationController extends Controller
      */
     public function show(DocumentForm $documentForm)
     {
-        $settings = DocumentFormNotificationSetting::where('document_form_id', $documentForm->id)
+        // Hanya perlu log sederhana seperti EmptyPageController
+        Log::info('DocumentFormNotificationController@show - Loading notification settings page');
+        
+        $notificationSettings = DocumentFormNotificationSetting::where('document_form_id', $documentForm->id)
             ->first();
             
-        if (!$settings) {
-            $settings = new DocumentFormNotificationSetting();
-            $settings->document_form_id = $documentForm->id;
-            $settings->whatsapp_notification_enabled = false;
-            $settings->dripsender_api_key = '';
-            $settings->dripsender_webhook_url = '';
+        if (!$notificationSettings) {
+            $notificationSettings = new DocumentFormNotificationSetting();
+            $notificationSettings->document_form_id = $documentForm->id;
+            $notificationSettings->whatsapp_notification_enabled = false;
+            $notificationSettings->dripsender_api_key = '';
+            $notificationSettings->dripsender_webhook_url = '';
             
             // Default templates
-            $settings->notification_templates = [
+            $notificationSettings->notification_templates = [
                 'document_uploaded' => [
                     'name' => 'Notifikasi Dokumen Diunggah',
                     'template' => 'Halo {name}, dokumen Anda "{file_name}" telah berhasil diunggah pada {uploaded_at}.',
@@ -56,7 +59,7 @@ class DocumentFormNotificationController extends Controller
 
         return Inertia::render('Admin/DocumentFormNotifications/Show', [
             'documentForm' => $documentForm,
-            'settings' => $settings,
+            'notificationSettings' => $notificationSettings,
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error')
@@ -70,7 +73,7 @@ class DocumentFormNotificationController extends Controller
     public function update(Request $request, DocumentForm $documentForm)
     {
         try {
-            $settings = DocumentFormNotificationSetting::firstOrCreate(
+            $notificationSettings = DocumentFormNotificationSetting::firstOrCreate(
                 ['document_form_id' => $documentForm->id],
                 [
                     'whatsapp_notification_enabled' => false,
@@ -82,23 +85,23 @@ class DocumentFormNotificationController extends Controller
 
             // Update basic settings
             if ($request->has('whatsapp_notification_enabled')) {
-                $settings->whatsapp_notification_enabled = $request->whatsapp_notification_enabled;
+                $notificationSettings->whatsapp_notification_enabled = $request->whatsapp_notification_enabled;
             }
             
             if ($request->has('dripsender_api_key')) {
-                $settings->dripsender_api_key = $request->dripsender_api_key;
+                $notificationSettings->dripsender_api_key = $request->dripsender_api_key;
             }
             
             if ($request->has('dripsender_webhook_url')) {
-                $settings->dripsender_webhook_url = $request->dripsender_webhook_url;
+                $notificationSettings->dripsender_webhook_url = $request->dripsender_webhook_url;
             }
             
             // Update notification templates
             if ($request->has('notification_templates')) {
-                $settings->notification_templates = $request->notification_templates;
+                $notificationSettings->notification_templates = $request->notification_templates;
             }
 
-            $settings->save();
+            $notificationSettings->save();
 
             return back()->with('success', 'Pengaturan notifikasi WhatsApp berhasil disimpan.');
             

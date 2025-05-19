@@ -1,7 +1,7 @@
 <template>
   <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-primary-600 px-6 pb-4">
     <!-- Logo dan Judul Website -->
-    <SidebarHeader />
+    <SidebarHeader :settings="settings" />
     <nav class="flex flex-1 flex-col">
       <ul role="list" class="flex flex-1 flex-col gap-y-7"> 
         <!-- Primary Navigation -->
@@ -123,8 +123,14 @@ import {
 import TransitionExpand from '@/Components/TransitionExpand.vue'
 import SidebarHeader from '@/Components/SidebarHeader.vue'
 
+const props = defineProps({
+  settings: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
 const page = usePage()
-const settings = computed(() => page.props.settings || {})
 
 onMounted(() => {
   if (window.Echo && typeof window.Echo.channel === 'function') {
@@ -237,14 +243,12 @@ const filteredNavigation = computed(() => {
 
 // Filter children pada menu dropdown
 const filteredChildren = (children) => {
-  if (!children) return [];
   return children.filter(child => !child.requirePermission || hasPermission(child.requirePermission));
 }
 
-const teams = ref([])
-
+// Fungsi untuk memeriksa apakah salah satu anak aktif
 const isAnyChildActive = (children) => {
-  return children.some(child => route().current(child.active))
+  return children.some(child => route().current(child.active));
 }
 
 function getInitials(str) {

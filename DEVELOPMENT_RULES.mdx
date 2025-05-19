@@ -1,0 +1,118 @@
+# PANDUAN PENGEMBANGAN FITUR & HALAMAN KONSISTEN
+
+## TUJUAN
+Dokumen ini memberikan aturan dan panduan untuk memastikan semua halaman dan fitur baru diimplementasikan secara **100% KONSISTEN** dengan halaman yang sudah ada seperti `/admin/dashboard` dan `/admin/empty-page`.
+
+## ATURAN PENTING
+
+### 1. PENAMAAN VARIABEL & DATA TRANSFER
+
+- **HINDARI** penggunaan nama variabel yang sama dengan variabel global, terutama `settings`.
+- **WAJIB** menggunakan nama yang spesifik dan deskriptif untuk data yang dikirim ke view, misalnya:
+  - `documentSettings` (bukan `settings`)
+  - `userNotifications` (bukan `notifications`)
+  - `pageConfig` (bukan `config`)
+
+### 2. IMPLEMENTASI CONTROLLER
+
+```php
+public function show(SomeModel $model)
+{
+    // BENAR - Menggunakan nama variabel spesifik
+    $specificSettings = SomeSettingModel::where('model_id', $model->id)->first();
+    
+    // SALAH ❌ - JANGAN PERNAH gunakan nama 'settings' karena konflik dengan global
+    // $settings = SomeSettingModel::where('model_id', $model->id)->first();
+    
+    return Inertia::render('Path/To/Component', [
+        'model' => $model,
+        'specificSettings' => $specificSettings, // ✓ Nama spesifik
+        'flash' => [
+            'success' => session('success'),
+            'error' => session('error')
+        ]
+    ]);
+}
+```
+
+### 3. IMPLEMENTASI TEMPLATE VUE
+
+```vue
+<template>
+  <!-- BENAR - Menggunakan AdminLayout dengan benar -->
+  <AdminLayout title="Judul Halaman" :user="$page.props.auth?.user">
+    <!-- BENAR - Konten halaman khusus disini -->
+  </AdminLayout>
+</template>
+
+<script setup>
+// BENAR - Props menggunakan nama spesifik, bukan 'settings'
+const props = defineProps({
+  model: Object,
+  specificSettings: Object, // ✓ Nama spesifik
+  flash: Object,
+});
+</script>
+```
+
+### 4. PENGGUNAAN SETTINGS GLOBAL
+
+- Settings global dari AppServiceProvider **HARUS SELALU** diakses melalui `$page.props.settings`
+- **JANGAN PERNAH** menimpa variabel global `settings` dengan variabel lokal
+
+## CHECKLIST VALIDASI FITUR BARU
+
+Sebelum mengimplementasikan setiap fitur baru, pastikan:
+
+- [ ] Nama variabel yang dikirim ke view **TIDAK** konflik dengan variabel global
+- [ ] AdminLayout digunakan dengan benar dan menerima properti yang tepat
+- [ ] Data halaman dikirim dengan nama yang spesifik dan deskriptif
+- [ ] Debug mode diaktifkan untuk memeriksa aliran data settings dengan benar
+- [ ] Implementasi konsisten dengan pola yang ada di halaman dashboard
+
+## CONTOH IMPLEMENTASI YANG BENAR
+
+### Controller (PHP)
+```php
+public function show(DocumentForm $documentForm)
+{
+    $notificationSettings = DocumentFormNotificationSetting::where('document_form_id', $documentForm->id)
+        ->first();
+        
+    // Inisialisasi jika tidak ada
+    if (!$notificationSettings) {
+        $notificationSettings = new DocumentFormNotificationSetting();
+        // Set properti default...
+    }
+
+    return Inertia::render('Admin/Path/To/Component', [
+        'documentForm' => $documentForm,
+        'notificationSettings' => $notificationSettings, // ✓ Nama spesifik!
+        'flash' => [
+            'success' => session('success'),
+            'error' => session('error')
+        ]
+    ]);
+}
+```
+
+### Komponen Vue (JavaScript)
+```javascript
+const props = defineProps({
+  documentForm: Object,
+  notificationSettings: Object, // ✓ Nama spesifik!
+  flash: Object,
+});
+
+// BENAR - Gunakan props.notificationSettings, bukan mereferensikan settings
+const settingsForm = useForm({
+  enabled: props.notificationSettings.enabled,
+  api_key: props.notificationSettings.api_key,
+});
+```
+
+## KESIMPULAN
+
+Dengan mengikuti panduan ini, Anda akan menghindari konflik penamaan variabel dan memastikan semua halaman memiliki implementasi yang konsisten. Selalu cek halaman `/admin/dashboard` dan `/admin/empty-page` sebagai referensi untuk implementasi yang benar.
+
+**INGAT**: Konsistensi adalah kunci untuk aplikasi yang mudah dipelihara dan bebas bug! 

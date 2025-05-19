@@ -2,34 +2,38 @@
   <div class="flex h-16 shrink-0 items-center gap-x-3">
     <Link :href="route('admin.dashboard')" class="flex items-center gap-x-3">
       <img 
-        v-if="settings?.logo" 
-        :src="settings.logo" 
-        :alt="settings?.site_title || 'Admin Panel'" 
+        v-if="settingsToUse?.logo" 
+        :src="settingsToUse.logo" 
+        :alt="settingsToUse?.site_title || 'Admin Panel'" 
         class="h-10 w-auto object-contain bg-white rounded-md p-1"
       />
       <div v-else class="flex h-10 w-10 items-center justify-center rounded-md bg-primary-700">
-        <span class="text-lg font-bold text-white">{{ getInitials(settings?.site_title || 'AP') }}</span>
+        <span class="text-lg font-bold text-white">{{ getInitials(settingsToUse?.site_title || 'AP') }}</span>
       </div>
-      <span class="text-lg font-semibold text-white">{{ settings?.site_title || 'Admin Panel' }}</span>
+      <span class="text-lg font-semibold text-white">{{ settingsToUse?.site_title || 'Admin Panel' }}</span>
     </Link>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 
-const page = usePage()
-const settings = computed(() => {
-  // Log untuk debugging
-  console.log('SidebarHeader page props:', page.props);
-  console.log('SidebarHeader settings:', page.props.settings);
-  
-  return page.props.settings || {};
+const props = defineProps({
+  settings: {
+    type: Object,
+    default: null
+  }
 })
 
-onMounted(() => {
-  console.log('SidebarHeader mounted, settings:', settings.value);
+const page = usePage()
+const settingsToUse = computed(() => {
+  // Prioritaskan settings dari props jika ada
+  const fromProps = props.settings
+  const fromGlobal = page.props.settings || {}
+  const result = fromProps || fromGlobal
+  
+  return result
 })
 
 const getInitials = (text) => {
