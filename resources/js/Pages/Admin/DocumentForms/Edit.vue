@@ -60,7 +60,7 @@
               <!-- Description -->
               <div class="mb-4">
                 <InputLabel for="description" value="Deskripsi (opsional)" />
-                <Textarea
+                <TextArea
                   id="description"
                   class="mt-1 block w-full"
                   v-model="form.description"
@@ -148,6 +148,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import TextArea from '@/Components/TextArea.vue'
 
 const props = defineProps({
   documentForm: Object,
