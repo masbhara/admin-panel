@@ -32,7 +32,16 @@
 
       <!-- Form Section -->
       <div v-if="canSubmit" class="py-2">
-        <DocumentForm :success-message="$page.props.flash?.success || ''" :document-form-id="documentForm.id" />
+        <DocumentForm 
+          :success-message="$page.props.flash?.success || ''" 
+          :document-form-id="documentForm.id" 
+        />
+        
+        <!-- Perbaikan kondisional baris yang error -->
+        <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+          <!-- Debug info hanya ditampilkan jika isDev true -->
+          <p v-if="isDev">Form ID: {{ documentForm.id }}</p>
+        </div>
       </div>
       
       <!-- Closed Message -->
@@ -60,6 +69,20 @@ const props = defineProps({
   documentForm: Object,
 });
 
+// Mendeteksi mode development di script
+const isDev = computed(() => {
+  return process.env.NODE_ENV === 'development' || 
+         window.location.hostname === 'localhost' || 
+         window.location.hostname === '127.0.0.1';
+});
+
+// Memastikan bahwa document form id ada dan valid
+if (!props.documentForm?.id) {
+  console.error('CRITICAL ERROR: Document form ID tidak tersedia di halaman public!');
+} else {
+  console.info('Document form ID tersedia: ' + props.documentForm.id);
+}
+
 // Logging untuk debugging
 console.log('Public DocumentForm page loaded with data:', { 
   documentFormId: props.documentForm?.id,
@@ -67,11 +90,6 @@ console.log('Public DocumentForm page loaded with data:', {
   slug: props.documentForm?.slug,
   isActive: props.documentForm?.is_active
 });
-
-// Cek flash message untuk debugging
-if (usePage().props.flash) {
-  console.log('Flash messages:', usePage().props.flash);
-}
 
 const countdown = ref({
   days: '00',

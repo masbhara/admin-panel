@@ -336,14 +336,14 @@ const closePublicUrlModal = () => {
 };
 
 const copyToClipboard = () => {
-  if (publicUrlInput.value) {
-    publicUrlInput.value.select();
-    document.execCommand('copy');
-    copied.value = true;
-    
-    setTimeout(() => {
-      copied.value = false;
-    }, 2000);
-  }
+  if (!publicUrlInput.value) return;
+  
+  publicUrlInput.value.select();
+  document.execCommand('copy');
+  copied.value = true;
+  
+  setTimeout(() => {
+    copied.value = false;
+  }, 2000);
 };
-</script> 
+</script>

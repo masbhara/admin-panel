@@ -40,6 +40,15 @@ Route::get('/', function () {
 // Form dokumen dengan slug
 Route::get('/form/{slug}', function ($slug) {
     $documentForm = \App\Models\DocumentForm::where('slug', $slug)->firstOrFail();
+    
+    // Tambahkan logging untuk debugging
+    \Illuminate\Support\Facades\Log::info('Form dokumen dengan slug diakses', [
+        'slug' => $slug,
+        'document_form_id' => $documentForm->id,
+        'title' => $documentForm->title,
+        'is_active' => $documentForm->is_active
+    ]);
+    
     return Inertia::render('Public/DocumentForm', [
         'documentForm' => $documentForm
     ]);
@@ -304,6 +313,17 @@ Route::middleware(['auth'])->group(function () {
                 // Document Forms Routes
                 Route::resource('document-forms', DocumentFormController::class);
                 Route::get('document-forms/{documentForm}/public-url', [DocumentFormController::class, 'getPublicUrl'])->name('document-forms.public-url');
+                
+                // Document Routes di admin
+                Route::prefix('documents')->name('documents.')->group(function () {
+                    Route::get('/{document}', [AdminDocumentCrudController::class, 'show'])->name('show');
+                    Route::get('/{document}/edit', [AdminDocumentCrudController::class, 'edit'])->name('edit');
+                    Route::put('/{document}', [AdminDocumentCrudController::class, 'update'])->name('update');
+                    Route::delete('/{document}', [AdminDocumentCrudController::class, 'destroy'])->name('destroy');
+                    Route::put('/{document}/status', [AdminDocumentCrudController::class, 'updateStatus'])->name('update-status');
+                    Route::post('/import', [AdminDocumentImportController::class, 'import'])->name('import');
+                    Route::get('/template/download', [AdminDocumentExportController::class, 'downloadTemplate'])->name('download-template');
+                });
                 
                 // Empty Page Route - halaman kosong yang menduplikasi struktur documents
                 Route::get('/empty-page', [EmptyPageController::class, 'index'])->name('empty-page.index');

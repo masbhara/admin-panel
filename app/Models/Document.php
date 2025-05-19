@@ -9,6 +9,7 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class Document extends Model implements HasMedia
 {
@@ -63,12 +64,56 @@ class Document extends Model implements HasMedia
         parent::boot();
         
         static::creating(function ($document) {
+            Log::info('Document creating event fired', [
+                'document_form_id' => $document->document_form_id,
+                'name' => $document->name,
+                'has_form_id' => !empty($document->document_form_id),
+                'document_form_id_type' => gettype($document->document_form_id),
+                'document_attributes' => $document->getAttributes()
+            ]);
+            
+            // Validasi dokumen form ID
+            if (empty($document->document_form_id)) {
+                Log::error('Mencoba membuat dokumen tanpa document_form_id');
+                throw new \Exception('Document form ID wajib diisi');
+            }
+            
+            // Pastikan document_form_id adalah integer
+            if (is_string($document->document_form_id)) {
+                $document->document_form_id = (int)$document->document_form_id;
+                Log::info('Mengkonversi document_form_id dari string ke integer: ' . $document->document_form_id);
+            }
+            
             if (empty($document->uploaded_at)) {
                 $document->uploaded_at = Carbon::now();
             }
             if (empty($document->user_id)) {
                 $document->user_id = auth()->id() ?? 1; // Default to admin user if not authenticated
             }
+        });
+        
+        static::created(function ($document) {
+            Log::info('Document created event fired', [
+                'id' => $document->id,
+                'document_form_id' => $document->document_form_id,
+                'name' => $document->name
+            ]);
+        });
+        
+        static::saving(function ($document) {
+            Log::info('Document saving event fired', [
+                'id' => $document->id ?? 'new',
+                'document_form_id' => $document->document_form_id,
+                'name' => $document->name
+            ]);
+            
+            // Pastikan document_form_id tidak kosong
+            if (empty($document->document_form_id)) {
+                Log::error('Mencoba menyimpan dokumen tanpa document_form_id');
+                return false;
+            }
+            
+            return true;
         });
     }
 

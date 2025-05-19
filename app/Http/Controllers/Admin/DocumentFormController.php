@@ -143,6 +143,25 @@ class DocumentFormController extends Controller
         // Query documents dengan filtering
         $query = Document::where('document_form_id', $documentForm->id);
         
+        // Log raw SQL query untuk debugging
+        $sql = $query->toSql();
+        $bindings = $query->getBindings();
+        Log::info('Document query SQL', [
+            'sql' => $sql,
+            'bindings' => $bindings,
+            'document_form_id' => $documentForm->id
+        ]);
+        
+        // Periksa dokumen secara manual
+        $allDocuments = Document::all();
+        Log::info('All documents in database', [
+            'total_count' => $allDocuments->count(),
+            'documents_with_form_id' => $allDocuments->whereNotNull('document_form_id')->count(),
+            'documents_with_this_form_id' => $allDocuments->where('document_form_id', $documentForm->id)->count(),
+            'sample_document_ids' => $allDocuments->take(5)->pluck('id')->toArray(),
+            'sample_document_form_ids' => $allDocuments->take(5)->pluck('document_form_id')->toArray()
+        ]);
+        
         // Tambahkan filter pencarian jika ada
         if ($request->has('search')) {
             $search = $request->input('search');

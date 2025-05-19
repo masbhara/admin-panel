@@ -6,168 +6,6 @@
       </h2>
     </template>
 
-    <!-- Portal untuk dropdown menu -->
-    <teleport to="body">
-      <!-- Header dropdown portal -->
-      <div 
-        v-if="showHeaderDropdown" 
-        class="fixed inset-0 z-[99999]" 
-        @click="closeHeaderDropdown"
-      >
-        <div 
-          ref="headerDropdownRef"
-          class="absolute bg-white dark:bg-gray-800 rounded-md shadow-xl border border-gray-200 dark:border-gray-600 py-1 w-56"
-          :style="{
-            top: headerDropdownPosition.y + 'px',
-            left: headerDropdownPosition.x + 'px',
-          }"
-          @click.stop
-        >
-          <div class="py-1 divide-y divide-gray-200 dark:divide-gray-600">
-            <button 
-              @click="showDocumentDetail(selectedHeaderDocument)"
-              class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Detail</span>
-            </button>
-            
-            <button
-              @click="openPreviewModal(selectedHeaderDocument)"
-              class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <span>Preview</span>
-            </button>
-            
-            <a 
-              :href="selectedHeaderDocument ? route('documents.download', selectedHeaderDocument.id) : '#'"
-              target="_blank" 
-              class="flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span>Download</span>
-            </a>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Table dropdown portal -->
-      <div 
-        v-if="activeActionMenu" 
-        class="fixed inset-0 z-[99999]" 
-        @click="activeActionMenu = null"
-      >
-        <div 
-          v-for="document in documents.data" 
-          :key="document.id"
-          v-show="activeActionMenu === document.id"
-          class="absolute bg-white dark:bg-gray-800 rounded-md shadow-xl border border-gray-200 dark:border-gray-600 py-1 w-56"
-          :style="{
-            top: tableDropdownPosition.y + 'px',
-            left: tableDropdownPosition.x + 'px',
-          }"
-          @click.stop
-        >
-          <div class="py-1 divide-y divide-gray-200 dark:divide-gray-600">
-            <!-- Link to document detail -->
-            <button 
-              @click="showDocumentDetail(document)"
-              class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Detail</span>
-            </button>
-            
-            <button
-              @click="openPreviewModal(document)"
-              class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <span>Preview</span>
-            </button>
-            
-            <a 
-              :href="route('documents.download', document.id)"
-              target="_blank" 
-              class="flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span>Download</span>
-            </a>
-            
-            <!-- Edit and delete links -->
-            <Link 
-              :href="route('admin.documents.edit', document.id)"
-              class="flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span>Edit</span>
-            </Link>
-            
-            <button 
-              @click="confirmDelete(document)"
-              class="w-full flex items-center px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg class="mr-3 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              <span>Hapus</span>
-            </button>
-
-            <!-- Tombol Status -->
-            <div class="py-1 border-t border-gray-200 dark:border-gray-600">
-              <button 
-                @click="updateDocumentStatus(document, 'approved')" 
-                class="w-full flex items-center px-4 py-2 text-xs text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                :class="{ 'bg-green-50 dark:bg-green-900/20': document.status === 'approved' }"
-                :disabled="processingStatus"
-              >
-                <svg v-if="processingStatus && processingDocumentId === document.id && processingStatusType === 'approved'" class="animate-spin mr-3 h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <svg v-else class="mr-3 h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Disetujui</span>
-              </button>
-              
-              <button 
-                @click="updateDocumentStatus(document, 'rejected')" 
-                class="w-full flex items-center px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                :class="{ 'bg-red-50 dark:bg-red-900/20': document.status === 'rejected' }"
-                :disabled="processingStatus"
-              >
-                <svg v-if="processingStatus && processingDocumentId === document.id && processingStatusType === 'rejected'" class="animate-spin mr-3 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <svg v-else class="mr-3 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <span>Ditolak</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </teleport>
-
     <div class="py-6">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <!-- Form Details -->
@@ -428,7 +266,102 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                           </svg>
                         </button>
-                        <!-- Dropdown aksi DIHAPUS - digantikan oleh portal -->
+                        <!-- Dropdown aksi -->
+                        <div 
+                          v-show="activeActionMenu === document.id"
+                          class="dropdown-menu absolute right-0 top-full mt-1 z-[999] w-56 bg-white dark:bg-gray-800 rounded-md shadow-xl border border-gray-200 dark:border-gray-600"
+                          style="max-height: 300px; overflow: auto;"
+                        >
+                          <div class="py-1 divide-y divide-gray-200 dark:divide-gray-600">
+                            <!-- Link to document detail restored -->
+                            <button 
+                              @click="showDocumentDetail(document)"
+                              class="w-full flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <svg class="mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <span>Detail</span>
+                            </button>
+                            
+                            <button
+                              @click="openPreviewModal(document)"
+                              class="w-full flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <svg class="mr-3 h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                              <span>Preview</span>
+                            </button>
+                            
+                            <a 
+                              :href="route('documents.download', document.id)" 
+                              target="_blank" 
+                              class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <svg class="mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              <span>Download</span>
+                            </a>
+                            
+                            <!-- Edit and delete links restored -->
+                            <Link 
+                              :href="route('admin.documents.edit', document.id)"
+                              class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <svg class="mr-3 h-5 w-5 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              <span>Edit</span>
+                            </Link>
+                            
+                            <button 
+                              @click="confirmDelete(document)"
+                              class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <svg class="mr-3 h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              <span>Hapus</span>
+                            </button>
+
+                            <!-- Tombol Status -->
+                            <div class="py-1 border-t border-gray-200 dark:border-gray-600">
+                              <button 
+                                @click="updateDocumentStatus(document, 'approved')" 
+                                class="w-full flex items-center px-4 py-3 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                :class="{ 'bg-green-50 dark:bg-green-900/20': document.status === 'approved' }"
+                                :disabled="processingStatus"
+                              >
+                                <svg v-if="processingStatus && processingDocumentId === document.id && processingStatusType === 'approved'" class="animate-spin mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <svg v-else class="mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Disetujui</span>
+                              </button>
+                              
+                              <button 
+                                @click="updateDocumentStatus(document, 'rejected')" 
+                                class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                :class="{ 'bg-red-50 dark:bg-red-900/20': document.status === 'rejected' }"
+                                :disabled="processingStatus"
+                              >
+                                <svg v-if="processingStatus && processingDocumentId === document.id && processingStatusType === 'rejected'" class="animate-spin mr-3 h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <svg v-else class="mr-3 h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Ditolak</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -456,324 +389,364 @@
               </p>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="documents.data.length > 0" class="mt-4">
+            <!-- Bulk Action Bar -->
+            <div v-if="selectedDocuments.length > 0" 
+                class="fixed bottom-0 inset-x-0 pb-6 z-50">
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-primary-600 rounded-lg shadow-lg px-6 py-4">
+                  <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex-1 flex items-center">
+                      <span class="text-white font-medium">
+                        {{ selectedDocuments.length }} dokumen dipilih
+                      </span>
+                    </div>
+                    <div class="flex-shrink-0 flex items-center gap-4">
+                      <button
+                        @click="confirmBulkDelete"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-600 focus:ring-white transition-colors"
+                      >
+                        <svg class="h-5 w-5 mr-2 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Hapus Dokumen Terpilih
+                      </button>
+                      <button
+                        @click="clearSelection"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-500 hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-600 focus:ring-white transition-colors"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Konfirmasi Bulk Delete Modal -->
+            <modal-dialog :show="showBulkDeleteModal" @close="showBulkDeleteModal = false">
+              <div class="p-6 bg-white dark:bg-gray-800">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
+                    Konfirmasi Hapus Dokumen
+                  </h3>
+                  <button @click="showBulkDeleteModal = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Anda akan menghapus {{ selectedDocuments.length }} dokumen. Aksi ini tidak dapat dibatalkan.
+                </p>
+                <div class="mt-6 flex justify-end gap-3">
+                  <button
+                    @click="showBulkDeleteModal = false"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    @click="executeBulkDelete"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                  >
+                    Ya, Hapus Dokumen
+                  </button>
+                </div>
+              </div>
+            </modal-dialog>
+
+            <!-- Pagination dan Per-Page Options -->
+            <div v-if="documents.data.length > 0" class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <label for="perPage" class="text-sm text-gray-500 dark:text-gray-400">Tampilkan:</label>
+                <select 
+                  id="perPage" 
+                  v-model="perPage" 
+                  @change="changePerPage"
+                  class="py-1 px-2 text-sm rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option :value="10">10</option>
+                  <option :value="25">25</option>
+                  <option :value="50">50</option>
+                  <option :value="100">100</option>
+                </select>
+                <span class="text-sm text-gray-500 dark:text-gray-400">dari {{ documents.total }} dokumen</span>
+              </div>
               <Pagination :links="documents.links" />
             </div>
           </div>
         </div>
       </div>
     </div>
-  </AdminLayout>
-  
-  <!-- Modals -->
-  <!-- Preview Modal -->
-  <Modal :show="showPreviewModal" max-width="4xl" @close="showPreviewModal = false" :closeable="true">
-    <div class="p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-          Preview Dokumen: {{ previewDocument?.name || previewDocument?.file_name || 'Dokumen' }}
-        </h3>
-        <button
-          @click="showPreviewModal = false"
-          class="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <span class="sr-only">Close</span>
-          <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+
+    <!-- Public URL Modal -->
+    <Modal :show="publicUrlModal" @close="closePublicUrlModal">
+      <div class="p-6">
+        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+          URL Publik Form
+        </h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          URL publik untuk form "{{ documentForm.title }}":
+        </p>
+        <div class="mt-2 flex items-center">
+          <input 
+            ref="publicUrlInput"
+            type="text" 
+            :value="publicUrl" 
+            readonly 
+            class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          />
+          <button 
+            @click="copyToClipboard" 
+            class="ml-2 p-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition"
+            :class="{ 'bg-green-600 hover:bg-green-700': copied }"
+          >
+            <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+        </div>
+        <div class="mt-6 flex justify-end">
+          <SecondaryButton @click="closePublicUrlModal">Tutup</SecondaryButton>
+        </div>
+      </div>
+    </Modal>
+    
+    <!-- Preview Modal -->
+    <modal-dialog :show="showPreviewModal" @close="showPreviewModal = false" max-width="4xl">
+      <div class="bg-white dark:bg-gray-800 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+            Preview Dokumen
+          </h3>
+          <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
+          <svg class="animate-spin h-10 w-10 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-        </button>
-      </div>
-      
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
-        <svg class="animate-spin h-10 w-10 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="text-gray-500 dark:text-gray-400">Memuat preview dokumen...</p>
-      </div>
-      
-      <div v-else-if="previewError" class="flex flex-col items-center justify-center py-12 bg-red-50 dark:bg-red-900/20 rounded-lg">
-        <svg class="h-16 w-16 text-red-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        <h3 class="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Preview tidak tersedia</h3>
-        <p class="text-center text-gray-500 dark:text-gray-400 mb-4">{{ previewError }}</p>
-        <a 
-          :href="currentOriginalUrl" 
-          target="_blank" 
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-        >
-          <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <p class="mt-4 text-gray-600 dark:text-gray-400">Memuat preview dokumen...</p>
+        </div>
+        
+        <div v-else-if="previewError" class="flex flex-col items-center justify-center py-12">
+          <svg class="h-16 w-16 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Download dokumen
-        </a>
-      </div>
-      
-      <div v-else>
-        <!-- Preview tools header -->
-        <div v-if="previewType === 'external'" class="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <div class="flex items-center space-x-4">
-            <button 
-              @click="switchViewer('google')" 
-              class="px-3 py-1 text-sm rounded-md transition-colors"
-              :class="activeViewer === 'google' ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
-            >
-              Google Viewer
-            </button>
-            <button 
-              v-if="officeViewerUrl"
-              @click="switchViewer('office')" 
-              class="px-3 py-1 text-sm rounded-md transition-colors"
-              :class="activeViewer === 'office' ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
-            >
-              Office Viewer
-            </button>
-          </div>
+          <p class="mt-4 text-red-600 dark:text-red-400">{{ previewError }}</p>
           <a 
             :href="currentOriginalUrl" 
             target="_blank" 
-            class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           >
-            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download
+            Download File
           </a>
         </div>
         
-        <!-- PDF Preview -->
-        <div v-if="previewType === 'pdf'" class="bg-gray-800 rounded-lg overflow-hidden h-[75vh]">
-          <iframe 
-            :src="currentPreviewUrl" 
-            class="w-full h-full border-0"
-            allowfullscreen
-          ></iframe>
-        </div>
-        
-        <!-- External Preview (Google/Office) -->
-        <div v-else-if="previewType === 'external'" class="bg-gray-800 rounded-lg overflow-hidden h-[75vh]">
-          <iframe 
-            :src="currentPreviewUrl"
-            class="w-full h-full border-0"
-            allowfullscreen
-          ></iframe>
-        </div>
-        
-        <!-- Image Preview -->
-        <div v-else class="bg-gray-800 rounded-lg overflow-hidden text-center p-4 h-[75vh]">
-          <img :src="currentPreviewUrl" alt="Preview dokumen" class="max-h-full max-w-full inline-block object-contain" />
-        </div>
-      </div>
-    </div>
-  </Modal>
-
-  <!-- Delete Confirmation Modal -->
-  <ModalDialog :show="showDeleteModal" @close="showDeleteModal = false">
-    <div class="p-6">
-      <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
-        <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      </div>
-      <h3 class="text-lg font-medium text-center text-gray-900 dark:text-gray-100 mb-5">Konfirmasi Hapus</h3>
-      <p class="text-sm text-center text-gray-500 dark:text-gray-400 mb-5">
-        Apakah Anda yakin ingin menghapus dokumen ini? Dokumen yang dihapus tidak dapat dikembalikan.
-      </p>
-      <div class="flex justify-center gap-3 mt-6">
-        <SecondaryButton @click="showDeleteModal = false" :disabled="processingDelete">
-          Batal
-        </SecondaryButton>
-        <button
-          @click="executeDelete"
-          class="inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          :class="{'opacity-75 cursor-not-allowed': processingDelete}"
-          :disabled="processingDelete"
-        >
-          <svg v-if="processingDelete" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          {{ processingDelete ? 'Menghapus...' : 'Hapus' }}
-        </button>
-      </div>
-    </div>
-  </ModalDialog>
-
-  <!-- Public URL Modal -->
-  <ModalDialog :show="publicUrlModal" @close="closePublicUrlModal">
-    <div class="p-6">
-      <div class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mx-auto mb-4">
-        <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-        </svg>
-      </div>
-      <h3 class="text-lg font-medium text-center text-gray-900 dark:text-gray-100 mb-5">URL Publik Form</h3>
-      <p class="text-sm text-center text-gray-500 dark:text-gray-400 mb-5">
-        Bagikan URL berikut untuk mengizinkan pengunjung mengunggah dokumen ke form ini.
-      </p>
-      
-      <div class="mt-4 relative">
-        <input
-          ref="publicUrlInput"
-          type="text"
-          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-gray-300"
-          readonly
-          :value="publicUrl"
-        />
-        <button 
-          @click="copyToClipboard" 
-          class="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-        >
-          {{ copied ? 'Disalin!' : 'Salin' }}
-        </button>
-      </div>
-      
-      <div class="flex justify-center mt-6">
-        <button
-          @click="closePublicUrlModal"
-          class="inline-flex items-center justify-center px-4 py-2 bg-gray-300 dark:bg-gray-600 border border-transparent rounded-md font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-        >
-          Tutup
-        </button>
-      </div>
-    </div>
-  </ModalDialog>
-
-  <!-- Import Modal -->
-  <ModalDialog :show="showImportModal" @close="showImportModal = false">
-    <div class="p-6">
-      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-5">Import Dokumen</h3>
-      
-      <form @submit="submitImportForm">
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            File Excel (.xlsx, .xls, .csv)
-          </label>
+        <div v-else>
+          <div v-if="previewType === 'external'" class="mb-4 flex justify-between items-center">
+            <div class="flex space-x-2">
+              <button 
+                @click="switchViewer('google')" 
+                class="px-3 py-1 text-sm font-medium rounded transition-colors"
+                :class="activeViewer === 'google' ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'"
+              >
+                Google Viewer
+              </button>
+              <button 
+                v-if="officeViewerUrl"
+                @click="switchViewer('office')" 
+                class="px-3 py-1 text-sm font-medium rounded transition-colors"
+                :class="activeViewer === 'office' ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'"
+              >
+                Office Viewer
+              </button>
+            </div>
+            <a 
+              :href="currentOriginalUrl" 
+              target="_blank" 
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </a>
+          </div>
           
+          <div class="mt-2 border border-gray-300 dark:border-gray-600 rounded-md h-[70vh] overflow-hidden">
+            <iframe 
+              :src="currentPreviewUrl" 
+              class="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              frameborder="0" 
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </modal-dialog>
+    
+    <!-- Delete Confirmation Modal -->
+    <modal-dialog :show="showDeleteModal" @close="showDeleteModal = false">
+      <div class="p-6 bg-white dark:bg-gray-800">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
+            Konfirmasi Hapus Dokumen
+          </h3>
+          <button @click="showDeleteModal = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Apakah Anda yakin ingin menghapus dokumen "{{ documentToDelete?.name || documentToDelete?.file_name }}"? Aksi ini tidak dapat dibatalkan.
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            @click="showDeleteModal = false"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            @click="executeDelete"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+            :disabled="deleteForm.processing"
+          >
+            <span v-if="deleteForm.processing">Menghapus...</span>
+            <span v-else>Ya, Hapus Dokumen</span>
+          </button>
+        </div>
+      </div>
+    </modal-dialog>
+    
+    <!-- Import Modal -->
+    <modal-dialog :show="showImportModal" @close="showImportModal = false">
+      <div class="p-6 bg-white dark:bg-gray-800">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
+            Import Dokumen
+          </h3>
+          <button @click="showImportModal = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <form @submit="submitImportForm" enctype="multipart/form-data" class="mt-4">
           <div 
+            class="border-2 border-dashed p-6 rounded-lg text-center transition-colors"
+            :class="{
+              'border-primary-300 bg-primary-50 dark:border-primary-700 dark:bg-primary-900/20': isDragging,
+              'border-gray-300 dark:border-gray-700': !isDragging
+            }"
             @dragover="onDragOver"
             @dragleave="onDragLeave"
             @drop="onFileDrop"
-            :class="['border-2 border-dashed rounded-lg p-6 text-center transition-colors', 
-              isDragging ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-300 dark:border-gray-600'
-            ]"
+            @click="triggerFileInput"
           >
-            <div v-if="!importFile">
-              <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <input 
+              type="file" 
+              ref="importFileInput" 
+              @change="onFileInputChange" 
+              accept=".xlsx,.xls,.csv" 
+              class="hidden" 
+            />
+            
+            <div v-if="importFile">
+              <svg class="w-10 h-10 mx-auto text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">{{ importFile.name }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                {{ formatFileSize(importFile.size) }}
+              </p>
+              <button 
+                type="button" 
+                class="mt-2 text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                @click.stop="importFile = null"
+              >
+                Hapus file
+              </button>
+            </div>
+            
+            <template v-else>
+              <svg class="w-12 h-12 mx-auto text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                <span class="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 cursor-pointer" @click="triggerFileInput">Pilih file</span> atau tarik dan letakkan file di sini.
+              <p class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                Drag & drop file atau klik untuk memilih
               </p>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Format yang didukung: .xlsx, .xls, .csv
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                File harus berformat Excel (.xlsx, .xls) atau CSV (.csv)
               </p>
-              <input 
-                type="file" 
-                class="hidden" 
-                ref="importFileInput"
-                @change="onFileInputChange"
-                accept=".xlsx,.xls,.csv" 
-              />
-            </div>
-            <div v-else class="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded">
-              <div class="flex items-center">
-                <svg class="h-8 w-8 text-emerald-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <div class="text-left">
-                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-xs">{{ importFile.name }}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatFileSize(importFile.size) }}</p>
-                </div>
-              </div>
+            </template>
+          </div>
+          
+          <div v-if="importError" class="mt-3 text-sm text-red-600 dark:text-red-400">
+            {{ importError }}
+          </div>
+          
+          <div class="flex gap-3 justify-between pt-4">
+            <a 
+              href="#" 
+              @click.prevent="downloadTemplate"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-secondary-600 border border-transparent rounded-lg shadow-sm hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 transition-colors"
+              :class="{ 'opacity-50 cursor-not-allowed': importProcessing }"
+              :disabled="importProcessing"
+            >
+              <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Template
+            </a>
+            
+            <div>
               <button 
+                @click="showImportModal = false" 
                 type="button"
-                @click="importFile = null"
-                class="p-1 rounded-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                class="mr-2 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                :disabled="importProcessing"
               >
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                Batal
+              </button>
+              
+              <button 
+                type="submit" 
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="!importFile || importProcessing"
+              >
+                <svg v-if="importProcessing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
+                <svg v-else class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                {{ importProcessing ? 'Mengimpor...' : 'Import' }}
               </button>
             </div>
           </div>
-          
-          <div v-if="importError" class="mt-2 text-sm text-red-600 dark:text-red-400">
-            {{ importError }}
-          </div>
+        </form>
+        <div v-if="importProcessing" class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+          <p>Proses import sedang berjalan, harap jangan menutup halaman ini.</p>
+          <p>Untuk file besar mungkin membutuhkan waktu lebih lama.</p>
+          <p>Halaman akan refresh otomatis setelah proses selesai.</p>
         </div>
-        
-        <div class="flex justify-between items-center mt-6">
-          <button 
-            type="button"
-            @click="downloadTemplate"
-            class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-500 flex items-center"
-          >
-            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download Template
-          </button>
-          
-          <div>
-            <button 
-              type="button"
-              @click="showImportModal = false"
-              class="inline-flex justify-center px-4 py-2 mr-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              Batal
-            </button>
-            
-            <button 
-              type="submit"
-              :disabled="!importFile || importProcessing"
-              class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg v-if="importProcessing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {{ importProcessing ? 'Importing...' : 'Import' }}
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </ModalDialog>
-
-  <!-- Bulk Delete Modal -->
-  <ModalDialog :show="showBulkDeleteModal" @close="showBulkDeleteModal = false">
-    <div class="p-6">
-      <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
-        <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
       </div>
-      <h3 class="text-lg font-medium text-center text-gray-900 dark:text-gray-100 mb-2">Hapus Dokumen Terpilih</h3>
-      <p class="text-sm text-center text-gray-500 dark:text-gray-400 mb-5">
-        Anda akan menghapus {{ selectedDocuments.length }} dokumen. Tindakan ini tidak dapat dibatalkan. Dokumen yang dihapus tidak akan dapat dipulihkan.
-      </p>
-      <div class="flex justify-center gap-3 mt-6">
-        <SecondaryButton @click="showBulkDeleteModal = false" :disabled="bulkDeleteForm.processing">
-          Batal
-        </SecondaryButton>
-        <button
-          @click="executeBulkDelete"
-          class="inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          :class="{'opacity-75 cursor-not-allowed': bulkDeleteForm.processing}"
-          :disabled="bulkDeleteForm.processing"
-        >
-          <svg v-if="bulkDeleteForm.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          {{ bulkDeleteForm.processing ? 'Menghapus...' : 'Hapus' }}
-        </button>
-      </div>
-    </div>
-  </ModalDialog>
+    </modal-dialog>
+  </AdminLayout>
 </template>
 
 <script setup>
@@ -826,11 +799,6 @@ const importProcessing = ref(false);
 const isDragging = ref(false);
 const importFileInput = ref(null);
 const showFormDetails = ref(false);
-const headerDropdownRef = ref(null);
-const showHeaderDropdown = ref(false);
-const headerDropdownPosition = ref({ x: 0, y: 0 });
-const tableDropdownPosition = ref({ x: 0, y: 0 });
-const selectedHeaderDocument = ref(null);
 
 const deleteForm = useForm({});
 const bulkDeleteForm = useForm({ document_ids: [] });
@@ -871,55 +839,36 @@ const toggleActionMenu = (documentId, event) => {
   
   console.log('Tombol aksi diklik untuk dokumen:', documentId);
   
-  // Cari dokumen dari data
-  const document = props.documents.data.find(doc => doc.id === documentId);
-  if (!document) return;
-
-  // Cek apakah tombol ini ada di header
-  const button = event.target.closest('button');
-  if (!button) return;
-  
-  const buttonRect = button.getBoundingClientRect();
-  const isInHeader = buttonRect.top < 200; // Asumsi: header berada di atas 200px dari atas browser
-  
-  if (isInHeader) {
-    console.log('Dropdown berada di header area, menggunakan portal');
-    
-    // Gunakan teleport untuk dropdown di header
+  // Toggle menu: jika menu dengan ID yang sama sudah aktif, tutup. Jika belum, buka.
+  if (activeActionMenu.value === documentId) {
+    console.log('Menutup menu karena sudah aktif');
     activeActionMenu.value = null;
-    selectedHeaderDocument.value = document;
-    
-    // Letakkan dropdown di atas tombol alih-alih di bawah
-    headerDropdownPosition.value = {
-      x: buttonRect.left - 170,
-      y: buttonRect.top - 150 // Posisikan 150px di atas tombol
-    };
-    
-    // Tampilkan dropdown
-    showHeaderDropdown.value = true;
   } else {
-    console.log('Dropdown berada di area tabel, menggunakan portal');
-    // Toggle menu di tabel reguler menggunakan portal
-    if (activeActionMenu.value === documentId) {
-      console.log('Menutup menu karena sudah aktif');
-      activeActionMenu.value = null;
-    } else {
-      console.log('Membuka menu untuk dokumen:', documentId);
-      // Tutup menu lain yang mungkin terbuka
-      activeActionMenu.value = documentId;
-      
-      // Posisikan dropdown di atas tombol alih-alih di bawah
-      tableDropdownPosition.value = {
-        x: window.innerWidth - buttonRect.right > 250 ? buttonRect.right - 50 : buttonRect.left - 200,
-        y: buttonRect.top - 220 // Posisikan 220px di atas tombol (tergantung tinggi dropdown)
-      };
-    }
+    console.log('Membuka menu untuk dokumen:', documentId);
+    // Tutup menu lain yang mungkin terbuka
+    activeActionMenu.value = documentId;
   }
+  
+  // Add event listener to close menu when clicking outside
+  setTimeout(() => {
+    window.addEventListener('click', closeActionMenuOnClickOutside);
+  }, 10);
 };
 
-// Function to close header dropdown
-const closeHeaderDropdown = () => {
-  showHeaderDropdown.value = false;
+const closeActionMenuOnClickOutside = (event) => {
+  // Jika tidak ada menu aktif, abaikan
+  if (activeActionMenu.value === null) {
+    window.removeEventListener('click', closeActionMenuOnClickOutside);
+    return;
+  }
+
+  const clickedOnDropdown = event.target.closest(`[data-dropdown-id="${activeActionMenu.value}"]`);
+  console.log('Klik luar, dropdown terdeteksi:', !!clickedOnDropdown);
+  
+  if (!clickedOnDropdown) {
+    activeActionMenu.value = null;
+    window.removeEventListener('click', closeActionMenuOnClickOutside);
+  }
 };
 
 // Toggle select all documents
@@ -1045,9 +994,7 @@ const confirmDelete = (document) => {
 // Function to show document detail
 const showDocumentDetail = (document) => {
   activeActionMenu.value = null; // Tutup dropdown
-  
-  // Gunakan URL langsung alih-alih route()
-  window.location.href = `/admin/documents/${document.id}`;
+  router.get(route('admin.documents.show', document.id));
 };
 
 // Functions related to document deletion
@@ -1056,23 +1003,21 @@ const executeDelete = () => {
   
   processingDelete.value = true;
   
-  // Gunakan axios alih-alih router.delete
-  axios.delete(`/admin/documents/${documentToDelete.value.id}`)
-    .then(response => {
+  router.delete(route('admin.documents.destroy', documentToDelete.value.id), {
+    preserveScroll: true,
+    onSuccess: () => {
       showDeleteModal.value = false;
       processingDelete.value = false;
       documentToDelete.value = null;
-      
-      // Refresh halaman
-      router.reload();
-    })
-    .catch(error => {
-      console.error('Error deleting document:', error);
+    },
+    onError: (errors) => {
+      console.error('Error deleting document:', errors);
       processingDelete.value = false;
-    })
-    .finally(() => {
+    },
+    onFinish: () => {
       processingDelete.value = false;
-    });
+    }
+  });
 };
 
 // Function to update document status
@@ -1083,31 +1028,27 @@ const updateDocumentStatus = (document, status) => {
   processingDocumentId.value = document.id;
   processingStatusType.value = status;
   
-  // Gunakan axios alih-alih router.put
-  axios.put(`/admin/documents/${document.id}/status`, {
+  router.put(route('admin.documents.update-status', document.id), {
     status: status
-  })
-    .then(response => {
+  }, {
+    preserveScroll: true,
+    preserveState: true,
+    onSuccess: () => {
       processingStatus.value = false;
       activeActionMenu.value = null;
-      
-      // Update dokumen status secara lokal
-      const index = props.documents.data.findIndex(d => d.id === document.id);
-      if (index !== -1) {
-        props.documents.data[index].status = status;
-      }
-    })
-    .catch(error => {
-      console.error('Error updating document status:', error);
+    },
+    onError: (errors) => {
+      console.error('Error updating document status:', errors);
       processingStatus.value = false;
-    })
-    .finally(() => {
+    },
+    onFinish: () => {
       setTimeout(() => {
         processingStatus.value = false;
         processingDocumentId.value = null;
         processingStatusType.value = null;
       }, 500);
-    });
+    }
+  });
 };
 
 // Function to change per page
@@ -1243,8 +1184,7 @@ const submitImportForm = async (e) => {
   formData.append('document_form_id', props.documentForm.id);
   
   try {
-    // Gunakan URL langsung alih-alih route
-    const response = await axios.post('/admin/documents/import', formData, {
+    const response = await axios.post(route('admin.documents.import'), formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -1268,8 +1208,7 @@ const submitImportForm = async (e) => {
 
 // Function to download template
 const downloadTemplate = () => {
-  // Gunakan URL langsung alih-alih route
-  window.open('/admin/documents/template/download', '_blank');
+  window.open(route('admin.documents.download-template'), '_blank');
 };
 
 // Function to format file size
@@ -1284,30 +1223,9 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-// Function to confirm bulk delete
-const confirmBulkDelete = () => {
-  if (selectedDocuments.value.length > 0) {
-    showBulkDeleteModal.value = true;
-  }
-};
-
-// Function to execute bulk delete
-const executeBulkDelete = () => {
-  if (selectedDocuments.value.length === 0) return;
-  
-  bulkDeleteForm.document_ids = selectedDocuments.value;
-  
-  bulkDeleteForm.delete(route('admin.documents.bulk-delete'), {
-    preserveScroll: true,
-    onSuccess: () => {
-      showBulkDeleteModal.value = false;
-      clearSelection();
-    }
-  });
-};
-
 // Membersihkan event listener saat komponen unmounted
 onBeforeUnmount(() => {
+  window.removeEventListener('click', closeActionMenuOnClickOutside);
   console.log('Event listener dibersihkan');
 });
 </script>
@@ -1323,46 +1241,8 @@ onBeforeUnmount(() => {
   right: 0;
   top: 100%;
   min-width: 200px;
-  z-index: 9999;
+  z-index: 1000;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  overflow: visible;
-}
-
-/* Untuk dropdown yang berada di bagian atas halaman (header) */
-.header-dropdown .dropdown-menu {
-  position: fixed !important; /* Gunakan posisi fixed */
-  z-index: 99999;
-  top: auto;
-  right: auto; /* Jangan gunakan right otomatis */
-  bottom: auto;
-  transform: translateY(0);
-  margin-top: 8px;
-  margin-bottom: 0;
-}
-
-.header-dropdown .dropdown-menu:before {
-  top: -8px;
-  bottom: auto;
-  transform: rotate(0);
-  border-color: transparent transparent white transparent;
-}
-
-.dropdown-menu:before {
-  content: "";
-  position: absolute;
-  bottom: -8px; /* Ubah dari top menjadi bottom */
-  right: 9px;
-  border-width: 8px 8px 0 8px; /* Ubah arah panah */
-  border-style: solid;
-  border-color: var(--tw-ring-color) transparent transparent transparent; /* Ubah warna panah */
-  filter: drop-shadow(0 1px 0px rgba(0, 0, 0, 0.1));
-}
-
-/* Panah untuk dropdown yang muncul di atas tombol */
-.header-dropdown .dropdown-menu:before {
-  bottom: -8px;
-  top: auto;
-  transform: rotate(0);
-  border-color: white transparent transparent transparent;
 }
 </style> 
+</rewritten_file>
