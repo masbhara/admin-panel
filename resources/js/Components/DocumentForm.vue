@@ -329,10 +329,14 @@ watch(() => props.successMessage, (newVal) => {
     showNotificationPopup(
       'success', 
       'Dokumen Berhasil Terkirim!', 
-      'Terima kasih! Dokumen Anda telah berhasil dikirim. Silakan periksa notifikasi WhatsApp Anda untuk informasi lebih lanjut.'
+      'Dokumen telah dikirim, jika Anda menerima notifikasi melalui WhatsApp berarti dokumen Anda telah kami terima.'
     );
+    // Refresh halaman setelah 7 detik
+    setTimeout(() => {
+      window.location.reload();
+    }, 7500);
   }
-}, { immediate: true }); // Tambah waktunya jadi 10 detik agar user punya waktu membaca
+}, { immediate: true });
 
 // Show notification popup
 const showNotificationPopup = (type, title, message) => {
@@ -341,10 +345,10 @@ const showNotificationPopup = (type, title, message) => {
   notificationMessage.value = message;
   showNotification.value = true;
   
-  // Auto close after 8 seconds
+  // Auto close after 7 seconds
   setTimeout(() => {
     showNotification.value = false;
-  }, 10000); // Tambah waktunya jadi 10 detik agar user punya waktu membaca
+  }, 7000); // Tambah waktunya jadi 7 detik agar user punya waktu membaca
 };
 
 const form = useForm({
@@ -646,11 +650,16 @@ const submitForm = () => {
         showNotificationPopup(
           'success', 
           'Dokumen Berhasil Terkirim!', 
-          'Terima kasih! Dokumen Anda telah berhasil dikirim. Silakan periksa notifikasi WhatsApp Anda untuk informasi lebih lanjut.'
+          'Dokumen telah dikirim, jika Anda menerima notifikasi melalui WhatsApp berarti dokumen Anda telah kami terima.'
         );
         form.reset();
         selectedFile.value = null;
         citySearch.value = '';
+        
+        // Refresh halaman setelah 7 detik
+        setTimeout(() => {
+          window.location.reload();
+        }, 7500);
         // Reset touched fields
         Object.keys(touchedFields.value).forEach(field => {
           touchedFields.value[field] = false;
