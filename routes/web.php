@@ -31,6 +31,7 @@ use App\Http\Controllers\CaptchaController;
 use App\Http\Controllers\Admin\EmptyPageController;
 use App\Http\Controllers\Admin\DocumentFormController;
 use App\Http\Controllers\Admin\DocumentFormNotificationController;
+use App\Http\Controllers\RedirectController;
 
 // Public routes
 Route::get('/', function () {
@@ -109,6 +110,21 @@ Route::middleware('guest')->group(function () {
     Route::get('reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
+
+// Redirect handler
+Route::get('/redirect', [RedirectController::class, 'handle'])
+    ->middleware(['auth', 'verified'])
+    ->name('redirect');
+
+// User dashboard route
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'role:user'])
+    ->name('dashboard');
+
+// Admin dashboard route
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'role:admin|super-admin'])
+    ->name('admin.dashboard');
 
 // Protected routes
 Route::middleware(['auth'])->group(function () {
