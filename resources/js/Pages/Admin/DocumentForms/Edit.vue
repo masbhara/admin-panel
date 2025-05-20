@@ -99,7 +99,7 @@
               <!-- Closed Message -->
               <div class="mb-4">
                 <InputLabel for="closed_message" value="Pesan Ketika Form Ditutup (opsional)" />
-                <Textarea
+                <TextArea
                   id="closed_message"
                   class="mt-1 block w-full"
                   v-model="form.closed_message"
@@ -142,13 +142,12 @@ import { useForm, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
-import Textarea from '@/Components/Textarea.vue';
+import TextArea from '@/Components/TextArea.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import TextArea from '@/Components/TextArea.vue'
 
 const props = defineProps({
   documentForm: Object,
