@@ -11,6 +11,24 @@
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
           <div class="p-6">
             <form @submit.prevent="submit">
+              <!-- Template Selection -->
+              <div class="mb-6">
+                <InputLabel for="template_type" value="Pilih Template Form" />
+                <select
+                  id="template_type"
+                  v-model="form.template_type"
+                  class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white sm:text-sm rounded-md"
+                  @change="handleTemplateChange"
+                >
+                  <option value="default">Form Dokumen Default</option>
+                  <option value="article">Form Artikel Media</option>
+                </select>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {{ getTemplateDescription(form.template_type) }}
+                </p>
+                <InputError :message="form.errors.template_type" class="mt-2" />
+              </div>
+
               <!-- Title -->
               <div class="mb-4">
                 <InputLabel for="title" value="Judul Form" />
@@ -87,6 +105,23 @@
                 <InputError :message="form.errors.is_active" class="mt-2" />
               </div>
 
+              <!-- Preview Fields -->
+              <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Preview Fields</h3>
+                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div v-for="field in previewFields" :key="field.name" class="mb-4 last:mb-0">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <span class="font-medium">{{ field.label }}</span>
+                        <span v-if="field.is_required" class="text-red-500 ml-1">*</span>
+                      </div>
+                      <span class="text-sm text-gray-500">{{ getFieldTypeLabel(field.type) }}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Submit Button -->
               <div class="flex items-center justify-end mt-4">
                 <Link
@@ -108,6 +143,7 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -117,6 +153,115 @@ import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 
+const defaultFields = {
+  default: [
+    {
+      label: 'Nama Lengkap',
+      name: 'name',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan nama lengkap Anda',
+      order: 0
+    },
+    {
+      label: 'Nomor WhatsApp',
+      name: 'whatsapp',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: '08xxx (gunakan nomor aktif)',
+      order: 1
+    },
+    {
+      label: 'Kota/Kabupaten',
+      name: 'city',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Ketik untuk mencari kota/kabupaten...',
+      order: 2
+    },
+    {
+      label: 'Unggah Dokumen',
+      name: 'document',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: PDF, Word, maksimal 10MB',
+      validation_rules: {
+        mimes: 'pdf,doc,docx',
+        max: 10240
+      },
+      order: 3
+    }
+  ],
+  article: [
+    {
+      label: 'Nama Lengkap',
+      name: 'name',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan nama lengkap Anda',
+      order: 0
+    },
+    {
+      label: 'Nomor WhatsApp',
+      name: 'whatsapp',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: '08xxx (gunakan nomor aktif)',
+      order: 1
+    },
+    {
+      label: 'Kota/Kabupaten',
+      name: 'city',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Ketik untuk mencari kota/kabupaten...',
+      order: 2
+    },
+    {
+      label: 'Unggah Dokumen',
+      name: 'document',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: PDF, Word, maksimal 10MB',
+      validation_rules: {
+        mimes: 'pdf,doc,docx',
+        max: 10240
+      },
+      order: 3
+    },
+    {
+      label: 'Tautan / Link Media',
+      name: 'media_link',
+      type: 'url',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan link artikel yang sudah dipublikasi',
+      order: 4
+    },
+    {
+      label: 'Unggah Screenshot',
+      name: 'screenshot',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: JPG, PNG, maksimal 5MB',
+      validation_rules: {
+        mimes: 'jpg,jpeg,png',
+        max: 5120
+      },
+      order: 5
+    }
+  ]
+};
+
 const form = useForm({
   title: '',
   description: '',
@@ -124,9 +269,53 @@ const form = useForm({
   submission_deadline: '',
   closed_message: 'Pengumpulan dokumen telah ditutup.',
   is_active: true,
+  template_type: 'default',
+  fields: defaultFields.default
 });
 
+const getTemplateDescription = (templateType) => {
+  const descriptions = {
+    default: 'Template standar untuk pengumpulan dokumen (PDF/Word)',
+    article: 'Template untuk pengumpulan artikel media dengan screenshot dan tautan'
+  };
+  return descriptions[templateType] || '';
+};
+
+const getFieldTypeLabel = (type) => {
+  const labels = {
+    text: 'Teks',
+    textarea: 'Teks Panjang',
+    select: 'Pilihan',
+    radio: 'Pilihan Radio',
+    checkbox: 'Kotak Centang',
+    file: 'Unggah File',
+    date: 'Tanggal',
+    number: 'Angka',
+    url: 'Tautan URL'
+  };
+  return labels[type] || type;
+};
+
+const previewFields = computed(() => {
+  return defaultFields[form.template_type] || [];
+});
+
+const handleTemplateChange = () => {
+  form.fields = defaultFields[form.template_type];
+  console.log('Template changed to:', form.template_type);
+  console.log('Fields updated:', form.fields);
+};
+
 const submit = () => {
-  form.post(route('admin.document-forms.store'));
+  console.log('Submitting form with data:', form.data());
+  form.post(route('admin.document-forms.store'), {
+    onSuccess: () => {
+      console.log('Form submitted successfully');
+      form.reset();
+    },
+    onError: (errors) => {
+      console.error('Form submission failed:', errors);
+    }
+  });
 };
 </script> 

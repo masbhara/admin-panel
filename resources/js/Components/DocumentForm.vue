@@ -247,6 +247,69 @@
           <p v-else-if="form.errors?.file" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.file }}</p>
         </div>
         
+        <!-- Media Link - Hanya untuk Template Article -->
+        <div v-if="props.templateType === 'article'" class="mt-6">
+          <label for="media_link" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tautan / Link Media <span class="text-red-500">*</span></label>
+          <input 
+            id="media_link" 
+            v-model="form.media_link" 
+            type="url" 
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+            :class="{'border-red-500 dark:border-red-500': mediaLinkErrors.length > 0 || form.errors?.media_link}"
+            placeholder="https://media.com/artikel-anda"
+            required
+            @blur="validateMediaLink"
+          />
+          <div v-if="mediaLinkErrors.length > 0" class="mt-1 text-sm text-red-600 dark:text-red-500">
+            <p v-for="(error, index) in mediaLinkErrors" :key="index">{{ error }}</p>
+          </div>
+          <p v-else-if="form.errors?.media_link" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.media_link }}</p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Masukkan URL Website atau link artikel yang sudah dipublikasi</p>
+        </div>
+        
+        <!-- Screenshot Upload - Hanya untuk Template Article -->
+        <div v-if="props.templateType === 'article'" class="mt-6">
+          <label for="screenshot" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Unggah Screenshot <span class="text-red-500">*</span></label>
+          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md"
+                :class="{'border-red-500 dark:border-red-500': screenshotErrors.length > 0 || form.errors?.screenshot, 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700': isScreenshotDragging}"
+                @dragover="handleScreenshotDragOver"
+                @dragleave="handleScreenshotDragLeave"
+                @drop="handleScreenshotDrop">
+            <div class="space-y-1 text-center">
+              <svg v-if="!selectedScreenshot && !screenshotPreviewName" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4h-5m-6 0H9.33M28 8v7m0 0v8m0-8h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <div v-if="selectedScreenshot || screenshotPreviewName" class="flex items-center justify-center">
+                <svg class="h-10 w-10 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                </svg>
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">{{ screenshotPreviewName }}</span>
+              </div>
+              <div v-else class="flex text-sm text-gray-600 dark:text-gray-400">
+                <label for="screenshot-upload" class="relative cursor-pointer rounded-md font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                  <span>Unggah screenshot</span>
+                  <input 
+                    id="screenshot-upload" 
+                    name="screenshot-upload" 
+                    type="file" 
+                    class="sr-only" 
+                    @change="handleScreenshotChange"
+                    accept=".jpg,.jpeg,.png"
+                  />
+                </label>
+                <p class="pl-1">atau seret dan letakkan</p>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Format: JPG, PNG, maksimal 5MB
+              </p>
+            </div>
+          </div>
+          <div v-if="screenshotErrors.length > 0" class="mt-1 text-sm text-red-600 dark:text-red-500">
+            <p v-for="(error, index) in screenshotErrors" :key="index">{{ error }}</p>
+          </div>
+          <p v-else-if="form.errors?.screenshot" class="mt-1 text-sm text-red-600 dark:text-red-500">{{ form.errors.screenshot }}</p>
+        </div>
+        
         <!-- Captcha Component -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verifikasi (Klik refresh untuk ganti kode) <span class="text-red-500">*</span></label>
@@ -294,13 +357,18 @@ const props = defineProps({
   documentFormId: {
     type: Number,
     default: null
+  },
+  templateType: {
+    type: String,
+    default: 'default'
   }
 });
 
 // Logging untuk debugging
 console.log('DocumentForm component initialized with props:', {
   documentFormId: props.documentFormId,
-  successMessage: props.successMessage
+  successMessage: props.successMessage,
+  templateType: props.templateType
 });
 
 // Notification states
@@ -314,12 +382,16 @@ const nameErrors = ref([]);
 const whatsappErrors = ref([]);
 const cityErrors = ref([]);
 const fileErrors = ref([]);
+const mediaLinkErrors = ref([]);
+const screenshotErrors = ref([]);
 const captchaErrors = ref([]);
 const touchedFields = ref({
   name: false,
   whatsapp: false,
   city: false,
   file: false,
+  media_link: false,
+  screenshot: false,
   captcha: false
 });
 
@@ -351,18 +423,23 @@ const showNotificationPopup = (type, title, message) => {
   }, 7000); // Tambah waktunya jadi 7 detik agar user punya waktu membaca
 };
 
+// Inisialisasi form dengan fields default
 const form = useForm({
   name: '',
   whatsapp: '',
   city: '',
   file: null,
+  media_link: '',
+  screenshot: null,
   captcha: '',
   captcha_key: '',
   document_form_id: props.documentFormId,
+  template_type: props.templateType,
 });
 
-// Log dokumen form ID saat komponen dibuat 
+// Log dokumen form ID dan template type saat komponen dibuat 
 console.log('DocumentForm initialized with document_form_id:', props.documentFormId);
+console.log('DocumentForm initialized with template_type:', props.templateType);
 
 // Validate name field
 const validateName = () => {
@@ -430,6 +507,55 @@ const validateFile = () => {
   return true;
 };
 
+// Validate media link field (untuk template artikel)
+const validateMediaLink = () => {
+  mediaLinkErrors.value = [];
+  touchedFields.value.media_link = true;
+  
+  if (props.templateType === 'article') {
+    if (!form.media_link) {
+      mediaLinkErrors.value.push('Link media wajib diisi');
+      return false;
+    }
+    
+    // Basic URL validation
+    try {
+      new URL(form.media_link);
+    } catch (e) {
+      mediaLinkErrors.value.push('Format URL tidak valid');
+      return false;
+    }
+  }
+  
+  return true;
+};
+
+// Validate screenshot field (untuk template artikel)
+const validateScreenshot = () => {
+  screenshotErrors.value = [];
+  touchedFields.value.screenshot = true;
+  
+  if (props.templateType === 'article') {
+    if (!form.screenshot) {
+      screenshotErrors.value.push('Screenshot wajib diunggah');
+      return false;
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(form.screenshot.type)) {
+      screenshotErrors.value.push('Tipe file tidak valid. Hanya menerima file JPG atau PNG');
+      return false;
+    }
+    
+    if (form.screenshot.size > 5 * 1024 * 1024) { // 5MB
+      screenshotErrors.value.push('Ukuran file tidak boleh lebih dari 5MB');
+      return false;
+    }
+  }
+  
+  return true;
+};
+
 // Validate captcha field
 const validateCaptcha = () => {
   captchaErrors.value = [];
@@ -452,6 +578,16 @@ const validateForm = () => {
   const isFileValid = validateFile();
   const isCaptchaValid = validateCaptcha();
   
+  // Validasi tambahan untuk template artikel
+  let isMediaLinkValid = true;
+  let isScreenshotValid = true;
+  
+  if (props.templateType === 'article') {
+    isMediaLinkValid = validateMediaLink();
+    isScreenshotValid = validateScreenshot();
+    return isNameValid && isWhatsappValid && isCityValid && isFileValid && isMediaLinkValid && isScreenshotValid && isCaptchaValid;
+  }
+  
   return isNameValid && isWhatsappValid && isCityValid && isFileValid && isCaptchaValid;
 };
 
@@ -468,6 +604,10 @@ watch(() => form.city, () => {
   if (touchedFields.value.city) validateCity();
 });
 
+watch(() => form.media_link, () => {
+  if (touchedFields.value.media_link && props.templateType === 'article') validateMediaLink();
+});
+
 watch(() => form.captcha, () => {
   if (touchedFields.value.captcha) validateCaptcha();
 });
@@ -482,8 +622,17 @@ const showCityDropdown = ref(false);
 const cityDropdownRef = ref(null);
 const highlightedIndex = ref(null);
 
+// Variabel tambahan untuk screenshot (template artikel)
+const selectedScreenshot = ref(null);
+const isScreenshotDragging = ref(false);
+
 const previewName = computed(() => {
   return selectedFile.value ? selectedFile.value.name : '';
+});
+
+// Preview name untuk screenshot
+const screenshotPreviewName = computed(() => {
+  return selectedScreenshot.value ? selectedScreenshot.value.name : '';
 });
 
 const filteredCities = computed(() => {
@@ -610,14 +759,21 @@ const submitForm = () => {
     console.log('Mengkonversi document_form_id ke integer:', form.document_form_id);
   }
 
+  // Pastikan template_type terisi
+  form.template_type = props.templateType;
+  console.log('Setting template_type:', props.templateType);
+
   console.log('Form data sebelum submit:', { 
     name: form.name,
     whatsapp: form.whatsapp,
     city: form.city,
     hasFile: !!form.file,
+    hasMediaLink: !!form.media_link,
+    hasScreenshot: !!form.screenshot,
     captcha: form.captcha?.length,
     document_form_id: form.document_form_id,
-    document_form_id_type: typeof form.document_form_id
+    document_form_id_type: typeof form.document_form_id,
+    template_type: form.template_type
   });
 
   try {
@@ -632,8 +788,18 @@ const submitForm = () => {
     formData.append('captcha', form.captcha);
     formData.append('captcha_key', form.captcha_key);
     formData.append('document_form_id', form.document_form_id);
+    formData.append('template_type', form.template_type);
+    
     if (form.file) {
       formData.append('file', form.file);
+    }
+    
+    // Tambahkan field khusus artikel jika template-nya artikel
+    if (props.templateType === 'article') {
+      formData.append('media_link', form.media_link);
+      if (form.screenshot) {
+        formData.append('screenshot', form.screenshot);
+      }
     }
     
     // Log FormData untuk debugging
@@ -654,6 +820,7 @@ const submitForm = () => {
         );
         form.reset();
         selectedFile.value = null;
+        selectedScreenshot.value = null;
         citySearch.value = '';
         
         // Refresh halaman setelah 7 detik
@@ -668,6 +835,8 @@ const submitForm = () => {
         whatsappErrors.value = [];
         cityErrors.value = [];
         fileErrors.value = [];
+        mediaLinkErrors.value = [];
+        screenshotErrors.value = [];
         captchaErrors.value = [];
       },
       onError: (errors) => {
@@ -681,6 +850,10 @@ const submitForm = () => {
           errorMessage = errors.captcha;
         } else if (errors.file) {
           errorMessage = errors.file;
+        } else if (errors.screenshot) {
+          errorMessage = errors.screenshot;
+        } else if (errors.media_link) {
+          errorMessage = errors.media_link;
         } else if (errors.document_form_id) {
           errorMessage = errors.document_form_id;
         } else if (errors.error) {
@@ -709,6 +882,38 @@ const navigateDropdown = (direction) => {
 const selectHighlightedCity = () => {
   if (highlightedIndex.value !== null && highlightedIndex.value >= 0 && highlightedIndex.value < filteredCities.value.length) {
     selectCity(filteredCities.value[highlightedIndex.value]);
+  }
+};
+
+const handleScreenshotChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    selectedScreenshot.value = file;
+    form.screenshot = file;
+    touchedFields.value.screenshot = true;
+    validateScreenshot();
+  }
+};
+
+const handleScreenshotDragOver = (event) => {
+  event.preventDefault();
+  isScreenshotDragging.value = true;
+};
+
+const handleScreenshotDragLeave = () => {
+  isScreenshotDragging.value = false;
+};
+
+const handleScreenshotDrop = (event) => {
+  event.preventDefault();
+  isScreenshotDragging.value = false;
+  
+  if (event.dataTransfer.files.length) {
+    const file = event.dataTransfer.files[0];
+    selectedScreenshot.value = file;
+    form.screenshot = file;
+    touchedFields.value.screenshot = true;
+    validateScreenshot();
   }
 };
 </script> 

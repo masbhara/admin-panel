@@ -34,7 +34,8 @@
       <div v-if="canSubmit" class="py-2">
         <DocumentForm 
           :success-message="$page.props.flash?.success || ''" 
-          :document-form-id="documentForm.id" 
+          :document-form-id="documentForm.id"
+          :template-type="documentForm.template_type" 
         />
       </div>
       
@@ -75,6 +76,7 @@ if (!props.documentForm?.id) {
   console.error('CRITICAL ERROR: Document form ID tidak tersedia di halaman public!');
 } else {
   console.info('Document form ID tersedia: ' + props.documentForm.id);
+  console.info('Template type yang digunakan: ' + (props.documentForm.template_type || 'default'));
 }
 
 // Logging untuk debugging
@@ -82,7 +84,8 @@ console.log('Public DocumentForm page loaded with data:', {
   documentFormId: props.documentForm?.id,
   title: props.documentForm?.title,
   slug: props.documentForm?.slug,
-  isActive: props.documentForm?.is_active
+  isActive: props.documentForm?.is_active,
+  templateType: props.documentForm?.template_type
 });
 
 const countdown = ref({

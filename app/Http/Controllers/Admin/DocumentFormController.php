@@ -62,9 +62,12 @@ class DocumentFormController extends Controller
             'submission_deadline' => 'nullable|date',
             'closed_message' => 'nullable|string|max:500',
             'is_active' => 'boolean',
+            'template_type' => 'required|string|in:default,article'
         ], [
             'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung.',
             'slug.unique' => 'Slug sudah digunakan, silakan gunakan slug yang lain.',
+            'template_type.required' => 'Tipe template harus dipilih.',
+            'template_type.in' => 'Tipe template tidak valid.'
         ]);
 
         $user = Auth::user();
@@ -92,30 +95,27 @@ class DocumentFormController extends Controller
             
             // Tambahkan user_id
             $validated['user_id'] = $user->id;
-
-            // Simpan form dokumen
+            
+            // Buat document form
             $documentForm = DocumentForm::create($validated);
             
-            // Log aktivitas
-            activity()
-                ->performedOn($documentForm)
-                ->causedBy($user)
-                ->log('created document form');
+            // Dapatkan fields default berdasarkan template yang dipilih
+            $fields = DocumentForm::getDefaultFields($validated['template_type']);
+            
+            // Buat form fields
+            foreach ($fields as $field) {
+                $documentForm->formFields()->create($field);
+            }
             
             DB::commit();
-
+            
             return redirect()->route('admin.document-forms.index')
                 ->with('success', 'Form dokumen berhasil dibuat.');
+                
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error creating document form: ' . $e->getMessage(), [
-                'user_id' => $user->id,
-                'data' => $validated,
-            ]);
-            
-            return back()
-                ->withInput()
-                ->withErrors(['error' => 'Terjadi kesalahan saat membuat form dokumen. ' . $e->getMessage()]);
+            Log::error('Error creating document form: ' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -226,9 +226,13 @@ class DocumentFormController extends Controller
             'submission_deadline' => 'nullable|date',
             'closed_message' => 'nullable|string|max:500',
             'is_active' => 'boolean',
+            'template_type' => 'required|string|in:default,article',
+            'fields' => 'array'
         ], [
             'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung.',
             'slug.unique' => 'Slug sudah digunakan, silakan gunakan slug yang lain.',
+            'template_type.required' => 'Tipe template harus dipilih.',
+            'template_type.in' => 'Tipe template tidak valid.'
         ]);
         
         $user = Auth::user();
@@ -259,6 +263,18 @@ class DocumentFormController extends Controller
             
             // Update form dokumen
             $documentForm->update($validated);
+
+            // Update form fields jika template berubah
+            if ($request->template_type !== $documentForm->template_type) {
+                // Hapus fields lama
+                $documentForm->formFields()->delete();
+                
+                // Buat fields baru sesuai template
+                $fields = DocumentForm::getDefaultFields($request->template_type);
+                foreach ($fields as $field) {
+                    $documentForm->formFields()->create($field);
+                }
+            }
             
             // Log aktivitas
             activity()

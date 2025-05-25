@@ -66,6 +66,31 @@
               <span>Preview</span>
             </button>
             
+            <!-- Tampilkan opsi ini hanya jika dokumen adalah template artikel -->
+            <template v-if="selectedHeaderDocument?.metadata?.template_type === 'article'">
+              <button
+                v-if="selectedHeaderDocument?.metadata?.media_link"
+                @click="openMediaLinkInNewTab(selectedHeaderDocument)"
+                class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg class="mr-3 h-4 w-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <span>Lihat Media Link</span>
+              </button>
+              
+              <button
+                v-if="selectedHeaderDocument?.metadata?.screenshot_path"
+                @click="previewArticleScreenshot(selectedHeaderDocument)"
+                class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg class="mr-3 h-4 w-4 text-pink-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Lihat Screenshot</span>
+              </button>
+            </template>
+            
             <a 
               :href="selectedHeaderDocument ? route('documents.download', selectedHeaderDocument.id) : '#'"
               target="_blank" 
@@ -119,8 +144,33 @@
               <span>Preview</span>
             </button>
             
+            <!-- Tampilkan opsi ini hanya jika dokumen adalah template artikel -->
+            <template v-if="document?.metadata?.template_type === 'article'">
+              <button
+                v-if="document?.metadata?.media_link"
+                @click="openMediaLinkInNewTab(document)"
+                class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg class="mr-3 h-4 w-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <span>Lihat Media Link</span>
+              </button>
+              
+              <button
+                v-if="document?.metadata?.screenshot_path"
+                @click="previewArticleScreenshot(document)"
+                class="w-full flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg class="mr-3 h-4 w-4 text-pink-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Lihat Screenshot</span>
+              </button>
+            </template>
+            
             <a 
-              :href="route('documents.download', document.id)"
+              :href="route('documents.download', document.id)" 
               target="_blank" 
               class="flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
@@ -399,6 +449,7 @@
                     <th scope="col" class="px-6 py-4 font-bold text-left text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600">Pengirim</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600">WhatsApp</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600">Asal Kota</th>
+                    <th scope="col" class="px-6 py-4 font-bold text-left text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600">Template</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600">Status</th>
                     <th scope="col" class="px-6 py-4 font-bold text-left text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600">Tanggal Upload</th>
                     <th scope="col" class="px-4 py-4 w-10 border-b border-gray-200 dark:border-gray-600">
@@ -432,6 +483,17 @@
                     <td class="px-6 py-4 text-gray-500 dark:text-gray-300 break-words">{{ getPengirimName(document) }}</td>
                     <td class="px-6 py-4 text-gray-500 dark:text-gray-300 break-words">{{ document?.whatsapp_number || document?.metadata?.whatsapp || '-' }}</td>
                     <td class="px-6 py-4 text-gray-500 dark:text-gray-300 break-words max-w-[150px]">{{ document?.metadata?.city || '-' }}</td>
+                    <td class="px-6 py-4">
+                      <span 
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                        :class="{
+                          'bg-blue-50 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200': document?.metadata?.template_type === 'article',
+                          'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300': document?.metadata?.template_type !== 'article'
+                        }"
+                      >
+                        {{ document?.metadata?.template_type === 'article' ? 'Artikel Media' : 'Dokumen' }}
+                      </span>
+                    </td>
                     <td class="px-6 py-4">
                       <span 
                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border border-transparent transition-colors"
@@ -571,8 +633,17 @@
           </a>
         </div>
         
+        <!-- Image Preview (untuk screenshot) -->
+        <div v-if="previewType === 'image'" class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden flex justify-center items-center">
+          <img 
+            :src="currentPreviewUrl" 
+            alt="Screenshot Media" 
+            class="max-w-full h-auto max-h-[75vh] object-contain"
+          />
+        </div>
+        
         <!-- PDF Preview -->
-        <div v-if="previewType === 'pdf'" class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden h-[75vh]">
+        <div v-else-if="previewType === 'pdf'" class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden h-[75vh]">
           <iframe 
             :src="currentPreviewUrl" 
             class="w-full h-full border-0"
@@ -583,13 +654,13 @@
         <!-- External Preview (Google/Office) -->
         <div v-else-if="previewType === 'external'" class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden h-[75vh]">
           <iframe 
-            :src="currentPreviewUrl"
+            :src="currentPreviewUrl" 
             class="w-full h-full border-0"
             allowfullscreen
           ></iframe>
         </div>
         
-        <!-- Image Preview -->
+        <!-- Fallback Preview -->
         <div v-else class="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden text-center p-4 h-[75vh]">
           <img :src="currentPreviewUrl" alt="Preview dokumen" class="max-h-full max-w-full inline-block object-contain" />
         </div>
@@ -1338,6 +1409,24 @@ const executeBulkDelete = () => {
 onBeforeUnmount(() => {
   console.log('Event listener dibersihkan');
 });
+
+const openMediaLinkInNewTab = (document) => {
+  if (document?.metadata?.media_link) {
+    window.open(document.metadata.media_link, '_blank');
+  }
+};
+
+// Fungsi untuk membuka preview screenshot
+const previewArticleScreenshot = (document) => {
+  if (document?.metadata?.screenshot_path) {
+    // Convert storage path ke URL publik
+    const path = document.metadata.screenshot_path.replace('public/', 'storage/');
+    currentPreviewUrl.value = `/${path}`;
+    previewDocument.value = document;
+    previewType.value = 'image';
+    showPreviewModal.value = true;
+  }
+};
 </script>
 
 <style scoped>

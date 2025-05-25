@@ -13,6 +13,12 @@ class DocumentForm extends Model
     use HasFactory, LogsActivity;
 
     /**
+     * Template types
+     */
+    public const TEMPLATE_DEFAULT = 'default';
+    public const TEMPLATE_ARTICLE = 'article';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -25,6 +31,7 @@ class DocumentForm extends Model
         'submission_deadline',
         'closed_message',
         'is_active',
+        'template_type',
         'metadata'
     ];
 
@@ -126,5 +133,138 @@ class DocumentForm extends Model
         }
         
         return now()->lt($this->submission_deadline);
+    }
+
+    /**
+     * Get the default fields for a template type
+     */
+    public static function getDefaultFields(string $templateType): array
+    {
+        $defaultFields = [
+            self::TEMPLATE_DEFAULT => [
+                [
+                    'label' => 'Nama Lengkap',
+                    'name' => 'name',
+                    'type' => 'text',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Masukkan nama lengkap Anda',
+                    'order' => 0
+                ],
+                [
+                    'label' => 'Nomor WhatsApp',
+                    'name' => 'whatsapp',
+                    'type' => 'text',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => '08xxx (gunakan nomor aktif)',
+                    'order' => 1
+                ],
+                [
+                    'label' => 'Kota/Kabupaten',
+                    'name' => 'city',
+                    'type' => 'text',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Ketik untuk mencari kota/kabupaten...',
+                    'order' => 2
+                ],
+                [
+                    'label' => 'Unggah Dokumen',
+                    'name' => 'document',
+                    'type' => 'file',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Format: PDF, Word, maksimal 10MB',
+                    'validation_rules' => [
+                        'mimes' => 'pdf,doc,docx',
+                        'max' => 10240
+                    ],
+                    'order' => 3
+                ]
+            ],
+            self::TEMPLATE_ARTICLE => [
+                [
+                    'label' => 'Nama Lengkap',
+                    'name' => 'name',
+                    'type' => 'text',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Masukkan nama lengkap Anda',
+                    'order' => 0
+                ],
+                [
+                    'label' => 'Nomor WhatsApp',
+                    'name' => 'whatsapp',
+                    'type' => 'text',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => '08xxx (gunakan nomor aktif)',
+                    'order' => 1
+                ],
+                [
+                    'label' => 'Kota/Kabupaten',
+                    'name' => 'city',
+                    'type' => 'text',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Ketik untuk mencari kota/kabupaten...',
+                    'order' => 2
+                ],
+                [
+                    'label' => 'Unggah Dokumen',
+                    'name' => 'document',
+                    'type' => 'file',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Format: PDF, Word, maksimal 10MB',
+                    'validation_rules' => [
+                        'mimes' => 'pdf,doc,docx',
+                        'max' => 10240
+                    ],
+                    'order' => 3
+                ],
+                [
+                    'label' => 'Tautan / Link Media',
+                    'name' => 'media_link',
+                    'type' => 'url',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Masukkan link artikel yang sudah dipublikasi',
+                    'order' => 4
+                ],
+                [
+                    'label' => 'Unggah Screenshot',
+                    'name' => 'screenshot',
+                    'type' => 'file',
+                    'is_required' => true,
+                    'is_enabled' => true,
+                    'help_text' => 'Format: JPG, PNG, maksimal 5MB',
+                    'validation_rules' => [
+                        'mimes' => 'jpg,jpeg,png',
+                        'max' => 5120
+                    ],
+                    'order' => 5
+                ]
+            ]
+        ];
+
+        return $defaultFields[$templateType] ?? [];
+    }
+
+    /**
+     * Get the form fields for this document form.
+     */
+    public function formFields()
+    {
+        return $this->hasMany(FormField::class)->orderBy('order');
+    }
+
+    /**
+     * Get the enabled form fields for this document form.
+     */
+    public function enabledFormFields()
+    {
+        return $this->formFields()->where('is_enabled', true);
     }
 } 

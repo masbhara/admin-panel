@@ -184,7 +184,13 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
                 
                 // Document Forms Routes
-                Route::resource('document-forms', DocumentFormController::class);
+                Route::get('document-forms', [DocumentFormController::class, 'index'])->name('document-forms.index');
+                Route::get('document-forms/create', [DocumentFormController::class, 'create'])->name('document-forms.create');
+                Route::post('document-forms', [DocumentFormController::class, 'store'])->name('document-forms.store');
+                Route::get('document-forms/{documentForm}', [DocumentFormController::class, 'show'])->name('document-forms.show');
+                Route::get('document-forms/{documentForm}/edit', [DocumentFormController::class, 'edit'])->name('document-forms.edit');
+                Route::put('document-forms/{documentForm}', [DocumentFormController::class, 'update'])->name('document-forms.update');
+                Route::delete('document-forms/{documentForm}', [DocumentFormController::class, 'destroy'])->name('document-forms.destroy');
                 
                 Route::get('document-forms/{documentForm}/public-url', [DocumentFormController::class, 'getPublicUrl'])
                     ->name('document-forms.public-url');

@@ -1,0 +1,266 @@
+# Panduan Implementasi Edit Data di API Penulis
+
+## Pendahuluan
+Dokumen ini berisi panduan lengkap untuk mengimplementasikan fungsi edit/update data di aplikasi API Penulis. Panduan ini mencakup implementasi di sisi frontend (Vue.js + Inertia) dan backend (Laravel).
+
+## Implementasi Frontend (Vue.js + Inertia)
+
+### 1. Form Edit Component
+```vue
+<template>
+  <form @submit.prevent="submit">
+    <!-- Form Fields -->
+    <div class="space-y-6">
+      <div class="mb-4">
+        <InputLabel for="field" value="Nama Field" />
+        <TextInput
+          id="field"
+          v-model="form.field"
+          type="text"
+          class="mt-1 block w-full"
+          required
+        />
+        <InputError :message="form.errors.field" class="mt-2" />
+      </div>
+      
+      <!-- Error Message Display -->
+      <div v-if="errorMessage" class="mb-6 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative">
+        <span class="block sm:inline">{{ errorMessage }}</span>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end space-x-3">
+        <Link
+          :href="route('admin.resource.index')"
+          class="px-4 py-2 bg-gray-300 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-800 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-400"
+        >
+          Batal
+        </Link>
+        <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+          Simpan Perubahan
+        </PrimaryButton>
+      </div>
+    </div>
+  </form>
+</template>
+```
+
+### 2. State Management
+```javascript
+// Import yang diperlukan
+import { ref } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+
+// State untuk form
+const processing = ref(false);
+const errorMessage = ref('');
+
+// Inisialisasi form dengan data yang ada
+const form = useForm({
+  field1: props.data.field1,
+  field2: props.data.field2,
+  // ... field lainnya
+});
+```
+
+### 3. Method Submit dengan Axios
+```javascript
+const submit = () => {
+  processing.value = true;
+  errorMessage.value = '';
+  
+  const formData = {
+    _method: 'PUT', // Method spoofing
+    ...form.data()  // Spread operator untuk semua field
+  };
+
+  // Dapatkan CSRF token
+  const token = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+  // Gunakan axios.post dengan method spoofing
+  axios.post(route('admin.resource.update', props.data.id), formData, {
+    headers: {
+      'X-CSRF-TOKEN': token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    console.log('Data updated successfully:', response);
+    router.visit(route('admin.resource.index'));
+  })
+  .catch(error => {
+    console.error('Update failed:', error.response);
+    errorMessage.value = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data.';
+  })
+  .finally(() => {
+    processing.value = false;
+  });
+};
+```
+
+### 4. Alternatif: Method Submit dengan Inertia Form Helper
+```javascript
+const submit = () => {
+  form.put(route('admin.resource.update', props.data.id), {
+    onSuccess: () => {
+      router.visit(route('admin.resource.index'));
+    },
+    onError: (errors) => {
+      console.error('Update failed:', errors);
+      errorMessage.value = errors?.message || 'Terjadi kesalahan saat menyimpan data.';
+    },
+    preserveScroll: true
+  });
+};
+```
+
+## Implementasi Backend (Laravel)
+
+### 1. Controller Method
+```php
+public function update(Request $request, Model $model)
+{
+    try {
+        DB::beginTransaction();
+        
+        // Validasi input
+        $validated = $request->validate([
+            'field1' => 'required|string|max:255',
+            'field2' => 'nullable|string|max:1000',
+            // ... validasi field lainnya
+        ], [
+            'field1.required' => 'Field 1 wajib diisi.',
+            // ... pesan error lainnya
+        ]);
+        
+        // Update model
+        $model->update($validated);
+        
+        // Log aktivitas
+        activity()
+            ->performedOn($model)
+            ->causedBy(auth()->user())
+            ->log('updated data');
+        
+        DB::commit();
+
+        return back()->with('success', 'Data berhasil diperbarui.');
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error updating data: ' . $e->getMessage(), [
+            'user_id' => auth()->id(),
+            'data' => $validated,
+        ]);
+        
+        return back()
+            ->withInput()
+            ->withErrors(['error' => 'Terjadi kesalahan saat memperbarui data. ' . $e->getMessage()]);
+    }
+}
+```
+
+### 2. Route Definition
+```php
+// Di routes/web.php
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('resource/{model}/edit', [Controller::class, 'edit'])
+        ->name('resource.edit');
+    Route::put('resource/{model}', [Controller::class, 'update'])
+        ->name('resource.update');
+});
+```
+
+## Catatan Penting
+
+1. **Method Spoofing**
+   - Laravel mengharuskan method spoofing untuk PUT/PATCH/DELETE
+   - Gunakan `_method: 'PUT'` saat mengirim request dengan axios.post
+   - Atau gunakan `form.put()` dengan Inertia Form Helper
+
+2. **CSRF Protection**
+   - Pastikan CSRF token tersedia di meta tag HTML
+   - Sertakan CSRF token di header saat menggunakan axios
+   - Inertia Form Helper menangani CSRF secara otomatis
+
+3. **Route Configuration**
+   - Pastikan route terdaftar dengan benar di web.php
+   - Bedakan antara route untuk form edit (GET) dan update data (PUT)
+   - Gunakan route helper yang sesuai di frontend
+
+4. **Error Handling**
+   - Implementasikan try-catch di controller
+   - Tampilkan pesan error yang informatif
+   - Log error untuk debugging
+   - Tangani berbagai jenis error (validasi, permission, dll)
+
+5. **Form Processing**
+   - Gunakan state `processing` untuk disable button submit
+   - Tampilkan loading indicator saat proses
+   - Redirect ke halaman yang sesuai setelah sukses
+   - Tampilkan pesan sukses/error yang jelas
+
+## Troubleshooting
+
+1. **Method Not Allowed (405)**
+   - Periksa route yang terdaftar (`php artisan route:list`)
+   - Pastikan method spoofing digunakan dengan benar
+   - Bedakan URL untuk edit (GET) dan update (PUT)
+
+2. **CSRF Token Mismatch**
+   - Periksa keberadaan meta tag csrf-token
+   - Pastikan token dikirim di header request
+   - Gunakan Inertia Form Helper untuk handling otomatis
+
+3. **Validation Errors**
+   - Tampilkan error di form dengan komponen InputError
+   - Gunakan `withErrors()` di controller
+   - Log error untuk tracking
+
+4. **Database Transaction**
+   - Selalu gunakan transaction untuk update data
+   - Rollback jika terjadi error
+   - Commit setelah semua proses berhasil
+
+## Contoh Penggunaan
+
+```vue
+<template>
+  <AdminLayout title="Edit Data">
+    <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
+      <!-- Form Edit seperti contoh di atas -->
+    </div>
+  </AdminLayout>
+</template>
+
+<script setup>
+// Import dan setup seperti panduan di atas
+</script>
+```
+
+## Best Practices
+
+1. **Validasi Data**
+   - Validasi di frontend sebelum submit
+   - Validasi lengkap di backend
+   - Tampilkan error dengan jelas
+
+2. **UX Considerations**
+   - Disable form selama proses submit
+   - Tampilkan loading state
+   - Berikan feedback yang jelas
+   - Konfirmasi sebelum meninggalkan form
+
+3. **Security**
+   - Implementasikan middleware auth
+   - Periksa permission user
+   - Validasi input untuk mencegah XSS
+   - Gunakan HTTPS
+
+4. **Performance**
+   - Optimalkan query database
+   - Gunakan caching jika perlu
+   - Minimalkan request ke server
+   - Lazy load komponen jika perlu 

@@ -42,7 +42,30 @@
               </div>
             </div>
 
+            <!-- Error Message Display -->
+            <div v-if="errorMessage" class="mb-6 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative">
+              <span class="block sm:inline">{{ errorMessage }}</span>
+            </div>
+
             <form @submit.prevent="submit">
+              <!-- Template Selection -->
+              <div class="mb-6">
+                <InputLabel for="template_type" value="Pilih Template Form" />
+                <select
+                  id="template_type"
+                  v-model="form.template_type"
+                  class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white sm:text-sm rounded-md"
+                  @change="handleTemplateChange"
+                >
+                  <option value="default">Form Dokumen Default</option>
+                  <option value="article">Form Artikel Media</option>
+                </select>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {{ getTemplateDescription(form.template_type) }}
+                </p>
+                <InputError :message="form.errors.template_type" class="mt-2" />
+              </div>
+
               <!-- Title -->
               <div class="mb-4">
                 <InputLabel for="title" value="Judul Form" />
@@ -71,12 +94,13 @@
 
               <!-- Slug -->
               <div class="mb-4">
-                <InputLabel for="slug" value="Slug URL" />
+                <InputLabel for="slug" value="Slug URL (opsional)" />
                 <TextInput
                   id="slug"
                   type="text"
                   class="mt-1 block w-full"
                   v-model="form.slug"
+                  placeholder="akan-dibuat-otomatis-dari-judul"
                 />
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung. Jika dibiarkan kosong, akan dibuat otomatis dari judul.
@@ -104,6 +128,7 @@
                   class="mt-1 block w-full"
                   v-model="form.closed_message"
                   rows="2"
+                  placeholder="Pengumpulan dokumen telah ditutup."
                 />
                 <InputError :message="form.errors.closed_message" class="mt-2" />
               </div>
@@ -117,13 +142,30 @@
                 <InputError :message="form.errors.is_active" class="mt-2" />
               </div>
 
+              <!-- Preview Fields -->
+              <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Preview Fields</h3>
+                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div v-for="field in previewFields" :key="field.name" class="mb-4 last:mb-0">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <span class="font-medium">{{ field.label }}</span>
+                        <span v-if="field.is_required" class="text-red-500 ml-1">*</span>
+                      </div>
+                      <span class="text-sm text-gray-500">{{ getFieldTypeLabel(field.type) }}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Submit Button -->
               <div class="flex items-center justify-end mt-4">
                 <Link
                   :href="route('admin.document-forms.index')"
                   class="mr-4 px-4 py-2 bg-gray-300 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-800 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-400 dark:hover:bg-gray-600 focus:bg-gray-400 dark:focus:bg-gray-600 active:bg-gray-400 dark:active:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
                 >
-                  Kembali
+                  Batal
                 </Link>
                 <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                   Simpan Perubahan
@@ -138,7 +180,8 @@
 </template>
 
 <script setup>
-import { useForm, Link } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { useForm, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -150,44 +193,206 @@ import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 
 const props = defineProps({
-  documentForm: Object,
+  documentForm: {
+    type: Object,
+    required: true
+  }
 });
+
+// State management
+const processing = ref(false);
+const errorMessage = ref('');
+
+const defaultFields = {
+  default: [
+    {
+      label: 'Nama Lengkap',
+      name: 'name',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan nama lengkap Anda',
+      order: 0
+    },
+    {
+      label: 'Nomor WhatsApp',
+      name: 'whatsapp',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: '08xxx (gunakan nomor aktif)',
+      order: 1
+    },
+    {
+      label: 'Kota/Kabupaten',
+      name: 'city',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Ketik untuk mencari kota/kabupaten...',
+      order: 2
+    },
+    {
+      label: 'Unggah Dokumen',
+      name: 'document',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: PDF, Word, maksimal 10MB',
+      validation_rules: {
+        mimes: 'pdf,doc,docx',
+        max: 10240
+      },
+      order: 3
+    }
+  ],
+  article: [
+    {
+      label: 'Nama Lengkap',
+      name: 'name',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan nama lengkap Anda',
+      order: 0
+    },
+    {
+      label: 'Nomor WhatsApp',
+      name: 'whatsapp',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: '08xxx (gunakan nomor aktif)',
+      order: 1
+    },
+    {
+      label: 'Kota/Kabupaten',
+      name: 'city',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Ketik untuk mencari kota/kabupaten...',
+      order: 2
+    },
+    {
+      label: 'Unggah Dokumen',
+      name: 'document',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: PDF, Word, maksimal 10MB',
+      validation_rules: {
+        mimes: 'pdf,doc,docx',
+        max: 10240
+      },
+      order: 3
+    },
+    {
+      label: 'Tautan / Link Media',
+      name: 'media_link',
+      type: 'url',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan link artikel yang sudah dipublikasi',
+      order: 4
+    },
+    {
+      label: 'Unggah Screenshot',
+      name: 'screenshot',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: JPG, PNG, maksimal 5MB',
+      validation_rules: {
+        mimes: 'jpg,jpeg,png',
+        max: 5120
+      },
+      order: 5
+    }
+  ]
+};
 
 const form = useForm({
   title: props.documentForm.title,
-  description: props.documentForm.description || '',
+  description: props.documentForm.description,
   slug: props.documentForm.slug,
-  submission_deadline: props.documentForm.formatted_submission_deadline || '',
-  closed_message: props.documentForm.closed_message || 'Pengumpulan dokumen telah ditutup.',
+  submission_deadline: props.documentForm.formatted_submission_deadline,
+  closed_message: props.documentForm.closed_message,
   is_active: props.documentForm.is_active,
+  template_type: props.documentForm.template_type || 'default',
+  fields: props.documentForm.fields || defaultFields.default
 });
 
+const getTemplateDescription = (templateType) => {
+  const descriptions = {
+    default: 'Template standar untuk pengumpulan dokumen (PDF/Word)',
+    article: 'Template untuk pengumpulan artikel media dengan screenshot dan tautan'
+  };
+  return descriptions[templateType] || '';
+};
+
+const getFieldTypeLabel = (type) => {
+  const labels = {
+    text: 'Teks',
+    textarea: 'Teks Panjang',
+    select: 'Pilihan',
+    radio: 'Pilihan Radio',
+    checkbox: 'Kotak Centang',
+    file: 'Unggah File',
+    date: 'Tanggal',
+    number: 'Angka',
+    url: 'Tautan URL'
+  };
+  return labels[type] || type;
+};
+
+const previewFields = computed(() => {
+  return defaultFields[form.template_type] || [];
+});
+
+const handleTemplateChange = () => {
+  form.fields = defaultFields[form.template_type];
+  console.log('Template changed to:', form.template_type);
+  console.log('Fields updated:', form.fields);
+};
+
 const submit = () => {
-  // Gunakan axios.post dengan method spoofing PUT
+  processing.value = true;
+  errorMessage.value = '';
+  
   const formData = {
-    _method: 'PUT',
+    _method: 'PUT', // Method spoofing
     title: form.title,
     description: form.description,
     slug: form.slug,
     submission_deadline: form.submission_deadline,
     closed_message: form.closed_message,
-    is_active: form.is_active
+    is_active: form.is_active,
+    template_type: form.template_type,
+    fields: form.fields
   };
 
-  axios.post(`/admin/document-forms/${props.documentForm.id}`, formData)
-    .then(response => {
-      // Redirect ke halaman detail setelah berhasil update
-      window.location.href = route('admin.document-forms.show', props.documentForm.id);
-    })
-    .catch(error => {
-      if (error.response && error.response.data && error.response.data.errors) {
-        const errors = error.response.data.errors;
-        Object.keys(errors).forEach(key => {
-          form.errors[key] = errors[key][0];
-        });
-      } else {
-        console.error('Error updating document form:', error);
-      }
-    });
+  // Dapatkan CSRF token dari meta tag
+  const token = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+  // Gunakan axios.post dengan CSRF token
+  axios.post(route('admin.document-forms.update', props.documentForm.id), formData, {
+    headers: {
+      'X-CSRF-TOKEN': token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    console.log('Form submitted successfully:', response);
+    router.visit(route('admin.document-forms.index'));
+  })
+  .catch(error => {
+    console.error('Form submission failed:', error.response);
+    errorMessage.value = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan form.';
+  })
+  .finally(() => {
+    processing.value = false;
+  });
 };
 </script> 

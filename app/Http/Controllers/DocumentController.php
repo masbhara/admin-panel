@@ -44,6 +44,22 @@ class DocumentController extends Controller
      */
     public function store(Request $request)
     {
+        // Debugging khusus untuk CSRF token dan form submission
+        Log::info('==================== DOCUMENT FORM SUBMISSION START ====================');
+        Log::info('Request headers:', [
+            'origin' => $request->header('origin'),
+            'referer' => $request->header('referer'),
+            'user-agent' => $request->header('user-agent'),
+            'content-type' => $request->header('content-type'),
+            'x-csrf-token' => $request->header('x-csrf-token') ? 'Present' : 'Missing',
+            'x-xsrf-token' => $request->header('x-xsrf-token') ? 'Present' : 'Missing'
+        ]);
+        
+        Log::info('Session status:', [
+            'has_session' => $request->hasSession(),
+            'csrf_token_valid' => $request->hasSession() ? ($request->session()->token() === $request->input('_token') ? 'Yes' : 'No') : 'N/A'
+        ]);
+        
         // Debugging lengkap untuk melihat request
         Log::info('==================== DEBUG DOCUMENT SUBMIT ====================');
         Log::info('Dokumen form submission menerima request', [
@@ -52,6 +68,8 @@ class DocumentController extends Controller
             'all_data' => $request->all(),
             'files' => $request->allFiles() ? 'Ada' : 'Tidak Ada',
             'has_file' => $request->hasFile('file'),
+            'has_screenshot' => $request->hasFile('screenshot'),
+            'template_type' => $request->template_type,
             'content_type' => $request->header('Content-Type'),
             'url' => $request->url(),
             'method' => $request->method(),
@@ -75,6 +93,19 @@ class DocumentController extends Controller
             Log::warning('File tidak ditemukan di request');
         }
 
+        // Log detail screenshot jika ada (untuk template artikel)
+        if ($request->hasFile('screenshot')) {
+            $screenshot = $request->file('screenshot');
+            Log::info('Detail screenshot upload:', [
+                'original_name' => $screenshot->getClientOriginalName(),
+                'size' => $screenshot->getSize(),
+                'mime' => $screenshot->getMimeType(),
+                'extension' => $screenshot->getClientOriginalExtension(),
+                'error' => $screenshot->getError(),
+                'valid' => $screenshot->isValid(),
+            ]);
+        }
+
         // Cek environtment
         $isDevelopment = app()->environment(['local', 'development', 'testing']);
         
@@ -84,23 +115,55 @@ class DocumentController extends Controller
                 'name' => 'required|string|max:255',
                 'whatsapp' => 'nullable|string|max:20',
                 'city' => 'nullable|string|max:255',
-                'document_form_id' => 'required|exists:document_forms,id'
+                'document_form_id' => 'required|exists:document_forms,id',
+                'template_type' => 'required|string|in:default,article'
             ], [
                 'name.required' => 'Nama lengkap wajib diisi',
                 'name.max' => 'Nama tidak boleh lebih dari 255 karakter',
                 'whatsapp.max' => 'Nomor WhatsApp tidak boleh lebih dari 20 digit',
                 'document_form_id.required' => 'Form ID tidak valid',
-                'document_form_id.exists' => 'Form dokumen tidak ditemukan'
+                'document_form_id.exists' => 'Form dokumen tidak ditemukan',
+                'template_type.required' => 'Tipe template wajib diisi',
+                'template_type.in' => 'Tipe template tidak valid'
             ]);
             
             // Log id yang diterima untuk debugging
             Log::info('Data dasar berhasil divalidasi', $validated);
             Log::info('Document form ID yang diterima: ' . $request->document_form_id . ' (tipe: ' . gettype($request->document_form_id) . ')');
+            Log::info('Template type yang diterima: ' . $request->template_type);
             
             // Pastikan document_form_id adalah integer
             $document_form_id = (int) $request->document_form_id;
             Log::info('Document form ID setelah konversi: ' . $document_form_id);
             $request->merge(['document_form_id' => $document_form_id]);
+            
+            // Get document form
+            $documentForm = \App\Models\DocumentForm::find($request->document_form_id);
+            
+            if (!$documentForm) {
+                Log::error('Document form tidak ditemukan dengan ID ' . $request->document_form_id);
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['document_form_id' => 'Form dokumen tidak ditemukan']);
+            }
+            
+            Log::info('Document form ditemukan', [
+                'id' => $documentForm->id, 
+                'title' => $documentForm->title,
+                'template_type' => $documentForm->template_type
+            ]);
+            
+            // Verifikasi template type di request sesuai dengan di database
+            if (strtolower($request->template_type) !== strtolower($documentForm->template_type)) {
+                Log::error('Template type tidak sesuai', [
+                    'request_template' => $request->template_type,
+                    'db_template' => $documentForm->template_type
+                ]);
+                
+                // Coba tetap gunakan template dari database untuk mencegah error
+                Log::info('Mencoba menggunakan template dari database: ' . $documentForm->template_type);
+                $request->merge(['template_type' => $documentForm->template_type]);
+            }
             
             // ===== TAHAP 2: Validasi dan proses file =====
             // Cek keberadaan file
@@ -131,6 +194,97 @@ class DocumentController extends Controller
                     ->withInput()
                     ->withErrors(['file' => 'Ukuran file tidak boleh lebih dari 10MB']);
             }
+            
+            // ===== TAHAP 2.1: Validasi tambahan untuk template artikel =====
+            $screenshotPath = null;
+            if ($request->template_type === 'article') {
+                // Logging detail untuk debugging template artikel
+                Log::info('Memproses template artikel dengan data:', [
+                    'media_link' => $request->media_link,
+                    'has_screenshot' => $request->hasFile('screenshot')
+                ]);
+                
+                // Validasi media link
+                $request->validate([
+                    'media_link' => 'required|url|max:2000'
+                ], [
+                    'media_link.required' => 'Link media wajib diisi',
+                    'media_link.url' => 'Format URL tidak valid',
+                    'media_link.max' => 'URL terlalu panjang (maksimal 2000 karakter)'
+                ]);
+                
+                Log::info('Validasi media_link berhasil');
+                
+                // Validasi screenshot
+                if (!$request->hasFile('screenshot')) {
+                    Log::error('Screenshot tidak ditemukan dalam request untuk template artikel');
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['screenshot' => 'Screenshot wajib diunggah']);
+                }
+                
+                $screenshot = $request->file('screenshot');
+                
+                Log::info('Screenshot ditemukan dalam request', [
+                    'file_name' => $screenshot->getClientOriginalName(),
+                    'mime_type' => $screenshot->getMimeType()
+                ]);
+                
+                // Cek validitas screenshot
+                if (!$screenshot->isValid()) {
+                    $errorMessage = $this->getFileErrorMessage($screenshot->getError());
+                    Log::error('Screenshot tidak valid', ['error' => $errorMessage]);
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['screenshot' => $errorMessage]);
+                }
+                
+                // Validasi tipe dan ukuran screenshot
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                if (!in_array($screenshot->getMimeType(), $allowedTypes)) {
+                    Log::error('Tipe screenshot tidak valid', ['mime' => $screenshot->getMimeType()]);
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['screenshot' => 'Tipe file tidak valid. Hanya menerima file JPG atau PNG']);
+                }
+                
+                if ($screenshot->getSize() > 5 * 1024 * 1024) { // 5MB
+                    Log::error('Ukuran screenshot terlalu besar', ['size' => $screenshot->getSize()]);
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['screenshot' => 'Ukuran file tidak boleh lebih dari 5MB']);
+                }
+                
+                Log::info('Validasi screenshot berhasil, akan mengupload screenshot');
+                
+                // Upload screenshot
+                $screenshotFileName = 'screenshot_' . pathinfo($screenshot->getClientOriginalName(), PATHINFO_FILENAME) . '_' . time() . '.' . $screenshot->getClientOriginalExtension();
+                $screenshotPath = 'public/screenshots/' . $screenshotFileName;
+                
+                // Ensure directory exists
+                if (!Storage::exists('public/screenshots')) {
+                    Storage::makeDirectory('public/screenshots');
+                    Log::info('Created screenshots directory');
+                }
+                
+                // Upload screenshot
+                try {
+                    $screenshotContent = file_get_contents($screenshot->getRealPath());
+                    Storage::put($screenshotPath, $screenshotContent);
+                    Log::info('Screenshot berhasil diupload ke path: ' . $screenshotPath);
+                } catch (\Exception $e) {
+                    Log::error('Gagal menyimpan screenshot', ['error' => $e->getMessage()]);
+                    throw new \Exception('Gagal menyimpan screenshot: ' . $e->getMessage());
+                }
+                
+                // Verify screenshot was uploaded correctly
+                if (!Storage::exists($screenshotPath)) {
+                    Log::error('Screenshot gagal disimpan ke storage');
+                    throw new \Exception('Gagal menyimpan screenshot. Silakan coba lagi.');
+                }
+                
+                Log::info('Screenshot berhasil diupload dan diverifikasi');
+            }
 
             // ===== TAHAP 3: Validasi captcha (hanya di production) =====
             if (!$isDevelopment) {
@@ -145,18 +299,6 @@ class DocumentController extends Controller
             }
 
             // ===== TAHAP 4: Proses Form & File =====
-            // Get document form
-            $documentForm = \App\Models\DocumentForm::find($request->document_form_id);
-            
-            if (!$documentForm) {
-                Log::error('Document form tidak ditemukan dengan ID ' . $request->document_form_id);
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['document_form_id' => 'Form dokumen tidak ditemukan']);
-            }
-            
-            Log::info('Document form ditemukan', ['id' => $documentForm->id, 'title' => $documentForm->title]);
-            
             // Generate unique filename
             $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '_' . time() . '.' . $file->getClientOriginalExtension();
             $filePath = 'public/documents/' . $fileName;
@@ -193,15 +335,40 @@ class DocumentController extends Controller
             // ===== TAHAP 5: Simpan dokumen ke database =====
             $userId = auth()->check() ? auth()->id() : 1; // Default to admin user if not authenticated
             
+            // Siapkan metadata dasar
+            $metadata = [
+                'name' => $request->name,
+                'whatsapp' => $request->whatsapp,
+                'city' => $request->city,
+                'form_title' => $documentForm->title,
+                'form_slug' => $documentForm->slug,
+                'template_type' => $documentForm->template_type
+            ];
+            
+            // Tambahkan metadata khusus untuk template artikel
+            if ($request->template_type === 'article') {
+                Log::info('Menambahkan metadata khusus untuk template artikel');
+                $metadata['media_link'] = $request->media_link;
+                
+                if ($screenshotPath) {
+                    $metadata['screenshot_path'] = $screenshotPath;
+                    Log::info('Screenshot path ditambahkan ke metadata: ' . $screenshotPath);
+                } else {
+                    Log::warning('Screenshot path kosong, tidak ditambahkan ke metadata');
+                }
+            }
+            
             // Debug log untuk memeriksa data sebelum menyimpan ke database
             Log::info('Data yang akan disimpan ke tabel Documents:', [
                 'name' => $request->name,
                 'document_form_id' => $request->document_form_id,
                 'file_path' => $filePath,
-                'user_id' => $userId
+                'user_id' => $userId,
+                'template_type' => $request->template_type,
+                'metadata' => $metadata
             ]);
             
-            $document = DB::transaction(function () use ($request, $userId, $filePath, $file, $documentForm) {
+            $document = DB::transaction(function () use ($request, $userId, $filePath, $file, $documentForm, $metadata, $screenshotPath) {
                 try {
                     $document = new Document();
                     $document->name = $request->name;
@@ -214,13 +381,23 @@ class DocumentController extends Controller
                     $document->document_form_id = $request->document_form_id;
                     $document->whatsapp_number = $request->whatsapp;
                     $document->notification_sent = false;
-                    $document->metadata = [
-                        'name' => $request->name,
-                        'whatsapp' => $request->whatsapp,
-                        'city' => $request->city,
-                        'form_title' => $documentForm->title,
-                        'form_slug' => $documentForm->slug,
-                    ];
+                    
+                    // Simpan metadata
+                    if ($request->template_type === 'article') {
+                        Log::info('Menyimpan dokumen dengan template artikel', [
+                            'media_link' => $request->media_link,
+                            'screenshot_path' => $screenshotPath
+                        ]);
+                        
+                        // Pastikan media_link dan screenshot_path tersimpan dalam metadata
+                        $metadata['media_link'] = $request->media_link;
+                        $metadata['screenshot_path'] = $screenshotPath;
+                    }
+                    
+                    // Simpan metadata ke dokumen
+                    $document->metadata = $metadata;
+                    Log::info('Metadata yang akan disimpan:', $metadata);
+                    
                     $document->uploaded_at = now();
                     $document->status = 'pending';
                     
@@ -233,6 +410,16 @@ class DocumentController extends Controller
                     }
                     
                     Log::info('Document berhasil disimpan dengan ID: ' . $document->id);
+                    
+                    // Verifikasi data yang tersimpan
+                    $savedDocument = Document::find($document->id);
+                    Log::info('Data dokumen yang tersimpan:', [
+                        'id' => $savedDocument->id,
+                        'metadata' => $savedDocument->metadata,
+                        'has_media_link' => isset($savedDocument->metadata['media_link']),
+                        'has_screenshot' => isset($savedDocument->metadata['screenshot_path'])
+                    ]);
+                    
                     return $document;
                 } catch (\Exception $e) {
                     Log::error('Error dalam transaksi DB saat menyimpan dokumen', [
@@ -249,26 +436,51 @@ class DocumentController extends Controller
                 ->performedOn($document)
                 ->log('uploaded by guest');
 
+            Log::info('Activity log dibuat untuk dokumen ID: ' . $document->id);
+
             // Kirim notifikasi ke admin
-            $admins = User::whereHas('roles', function($query) {
-                $query->where('name', 'admin');
-            })->get();
+            try {
+                $admins = User::whereHas('roles', function($query) {
+                    $query->where('name', 'admin');
+                })->get();
 
-            $sender = (object)[
-                'name' => $request->name ?: 'Pengunjung',
-                'id' => null
-            ];
+                $sender = (object)[
+                    'name' => $request->name ?: 'Pengunjung',
+                    'id' => null
+                ];
 
-            Notification::send($admins, new DocumentSubmitted($document, $sender));
+                Notification::send($admins, new DocumentSubmitted($document, $sender));
+                Log::info('Notifikasi berhasil dikirim ke admin');
+            } catch (\Exception $e) {
+                Log::error('Gagal mengirim notifikasi ke admin', ['error' => $e->getMessage()]);
+                // Jangan berhenti proses jika notifikasi gagal
+            }
 
             // Kirim notifikasi WhatsApp jika nomor tersedia
             if (!empty($request->whatsapp)) {
-                $this->whatsappNotificationService->sendDocumentUploadNotification($document);
+                try {
+                    $this->whatsappNotificationService->sendDocumentUploadNotification($document);
+                    Log::info('Notifikasi WhatsApp berhasil dikirim ke: ' . $request->whatsapp);
+                } catch (\Exception $e) {
+                    Log::error('Gagal mengirim notifikasi WhatsApp', ['error' => $e->getMessage()]);
+                    // Jangan berhenti proses jika notifikasi gagal
+                }
+            }
+
+            // Tentukan pesan sukses berdasarkan tipe template
+            $successMessage = 'Dokumen berhasil diunggah! Terima kasih atas pengiriman Anda.';
+            if ($request->template_type === 'article') {
+                $successMessage = 'Artikel dan screenshot media berhasil diunggah! Terima kasih atas kontribusi Anda.';
             }
 
             // Redirect dengan pesan sukses
-            Log::info('Document created successfully', ['id' => $document->id, 'form_id' => $document->document_form_id]);
-            return redirect()->back()->with('success', 'Dokumen berhasil diunggah! Terima kasih atas pengiriman Anda.');
+            Log::info('Document created successfully', [
+                'id' => $document->id, 
+                'form_id' => $document->document_form_id,
+                'template_type' => $request->template_type
+            ]);
+            
+            return redirect()->back()->with('success', $successMessage);
         } catch (\Exception $e) {
             Log::error('Error saving document', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return redirect()->back()
