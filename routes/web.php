@@ -195,6 +195,10 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('document-forms/{documentForm}/public-url', [DocumentFormController::class, 'getPublicUrl'])
                     ->name('document-forms.public-url');
                 
+                // Clone Document Form route
+                Route::post('document-forms/{documentForm}/clone', [DocumentFormController::class, 'clone'])
+                    ->name('document-forms.clone');
+                
                 // Admin notifications
                 Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications');
                 Route::post('/notifications/{id}/mark-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
