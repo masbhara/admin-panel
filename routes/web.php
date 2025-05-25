@@ -312,6 +312,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::put('/{document}/status', [AdminDocumentCrudController::class, 'updateStatus'])->name('update-status');
                     Route::post('/import', [AdminDocumentImportController::class, 'import'])->name('import');
                     Route::get('/template/download', [AdminDocumentExportController::class, 'downloadTemplate'])->name('download-template');
+                    Route::get('/export', [AdminDocumentExportController::class, 'export'])->name('export');
                 });
                 
                 // Empty Page Route - halaman kosong yang menduplikasi struktur documents
@@ -341,6 +342,16 @@ Route::get('/api/document-forms/{documentFormId}/documents', function($documentF
 // Document preview & download routes
 Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
 Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
+
+// Export dokumen langsung route
+Route::get('/admin/documents/export', [AdminDocumentExportController::class, 'export'])
+    ->middleware(['auth', 'verified', 'role:admin'])
+    ->name('admin.documents.export.direct');
+
+// Alternatif export route untuk kemudahan akses
+Route::get('/documents-export', [AdminDocumentExportController::class, 'export'])
+    ->middleware(['auth', 'verified', 'role:admin'])
+    ->name('documents.export.simple');
 
 // API routes for public document forms
 Route::get('/api/document-forms/active', function() {

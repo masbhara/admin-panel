@@ -877,7 +877,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
-import { Link, useForm, router } from '@inertiajs/vue3';
+import { Link, useForm, router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import Modal from '@/Components/Modal.vue';
@@ -1279,7 +1279,26 @@ const resetSearch = () => {
   );
 };
 
-// Function to export to Excel - removed
+// Function to export to Excel
+const exportToExcel = () => {
+  // Buat form untuk submit yang mempertahankan session
+  const form = document.createElement('form');
+  form.method = 'GET';
+  form.action = '/documents-export';
+  form.target = '_blank'; // Buka di tab baru
+  
+  // Tambahkan document_form_id
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'document_form_id';
+  input.value = props.documentForm.id;
+  form.appendChild(input);
+  
+  // Submit form
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+};
 
 // Function to open import modal
 const openImportModal = () => {

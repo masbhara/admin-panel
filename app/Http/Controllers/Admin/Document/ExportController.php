@@ -17,7 +17,19 @@ class ExportController extends Controller
     public function export(Request $request)
     {
         try {
-            $documentFormId = $request->input('document_form_id');
+            // Log request untuk debugging
+            Log::info('Export request received', [
+                'query_params' => $request->query(),
+                'all_params' => $request->all(),
+                'path' => $request->path(),
+                'url' => $request->url()
+            ]);
+            
+            // Ambil document_form_id dari query parameter atau JSON body
+            $documentFormId = $request->query('document_form_id', $request->input('document_form_id'));
+            
+            // Log document_form_id
+            Log::info('Using document_form_id for export', ['document_form_id' => $documentFormId]);
             
             // Ambil dokumen berdasarkan document_form_id
             $query = Document::query();
@@ -47,7 +59,12 @@ class ExportController extends Controller
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             
-            // Header
+            // Periksa apakah ada dokumen dengan template artikel
+            $hasArticleTemplate = $documents->contains(function ($document) {
+                return isset($document->metadata['template_type']) && $document->metadata['template_type'] === 'article';
+            });
+            
+            // Header dasar
             $sheet->setCellValue('A1', 'ID');
             $sheet->setCellValue('B1', 'Nama');
             $sheet->setCellValue('C1', 'WhatsApp');
@@ -56,10 +73,21 @@ class ExportController extends Controller
             $sheet->setCellValue('F1', 'Tanggal Upload');
             $sheet->setCellValue('G1', 'Nama File');
             $sheet->setCellValue('H1', 'Form');
-            $sheet->setCellValue('I1', 'Catatan');
+            $sheet->setCellValue('I1', 'Template');
+            
+            // Tambahkan header untuk template artikel jika diperlukan
+            if ($hasArticleTemplate) {
+                $sheet->setCellValue('J1', 'Media Link');
+                $sheet->setCellValue('K1', 'Screenshot Path');
+                $sheet->setCellValue('L1', 'Catatan');
+                $lastColumn = 'L';
+            } else {
+                $sheet->setCellValue('J1', 'Catatan');
+                $lastColumn = 'J';
+            }
             
             // Style header
-            $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+            $sheet->getStyle("A1:{$lastColumn}1")->getFont()->setBold(true);
             
             // Isi data
             $row = 2;
@@ -72,13 +100,36 @@ class ExportController extends Controller
                 $sheet->setCellValue('F' . $row, $document->uploaded_at ?? $document->created_at);
                 $sheet->setCellValue('G' . $row, $document->file_name ?? '-');
                 $sheet->setCellValue('H' . $row, $document->documentForm->title ?? '-');
-                $sheet->setCellValue('I' . $row, $document->notes ?? '-');
+                
+                // Template type
+                $templateType = isset($document->metadata['template_type']) && $document->metadata['template_type'] === 'article' 
+                    ? 'Artikel Media' 
+                    : 'Default';
+                $sheet->setCellValue('I' . $row, $templateType);
+                
+                // Jika template artikel, tambahkan data khusus
+                if ($hasArticleTemplate) {
+                    // Isi kolom khusus template artikel
+                    if (isset($document->metadata['template_type']) && $document->metadata['template_type'] === 'article') {
+                        $sheet->setCellValue('J' . $row, $document->metadata['media_link'] ?? '-');
+                        $sheet->setCellValue('K' . $row, $document->metadata['screenshot_path'] ?? '-');
+                        $sheet->setCellValue('L' . $row, $document->notes ?? '-');
+                    } else {
+                        // Untuk dokumen non-artikel
+                        $sheet->setCellValue('J' . $row, '-');
+                        $sheet->setCellValue('K' . $row, '-');
+                        $sheet->setCellValue('L' . $row, $document->notes ?? '-');
+                    }
+                } else {
+                    // Jika tidak ada template artikel, catatan di kolom J
+                    $sheet->setCellValue('J' . $row, $document->notes ?? '-');
+                }
                 
                 $row++;
             }
             
             // Auto size columns
-            foreach(range('A','I') as $col) {
+            foreach(range('A', $lastColumn) as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
             
@@ -98,6 +149,7 @@ class ExportController extends Controller
             // Return file download
             return response()->download($filepath, $filename, [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ])->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             Log::error('Error exporting documents: ' . $e->getMessage());
