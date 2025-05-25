@@ -358,4 +358,77 @@ class DocumentFormController extends Controller
             'publicUrl' => $publicUrl
         ]);
     }
+    
+    /**
+     * Clone the specified document form.
+     */
+    public function clone(DocumentForm $documentForm)
+    {
+        $this->authorize('create', DocumentForm::class);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Membuat salinan dari form yang ada
+            $newForm = $documentForm->replicate();
+            
+            // Ubah judul untuk menunjukkan ini adalah hasil kloning
+            $newForm->title = $documentForm->title . ' (Copy)';
+            
+            // Buat slug baru yang unik
+            $originalSlug = Str::slug($newForm->title);
+            $newForm->slug = $originalSlug;
+            
+            // Pastikan slug unik
+            $count = 0;
+            while (DocumentForm::where('slug', $newForm->slug)->exists()) {
+                $count++;
+                $newForm->slug = $originalSlug . '-' . $count;
+            }
+            
+            // Set user_id ke pengguna saat ini
+            $newForm->user_id = Auth::id();
+            
+            // Default ke status tidak aktif untuk form yang baru dikloning
+            $newForm->is_active = false;
+            
+            // Simpan form baru
+            $newForm->save();
+            
+            // Clone form fields
+            foreach ($documentForm->formFields as $field) {
+                $newField = $field->replicate();
+                $newField->document_form_id = $newForm->id;
+                $newField->save();
+            }
+            
+            // Log aktivitas
+            activity()
+                ->performedOn($newForm)
+                ->causedBy(Auth::user())
+                ->log('cloned document form from ID: ' . $documentForm->id);
+            
+            DB::commit();
+            
+            // Kembalikan respons JSON alih-alih redirect
+            return response()->json([
+                'success' => true,
+                'message' => 'Form dokumen berhasil dikloning.',
+                'form_id' => $newForm->id
+            ]);
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error cloning document form: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'document_form_id' => $documentForm->id,
+            ]);
+            
+            // Kembalikan respons JSON dengan status error
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengkloning form dokumen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 } 

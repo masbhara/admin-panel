@@ -24,6 +24,22 @@
           </div>
         </div>
 
+        <!-- Custom Success Message Alert -->
+        <div v-if="customSuccessMessage" class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-500 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-green-800 dark:text-green-300">
+                {{ customSuccessMessage }}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
           <div class="p-6">
             <div class="flex justify-between items-center mb-6">
@@ -136,6 +152,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </Link>
+                        <button @click="cloneForm(form)" class="text-green-600 hover:text-green-900 dark:hover:text-green-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
                         <Link :href="route('admin.document-forms.edit', form.id)" class="text-yellow-600 hover:text-yellow-900 dark:hover:text-yellow-400">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -192,6 +213,33 @@
       </div>
     </Modal>
 
+    <!-- Clone Confirmation Modal -->
+    <Modal :show="cloneModal" @close="closeCloneModal">
+      <div class="p-6">
+        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+          Konfirmasi Kloning Form
+        </h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          Apakah Anda yakin ingin mengkloning form dokumen "{{ formToClone?.title }}"? 
+          Form baru akan dibuat dengan status tidak aktif.
+        </p>
+        <div v-if="cloneErrorMessage" class="mt-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative">
+          <span class="block sm:inline">{{ cloneErrorMessage }}</span>
+        </div>
+        <div class="mt-6 flex justify-end space-x-4">
+          <SecondaryButton @click="closeCloneModal">Batal</SecondaryButton>
+          <button
+            @click="executeClone"
+            class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+            :class="{ 'opacity-25': cloneProcessing }"
+            :disabled="cloneProcessing"
+          >
+            {{ cloneProcessing ? 'Mengkloning...' : 'Kloning Form' }}
+          </button>
+        </div>
+      </div>
+    </Modal>
+
     <!-- Public URL Modal -->
     <Modal :show="publicUrlModal" @close="closePublicUrlModal">
       <div class="p-6">
@@ -231,7 +279,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, onMounted } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -245,6 +293,9 @@ const props = defineProps({
   filters: Object,
 });
 
+// Tambahkan state untuk notifikasi sukses kustom
+const customSuccessMessage = ref('');
+
 // Form search and filter
 const searchQuery = ref(props.filters?.search || '');
 const statusFilter = ref(props.filters?.status || 'all');
@@ -255,12 +306,33 @@ const formToDelete = ref(null);
 const processing = ref(false);
 const errorMessage = ref('');
 
+// Clone functionality
+const cloneModal = ref(false);
+const formToClone = ref(null);
+const cloneProcessing = ref(false);
+const cloneErrorMessage = ref('');
+
 // Public URL functionality
 const publicUrlModal = ref(false);
 const selectedForm = ref(null);
 const publicUrl = ref('');
 const copied = ref(false);
 const publicUrlInput = ref(null);
+
+// Tambahkan onMounted hook untuk memeriksa pesan sukses dari sessionStorage
+onMounted(() => {
+  // Cek apakah ada pesan sukses kloning di sessionStorage
+  const cloneSuccess = sessionStorage.getItem('cloneSuccess');
+  if (cloneSuccess) {
+    customSuccessMessage.value = cloneSuccess;
+    sessionStorage.removeItem('cloneSuccess');
+    
+    // Hilangkan pesan setelah beberapa detik
+    setTimeout(() => {
+      customSuccessMessage.value = '';
+    }, 5000);
+  }
+});
 
 // Custom debounce function implementation
 let timeout;
@@ -388,5 +460,71 @@ const copyToClipboard = () => {
   setTimeout(() => {
     copied.value = false;
   }, 2000);
+};
+
+const cloneForm = (form) => {
+  formToClone.value = form;
+  cloneModal.value = true;
+};
+
+const closeCloneModal = () => {
+  cloneModal.value = false;
+  cloneErrorMessage.value = '';
+  setTimeout(() => {
+    formToClone.value = null;
+  }, 200);
+};
+
+const executeClone = () => {
+  if (!formToClone.value || !formToClone.value.id) {
+    cloneErrorMessage.value = 'ID form tidak valid';
+    return;
+  }
+
+  cloneProcessing.value = true;
+  cloneErrorMessage.value = '';
+  
+  // Pastikan ID tidak kosong dan numerik
+  const formId = parseInt(formToClone.value.id);
+  if (isNaN(formId) || formId <= 0) {
+    cloneErrorMessage.value = 'ID form tidak valid';
+    cloneProcessing.value = false;
+    return;
+  }
+  
+  // Gunakan axios.post untuk kloning (tanpa method spoofing karena sudah menggunakan POST)
+  axios.post(route('admin.document-forms.clone', formId))
+  .then(response => {
+    // Cek jika ada success message dari server
+    if (response.data && response.data.success) {
+      // Tutup modal
+      cloneModal.value = false;
+      formToClone.value = null;
+      
+      // Simpan pesan sukses di sessionStorage untuk ditampilkan setelah reload
+      sessionStorage.setItem('cloneSuccess', response.data.message || 'Form dokumen berhasil dikloning.');
+      
+      // Reload halaman
+      window.location.reload();
+    } else {
+      // Jika tidak ada success message, mungkin ada pesan error
+      cloneErrorMessage.value = response.data?.message || 'Terjadi kesalahan saat mengkloning form dokumen.';
+    }
+  })
+  .catch(error => {
+    console.error('Clone error:', error);
+    if (error.response?.data?.message) {
+      cloneErrorMessage.value = error.response.data.message;
+    } else if (error.response?.status === 403) {
+      cloneErrorMessage.value = 'Anda tidak memiliki izin untuk mengkloning form ini.';
+    } else if (error.response?.status === 404) {
+      cloneErrorMessage.value = 'Form dokumen tidak ditemukan.';
+    } else {
+      cloneErrorMessage.value = 'Terjadi kesalahan saat mengkloning form dokumen.';
+    }
+  })
+  .finally(() => {
+    cloneProcessing.value = false;
+  });
 };
 </script>
