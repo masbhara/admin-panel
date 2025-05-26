@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         Commands\AddDocumentPermissions::class,
         Commands\SetupWhatsappNotification::class,
         Commands\AddWhatsappNotificationPermissions::class,
+        Commands\EnsureStorageDirectoriesExist::class,
     ];
 
     /**

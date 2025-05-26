@@ -345,7 +345,7 @@ Route::get('/api/document-forms/{documentFormId}/documents', function($documentF
 
 // Document preview & download routes
 Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
-Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
+Route::get('/documents/{document}/download', [App\Http\Controllers\DocumentDownloadController::class, 'download'])->name('documents.download');
 
 // Screenshot routes
 Route::get('/screenshots/{document}', [App\Http\Controllers\ScreenshotController::class, 'view'])->name('screenshots.view');

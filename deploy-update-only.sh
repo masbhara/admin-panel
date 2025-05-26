@@ -25,6 +25,9 @@ optimize_cache() {
     php artisan view:cache
     php artisan event:cache
     php artisan optimize
+    
+    # Pastikan direktori storage yang diperlukan ada
+    php artisan storage:ensure-directories
 }
 
 # Fungsi untuk clear cache
