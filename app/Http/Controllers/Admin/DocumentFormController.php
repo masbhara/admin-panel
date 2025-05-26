@@ -143,6 +143,20 @@ class DocumentFormController extends Controller
         // Query documents dengan filtering
         $query = Document::where('document_form_id', $documentForm->id);
         
+        // Hitung jumlah dokumen per status untuk keseluruhan data dengan satu kueri
+        $statusCounts = Document::where('document_form_id', $documentForm->id)
+            ->select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+        
+        // Pastikan semua status ada dalam array, meskipun countnya 0
+        $statusCounts = [
+            'pending' => $statusCounts['pending'] ?? 0,
+            'approved' => $statusCounts['approved'] ?? 0,
+            'rejected' => $statusCounts['rejected'] ?? 0,
+        ];
+        
         // Log raw SQL query untuk debugging
         $sql = $query->toSql();
         $bindings = $query->getBindings();
@@ -180,11 +194,15 @@ class DocumentFormController extends Controller
             ->paginate($perPage)
             ->withQueryString();
             
+        // Tambahkan status_counts ke metadata pagination
+        $documents->meta->status_counts = $statusCounts;
+            
         Log::info('DocumentForm paginated results', [
             'total_in_pagination' => $documents->total(),
             'has_pages' => $documents->hasPages(),
             'current_page' => $documents->currentPage(),
-            'per_page' => $documents->perPage()
+            'per_page' => $documents->perPage(),
+            'status_counts' => $statusCounts
         ]);
 
         return Inertia::render('Admin/DocumentForms/Show', [

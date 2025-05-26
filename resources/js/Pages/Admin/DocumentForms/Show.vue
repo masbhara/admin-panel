@@ -959,7 +959,21 @@ const formatDate = (dateString) => {
 
 // Mendapatkan jumlah dokumen berdasarkan status
 const getDocumentCountByStatus = (status) => {
-  return props.documents.data.filter(doc => doc.status === status).length;
+  // Jika meta data tersedia (Laravel menyertakan meta data untuk status count)
+  if (props.documents.meta && props.documents.meta.status_counts) {
+    return props.documents.meta.status_counts[status] || 0;
+  }
+  
+  // Fallback menggunakan total semua dokumen untuk menghitung proporsi berdasarkan status
+  // Ini tidak akurat, tapi setidaknya memberikan informasi lebih baik daripada hanya halaman saat ini
+  let countInCurrentPage = props.documents.data.filter(doc => doc.status === status).length;
+  let totalInCurrentPage = props.documents.data.length;
+  
+  if (totalInCurrentPage === 0) return 0;
+  
+  // Estimasi jumlah total berdasarkan proporsi di halaman saat ini
+  let proportion = countInCurrentPage / totalInCurrentPage;
+  return Math.round(proportion * props.documents.total);
 };
 
 // Toggle menu aksi
