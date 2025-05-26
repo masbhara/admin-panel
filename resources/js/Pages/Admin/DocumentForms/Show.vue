@@ -1438,9 +1438,16 @@ const openMediaLinkInNewTab = (document) => {
 // Fungsi untuk membuka preview screenshot
 const previewArticleScreenshot = (document) => {
   if (document?.metadata?.screenshot_path) {
-    // Convert storage path ke URL publik
-    const path = document.metadata.screenshot_path.replace('public/', 'storage/');
-    currentPreviewUrl.value = `/${path}`;
+    // Gunakan URL API langsung daripada mengubah path
+    const screenshotUrl = `/screenshots/${document.id}`;
+    
+    // Debug info
+    console.log('Screenshot path:', {
+      original: document.metadata.screenshot_path,
+      newUrl: screenshotUrl
+    });
+    
+    currentPreviewUrl.value = screenshotUrl;
     previewDocument.value = document;
     previewType.value = 'image';
     showPreviewModal.value = true;

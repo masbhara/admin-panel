@@ -347,6 +347,10 @@ Route::get('/api/document-forms/{documentFormId}/documents', function($documentF
 Route::get('/documents/{document}/preview', [DocumentPreviewController::class, 'preview'])->name('documents.preview');
 Route::get('/documents/{document}/download', [DocumentPreviewController::class, 'download'])->name('documents.download');
 
+// Screenshot routes
+Route::get('/screenshots/{document}', [App\Http\Controllers\ScreenshotController::class, 'view'])->name('screenshots.view');
+Route::get('/screenshots/{document}/download', [App\Http\Controllers\ScreenshotController::class, 'download'])->name('screenshots.download');
+
 // Export dokumen langsung route
 Route::get('/admin/documents/export', [AdminDocumentExportController::class, 'export'])
     ->middleware(['auth', 'verified', 'role:admin'])

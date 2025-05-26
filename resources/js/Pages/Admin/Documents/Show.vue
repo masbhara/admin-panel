@@ -508,9 +508,16 @@ const deleteDocument = async () => {
 // Preview screenshot untuk artikel media
 const previewScreenshot = () => {
   if (props.document.metadata?.screenshot_path) {
-    // Convert storage path ke URL publik
-    const path = props.document.metadata.screenshot_path.replace('public/', 'storage/');
-    screenshotUrl.value = `/${path}`;
+    // Gunakan URL API langsung daripada mengubah path
+    const url = `/screenshots/${props.document.id}`;
+    
+    // Debug info
+    console.log('Screenshot path:', {
+      original: props.document.metadata.screenshot_path,
+      newUrl: url
+    });
+    
+    screenshotUrl.value = url;
     showScreenshotModal.value = true;
   }
 };

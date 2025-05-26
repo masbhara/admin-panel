@@ -267,6 +267,16 @@ class DocumentController extends Controller
                     Log::info('Created screenshots directory');
                 }
                 
+                // Debug info untuk storage path
+                Log::info('Storage path details', [
+                    'disk' => config('filesystems.default'),
+                    'base_path' => storage_path(),
+                    'app_url' => config('app.url'),
+                    'screenshot_full_path' => storage_path('app/' . $screenshotPath),
+                    'public_url' => Storage::url($screenshotPath),
+                    'directory_exists' => Storage::exists('public/screenshots'),
+                ]);
+                
                 // Upload screenshot
                 try {
                     $screenshotContent = file_get_contents($screenshot->getRealPath());
