@@ -138,7 +138,7 @@
                     </div>
                     <a 
                       v-if="document.file_name"
-                      :href="route('documents.download', document.id)" 
+                      :href="`/documents/${document.id}/download`" 
                       target="_blank" 
                       class="ml-auto inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-primary-600 border border-transparent rounded hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                     >

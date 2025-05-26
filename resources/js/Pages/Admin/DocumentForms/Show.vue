@@ -92,7 +92,7 @@
             </template>
             
             <a 
-              :href="selectedHeaderDocument ? route('documents.download', selectedHeaderDocument.id) : '#'"
+              :href="`/documents/${selectedHeaderDocument?.id}/download`" 
               target="_blank" 
               class="flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
@@ -170,7 +170,7 @@
             </template>
             
             <a 
-              :href="route('documents.download', document.id)" 
+              :href="`/documents/${document.id}/download`" 
               target="_blank" 
               class="flex items-center px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >

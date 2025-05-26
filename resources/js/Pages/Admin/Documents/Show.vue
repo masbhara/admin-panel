@@ -38,7 +38,7 @@
               
               <div class="flex space-x-2">
                 <a 
-                  :href="route('documents.download', document.id)" 
+                  :href="`/documents/${document.id}/download`" 
                   target="_blank" 
                   class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-lg font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                 >
