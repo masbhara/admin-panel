@@ -51,7 +51,8 @@ Route::get('/form/{slug}', function ($slug) {
     ]);
     
     return Inertia::render('Public/DocumentForm', [
-        'documentForm' => $documentForm
+        'documentForm' => $documentForm,
+        'captchaEnabled' => $documentForm->captcha_enabled
     ]);
 })->name('public.document-form');
 

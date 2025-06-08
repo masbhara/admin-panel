@@ -32,7 +32,8 @@ class DocumentForm extends Model
         'closed_message',
         'is_active',
         'template_type',
-        'metadata'
+        'metadata',
+        'captcha_enabled'
     ];
 
     /**
@@ -43,6 +44,7 @@ class DocumentForm extends Model
     protected $casts = [
         'submission_deadline' => 'datetime',
         'is_active' => 'boolean',
+        'captcha_enabled' => 'boolean',
         'metadata' => 'array'
     ];
 

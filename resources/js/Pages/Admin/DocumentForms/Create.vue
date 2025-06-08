@@ -105,6 +105,18 @@
                 <InputError :message="form.errors.is_active" class="mt-2" />
               </div>
 
+              <!-- Captcha Status -->
+              <div class="mb-6">
+                <div class="flex items-center">
+                  <Checkbox id="captcha_enabled" v-model="form.captcha_enabled" />
+                  <InputLabel for="captcha_enabled" class="ml-2" value="Aktifkan Captcha" />
+                </div>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Aktifkan verifikasi captcha untuk mencegah spam dan bot.
+                </p>
+                <InputError :message="form.errors.captcha_enabled" class="mt-2" />
+              </div>
+
               <!-- Preview Fields -->
               <div class="mb-6">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Preview Fields</h3>
@@ -269,6 +281,7 @@ const form = useForm({
   submission_deadline: '',
   closed_message: 'Pengumpulan dokumen telah ditutup.',
   is_active: true,
+  captcha_enabled: true,
   template_type: 'default',
   fields: defaultFields.default
 });

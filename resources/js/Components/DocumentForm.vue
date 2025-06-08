@@ -311,7 +311,7 @@
         </div>
         
         <!-- Captcha Component -->
-        <div>
+        <div v-if="captchaEnabled">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verifikasi (Klik refresh untuk ganti kode) <span class="text-red-500">*</span></label>
           <Captcha 
             v-model="form.captcha"
@@ -361,6 +361,10 @@ const props = defineProps({
   templateType: {
     type: String,
     default: 'default'
+  },
+  captchaEnabled: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -560,6 +564,11 @@ const validateScreenshot = () => {
 const validateCaptcha = () => {
   captchaErrors.value = [];
   touchedFields.value.captcha = true;
+  
+  // Jika captcha tidak diaktifkan, anggap valid
+  if (!props.captchaEnabled) {
+    return true;
+  }
   
   if (!form.captcha) {
     captchaErrors.value.push('Kode captcha wajib diisi');

@@ -62,6 +62,7 @@ class DocumentFormController extends Controller
             'submission_deadline' => 'nullable|date',
             'closed_message' => 'nullable|string|max:500',
             'is_active' => 'boolean',
+            'captcha_enabled' => 'boolean',
             'template_type' => 'required|string|in:default,article'
         ], [
             'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung.',
@@ -242,6 +243,7 @@ class DocumentFormController extends Controller
             'submission_deadline' => 'nullable|date',
             'closed_message' => 'nullable|string|max:500',
             'is_active' => 'boolean',
+            'captcha_enabled' => 'boolean',
             'template_type' => 'required|string|in:default,article',
             'fields' => 'array'
         ], [

@@ -35,7 +35,8 @@
         <DocumentForm 
           :success-message="$page.props.flash?.success || ''" 
           :document-form-id="documentForm.id"
-          :template-type="documentForm.template_type" 
+          :template-type="documentForm.template_type"
+          :captcha-enabled="captchaEnabled" 
         />
       </div>
       
@@ -62,6 +63,10 @@ import DocumentForm from '@/Components/DocumentForm.vue';
 
 const props = defineProps({
   documentForm: Object,
+  captchaEnabled: {
+    type: Boolean,
+    default: true
+  }
 });
 
 // Mendeteksi mode development di script

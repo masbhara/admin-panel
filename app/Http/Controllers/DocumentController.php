@@ -297,15 +297,17 @@ class DocumentController extends Controller
             }
 
             // ===== TAHAP 3: Validasi captcha (hanya di production) =====
-            if (!$isDevelopment) {
+            if (!$isDevelopment && $documentForm->captcha_enabled) {
                 $request->validate([
                     'captcha' => 'required|captcha_api:' . $request->captcha_key . ',default'
                 ], [
                     'captcha.required' => 'Kode captcha wajib diisi',
                     'captcha.captcha_api' => 'Kode captcha tidak valid'
                 ]);
+                Log::info('Captcha validation performed');
             } else {
-                Log::info('Captcha validation bypassed in development environment');
+                Log::info('Captcha validation bypassed: ' . 
+                    ($isDevelopment ? 'Development environment' : 'Captcha disabled for this form'));
             }
 
             // ===== TAHAP 4: Proses Form & File =====
