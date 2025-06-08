@@ -194,9 +194,6 @@ class DocumentFormController extends Controller
             ->paginate($perPage)
             ->withQueryString();
             
-        // Tambahkan status_counts ke metadata pagination
-        $documents->meta->status_counts = $statusCounts;
-            
         Log::info('DocumentForm paginated results', [
             'total_in_pagination' => $documents->total(),
             'has_pages' => $documents->hasPages(),
@@ -209,6 +206,7 @@ class DocumentFormController extends Controller
             'documentForm' => $documentForm,
             'documents' => $documents,
             'filters' => $request->only(['search', 'per_page']),
+            'statusCounts' => $statusCounts,
         ]);
     }
 
