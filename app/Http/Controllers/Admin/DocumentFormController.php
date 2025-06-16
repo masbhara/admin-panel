@@ -63,7 +63,7 @@ class DocumentFormController extends Controller
             'closed_message' => 'nullable|string|max:500',
             'is_active' => 'boolean',
             'captcha_enabled' => 'boolean',
-            'template_type' => 'required|string|in:default,article'
+            'template_type' => 'required|string|in:default,article,multiple_article'
         ], [
             'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung.',
             'slug.unique' => 'Slug sudah digunakan, silakan gunakan slug yang lain.',
@@ -244,7 +244,7 @@ class DocumentFormController extends Controller
             'closed_message' => 'nullable|string|max:500',
             'is_active' => 'boolean',
             'captcha_enabled' => 'boolean',
-            'template_type' => 'required|string|in:default,article',
+            'template_type' => 'required|string|in:default,article,multiple_article',
             'fields' => 'array'
         ], [
             'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda hubung.',

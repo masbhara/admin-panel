@@ -20,9 +20,20 @@ class ScreenshotController extends Controller
         try {
             $document = Document::findOrFail($documentId);
             
-            if (!isset($document->metadata['screenshot_path'])) {
+            // Determine which screenshot to use based on type parameter
+            $screenshotType = $request->query('type', 'default');
+            $metadataKey = 'screenshot_path'; // Default key
+            
+            if ($screenshotType === 'media' && isset($document->metadata['screenshot_media_path'])) {
+                $metadataKey = 'screenshot_media_path';
+                Log::info('Using screenshot_media_path instead of default screenshot');
+            }
+            
+            if (!isset($document->metadata[$metadataKey])) {
                 Log::error('Screenshot path tidak ditemukan di metadata dokumen', [
-                    'document_id' => $documentId
+                    'document_id' => $documentId,
+                    'screenshot_type' => $screenshotType,
+                    'metadata_key' => $metadataKey
                 ]);
                 return response()->json([
                     'success' => false,
@@ -30,11 +41,12 @@ class ScreenshotController extends Controller
                 ], 404);
             }
             
-            $screenshotPath = $document->metadata['screenshot_path'];
+            $screenshotPath = $document->metadata[$metadataKey];
             
             Log::info('Download screenshot request', [
                 'document_id' => $documentId,
-                'path' => $screenshotPath
+                'path' => $screenshotPath,
+                'type' => $screenshotType
             ]);
             
             // Coba berbagai kemungkinan path
@@ -69,7 +81,8 @@ class ScreenshotController extends Controller
             
             Log::info('Serving screenshot from', [
                 'path' => $fullPath,
-                'filename' => $filename
+                'filename' => $filename,
+                'type' => $screenshotType
             ]);
             
             return response()->download($fullPath, $filename);
@@ -97,9 +110,20 @@ class ScreenshotController extends Controller
         try {
             $document = Document::findOrFail($documentId);
             
-            if (!isset($document->metadata['screenshot_path'])) {
+            // Determine which screenshot to use based on type parameter
+            $screenshotType = $request->query('type', 'default');
+            $metadataKey = 'screenshot_path'; // Default key
+            
+            if ($screenshotType === 'media' && isset($document->metadata['screenshot_media_path'])) {
+                $metadataKey = 'screenshot_media_path';
+                Log::info('Using screenshot_media_path instead of default screenshot');
+            }
+            
+            if (!isset($document->metadata[$metadataKey])) {
                 Log::error('Screenshot path tidak ditemukan di metadata dokumen', [
-                    'document_id' => $documentId
+                    'document_id' => $documentId,
+                    'screenshot_type' => $screenshotType,
+                    'metadata_key' => $metadataKey
                 ]);
                 return response()->json([
                     'success' => false,
@@ -107,11 +131,12 @@ class ScreenshotController extends Controller
                 ], 404);
             }
             
-            $screenshotPath = $document->metadata['screenshot_path'];
+            $screenshotPath = $document->metadata[$metadataKey];
             
             Log::info('View screenshot request', [
                 'document_id' => $documentId,
-                'path' => $screenshotPath
+                'path' => $screenshotPath,
+                'type' => $screenshotType
             ]);
             
             // Coba berbagai kemungkinan path
@@ -146,7 +171,8 @@ class ScreenshotController extends Controller
             
             Log::info('Serving screenshot content', [
                 'path' => $validPath,
-                'mime' => $mimeType
+                'mime' => $mimeType,
+                'type' => $screenshotType
             ]);
             
             return response($content)->header('Content-Type', $mimeType);

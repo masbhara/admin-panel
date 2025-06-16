@@ -22,6 +22,7 @@
                 >
                   <option value="default">Form Dokumen Default</option>
                   <option value="article">Form Artikel Media</option>
+                  <option value="multiple_article">Form Artikel Media (2 Screenshot)</option>
                 </select>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {{ getTemplateDescription(form.template_type) }}
@@ -271,6 +272,83 @@ const defaultFields = {
       },
       order: 5
     }
+  ],
+  multiple_article: [
+    {
+      label: 'Nama Lengkap',
+      name: 'name',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan nama lengkap Anda',
+      order: 0
+    },
+    {
+      label: 'Nomor WhatsApp',
+      name: 'whatsapp',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: '08xxx (gunakan nomor aktif)',
+      order: 1
+    },
+    {
+      label: 'Kota/Kabupaten',
+      name: 'city',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Ketik untuk mencari kota/kabupaten...',
+      order: 2
+    },
+    {
+      label: 'Unggah Dokumen',
+      name: 'document',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: PDF, Word, maksimal 10MB',
+      validation_rules: {
+        mimes: 'pdf,doc,docx',
+        max: 10240
+      },
+      order: 3
+    },
+    {
+      label: 'Tautan / Link Media',
+      name: 'media_link',
+      type: 'text',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Masukkan link artikel yang sudah dipublikasi',
+      order: 4
+    },
+    {
+      label: 'Unggah Screenshot SS Plagiat',
+      name: 'screenshot',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: JPG, PNG, maksimal 5MB',
+      validation_rules: {
+        mimes: 'jpg,jpeg,png',
+        max: 5120
+      },
+      order: 5
+    },
+    {
+      label: 'Unggah Screenshot Kirim ke Media',
+      name: 'screenshot_media',
+      type: 'file',
+      is_required: true,
+      is_enabled: true,
+      help_text: 'Format: JPG, PNG, maksimal 5MB',
+      validation_rules: {
+        mimes: 'jpg,jpeg,png',
+        max: 5120
+      },
+      order: 6
+    }
   ]
 };
 
@@ -289,7 +367,8 @@ const form = useForm({
 const getTemplateDescription = (templateType) => {
   const descriptions = {
     default: 'Template standar untuk pengumpulan dokumen (PDF/Word)',
-    article: 'Template untuk pengumpulan artikel media dengan screenshot dan tautan'
+    article: 'Template untuk pengumpulan artikel media dengan screenshot dan tautan',
+    multiple_article: 'Template artikel media dengan 2 screenshot: SS Plagiat dan Kirim ke Media'
   };
   return descriptions[templateType] || '';
 };

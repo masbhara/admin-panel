@@ -173,6 +173,56 @@
                   </dl>
                 </div>
                 
+                <!-- Informasi Template Multiple Article -->
+                <div v-if="document.metadata?.template_type === 'multiple_article'">
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mt-6 mb-4">Informasi Artikel Media (Multiple)</h3>
+                  
+                  <dl class="grid grid-cols-1 gap-3">
+                    <div class="py-2 border-b border-gray-100 dark:border-gray-700">
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Link Media</dt>
+                      <dd class="mt-1 text-gray-900 dark:text-gray-100">
+                        <a 
+                          :href="document.metadata?.media_link" 
+                          target="_blank" 
+                          class="text-primary-600 dark:text-primary-400 hover:underline"
+                        >
+                          {{ document.metadata?.media_link || '-' }}
+                        </a>
+                      </dd>
+                    </div>
+                    
+                    <div v-if="document.metadata?.screenshot_path" class="py-2 border-b border-gray-100 dark:border-gray-700">
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Screenshot SS Plagiat</dt>
+                      <dd class="mt-2">
+                        <button 
+                          @click="previewScreenshot"
+                          class="inline-flex items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          <svg class="mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Lihat Screenshot SS Plagiat
+                        </button>
+                      </dd>
+                    </div>
+                    
+                    <div v-if="document.metadata?.screenshot_media_path" class="py-2 border-b border-gray-100 dark:border-gray-700">
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Screenshot Kirim ke Media</dt>
+                      <dd class="mt-2">
+                        <button 
+                          @click="previewScreenshotMedia"
+                          class="inline-flex items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          <svg class="mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Lihat Screenshot Kirim ke Media
+                        </button>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+                
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mt-6 mb-4">Informasi File</h3>
                 
                 <dl class="grid grid-cols-1 gap-3">
@@ -343,7 +393,7 @@
       <div class="bg-white dark:bg-gray-800 p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-            Screenshot Media
+            {{ screenshotTitle }}
           </h3>
           <button @click="showScreenshotModal = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -401,6 +451,7 @@ const activeViewer = ref('google');
 // State untuk preview screenshot artikel
 const showScreenshotModal = ref(false);
 const screenshotUrl = ref('');
+const screenshotTitle = ref('Screenshot Media');
 
 // Fungsi format tanggal
 const formatDate = (dateString) => {
@@ -517,6 +568,26 @@ const previewScreenshot = () => {
       newUrl: url
     });
     
+    screenshotTitle.value = props.document.metadata?.template_type === 'multiple_article' ? 
+      'Screenshot SS Plagiat' : 'Screenshot Media';
+    screenshotUrl.value = url;
+    showScreenshotModal.value = true;
+  }
+};
+
+// Preview screenshot media untuk template multiple_article
+const previewScreenshotMedia = () => {
+  if (props.document.metadata?.screenshot_media_path) {
+    // Gunakan URL API langsung dengan parameter untuk screenshot media
+    const url = `/screenshots/${props.document.id}?type=media`;
+    
+    // Debug info
+    console.log('Screenshot media path:', {
+      original: props.document.metadata.screenshot_media_path,
+      newUrl: url
+    });
+    
+    screenshotTitle.value = 'Screenshot Kirim ke Media';
     screenshotUrl.value = url;
     showScreenshotModal.value = true;
   }

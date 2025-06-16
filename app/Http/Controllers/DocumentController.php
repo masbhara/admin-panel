@@ -116,7 +116,7 @@ class DocumentController extends Controller
                 'whatsapp' => 'nullable|string|max:20',
                 'city' => 'nullable|string|max:255',
                 'document_form_id' => 'required|exists:document_forms,id',
-                'template_type' => 'required|string|in:default,article'
+                'template_type' => 'required|string|in:default,article,multiple_article'
             ], [
                 'name.required' => 'Nama lengkap wajib diisi',
                 'name.max' => 'Nama tidak boleh lebih dari 255 karakter',
@@ -197,27 +197,40 @@ class DocumentController extends Controller
             
             // ===== TAHAP 2.1: Validasi tambahan untuk template artikel =====
             $screenshotPath = null;
-            if ($request->template_type === 'article') {
+            $screenshotMediaPath = null; // Tambahkan variabel untuk screenshot media
+
+            if ($request->template_type === 'article' || $request->template_type === 'multiple_article') {
                 // Logging detail untuk debugging template artikel
-                Log::info('Memproses template artikel dengan data:', [
+                Log::info('Memproses template ' . $request->template_type . ' dengan data:', [
                     'media_link' => $request->media_link,
-                    'has_screenshot' => $request->hasFile('screenshot')
+                    'has_screenshot' => $request->hasFile('screenshot'),
+                    'has_screenshot_media' => $request->hasFile('screenshot_media'),
                 ]);
                 
                 // Validasi media link
-                $request->validate([
-                    'media_link' => 'required|url|max:2000'
-                ], [
-                    'media_link.required' => 'Link media wajib diisi',
-                    'media_link.url' => 'Format URL tidak valid',
-                    'media_link.max' => 'URL terlalu panjang (maksimal 2000 karakter)'
-                ]);
+                // Untuk multiple_article, tidak perlu validasi URL
+                if ($request->template_type === 'article') {
+                    $request->validate([
+                        'media_link' => 'required|url|max:2000'
+                    ], [
+                        'media_link.required' => 'Link media wajib diisi',
+                        'media_link.url' => 'Format URL tidak valid',
+                        'media_link.max' => 'URL terlalu panjang (maksimal 2000 karakter)'
+                    ]);
+                } else {
+                    $request->validate([
+                        'media_link' => 'required|max:2000'
+                    ], [
+                        'media_link.required' => 'Link media wajib diisi',
+                        'media_link.max' => 'URL terlalu panjang (maksimal 2000 karakter)'
+                    ]);
+                }
                 
                 Log::info('Validasi media_link berhasil');
                 
                 // Validasi screenshot
                 if (!$request->hasFile('screenshot')) {
-                    Log::error('Screenshot tidak ditemukan dalam request untuk template artikel');
+                    Log::error('Screenshot tidak ditemukan dalam request untuk template ' . $request->template_type);
                     return redirect()->back()
                         ->withInput()
                         ->withErrors(['screenshot' => 'Screenshot wajib diunggah']);
@@ -294,6 +307,72 @@ class DocumentController extends Controller
                 }
                 
                 Log::info('Screenshot berhasil diupload dan diverifikasi');
+                
+                // Khusus untuk multiple_article: proses screenshot_media
+                if ($request->template_type === 'multiple_article') {
+                    // Validasi screenshot_media
+                    if (!$request->hasFile('screenshot_media')) {
+                        Log::error('Screenshot media tidak ditemukan dalam request untuk template multiple_article');
+                        return redirect()->back()
+                            ->withInput()
+                            ->withErrors(['screenshot_media' => 'Screenshot kirim ke media wajib diunggah']);
+                    }
+                    
+                    $screenshotMedia = $request->file('screenshot_media');
+                    
+                    Log::info('Screenshot media ditemukan dalam request', [
+                        'file_name' => $screenshotMedia->getClientOriginalName(),
+                        'mime_type' => $screenshotMedia->getMimeType()
+                    ]);
+                    
+                    // Cek validitas screenshot media
+                    if (!$screenshotMedia->isValid()) {
+                        $errorMessage = $this->getFileErrorMessage($screenshotMedia->getError());
+                        Log::error('Screenshot media tidak valid', ['error' => $errorMessage]);
+                        return redirect()->back()
+                            ->withInput()
+                            ->withErrors(['screenshot_media' => $errorMessage]);
+                    }
+                    
+                    // Validasi tipe dan ukuran screenshot media
+                    if (!in_array($screenshotMedia->getMimeType(), $allowedTypes)) {
+                        Log::error('Tipe screenshot media tidak valid', ['mime' => $screenshotMedia->getMimeType()]);
+                        return redirect()->back()
+                            ->withInput()
+                            ->withErrors(['screenshot_media' => 'Tipe file tidak valid. Hanya menerima file JPG atau PNG']);
+                    }
+                    
+                    if ($screenshotMedia->getSize() > 5 * 1024 * 1024) { // 5MB
+                        Log::error('Ukuran screenshot media terlalu besar', ['size' => $screenshotMedia->getSize()]);
+                        return redirect()->back()
+                            ->withInput()
+                            ->withErrors(['screenshot_media' => 'Ukuran file tidak boleh lebih dari 5MB']);
+                    }
+                    
+                    Log::info('Validasi screenshot media berhasil, akan mengupload screenshot media');
+                    
+                    // Upload screenshot media
+                    $screenshotMediaFileName = 'screenshot_media_' . pathinfo($screenshotMedia->getClientOriginalName(), PATHINFO_FILENAME) . '_' . time() . '.' . $screenshotMedia->getClientOriginalExtension();
+                    $screenshotMediaPath = 'public/screenshots/' . $screenshotMediaFileName;
+                    
+                    // Upload screenshot media
+                    try {
+                        $screenshotMediaContent = file_get_contents($screenshotMedia->getRealPath());
+                        Storage::put($screenshotMediaPath, $screenshotMediaContent);
+                        Log::info('Screenshot media berhasil diupload ke path: ' . $screenshotMediaPath);
+                    } catch (\Exception $e) {
+                        Log::error('Gagal menyimpan screenshot media', ['error' => $e->getMessage()]);
+                        throw new \Exception('Gagal menyimpan screenshot media: ' . $e->getMessage());
+                    }
+                    
+                    // Verify screenshot media was uploaded correctly
+                    if (!Storage::exists($screenshotMediaPath)) {
+                        Log::error('Screenshot media gagal disimpan ke storage');
+                        throw new \Exception('Gagal menyimpan screenshot media. Silakan coba lagi.');
+                    }
+                    
+                    Log::info('Screenshot media berhasil diupload dan diverifikasi');
+                }
             }
 
             // ===== TAHAP 3: Validasi captcha (hanya di production) =====
@@ -357,9 +436,9 @@ class DocumentController extends Controller
                 'template_type' => $documentForm->template_type
             ];
             
-            // Tambahkan metadata khusus untuk template artikel
-            if ($request->template_type === 'article') {
-                Log::info('Menambahkan metadata khusus untuk template artikel');
+            // Tambahkan metadata khusus untuk template artikel dan multiple_article
+            if ($request->template_type === 'article' || $request->template_type === 'multiple_article') {
+                Log::info('Menambahkan metadata khusus untuk template ' . $request->template_type);
                 $metadata['media_link'] = $request->media_link;
                 
                 if ($screenshotPath) {
@@ -367,6 +446,12 @@ class DocumentController extends Controller
                     Log::info('Screenshot path ditambahkan ke metadata: ' . $screenshotPath);
                 } else {
                     Log::warning('Screenshot path kosong, tidak ditambahkan ke metadata');
+                }
+                
+                // Tambahkan metadata untuk screenshot media jika ada
+                if ($request->template_type === 'multiple_article' && $screenshotMediaPath) {
+                    $metadata['screenshot_media_path'] = $screenshotMediaPath;
+                    Log::info('Screenshot media path ditambahkan ke metadata: ' . $screenshotMediaPath);
                 }
             }
             
@@ -380,7 +465,7 @@ class DocumentController extends Controller
                 'metadata' => $metadata
             ]);
             
-            $document = DB::transaction(function () use ($request, $userId, $filePath, $file, $documentForm, $metadata, $screenshotPath) {
+            $document = DB::transaction(function () use ($request, $userId, $filePath, $file, $documentForm, $metadata, $screenshotPath, $screenshotMediaPath) {
                 try {
                     $document = new Document();
                     $document->name = $request->name;
@@ -395,15 +480,21 @@ class DocumentController extends Controller
                     $document->notification_sent = false;
                     
                     // Simpan metadata
-                    if ($request->template_type === 'article') {
-                        Log::info('Menyimpan dokumen dengan template artikel', [
+                    if ($request->template_type === 'article' || $request->template_type === 'multiple_article') {
+                        Log::info('Menyimpan dokumen dengan template ' . $request->template_type, [
                             'media_link' => $request->media_link,
-                            'screenshot_path' => $screenshotPath
+                            'screenshot_path' => $screenshotPath,
+                            'screenshot_media_path' => $screenshotMediaPath
                         ]);
                         
                         // Pastikan media_link dan screenshot_path tersimpan dalam metadata
                         $metadata['media_link'] = $request->media_link;
                         $metadata['screenshot_path'] = $screenshotPath;
+                        
+                        // Tambahkan screenshot_media_path jika ada
+                        if ($request->template_type === 'multiple_article' && $screenshotMediaPath) {
+                            $metadata['screenshot_media_path'] = $screenshotMediaPath;
+                        }
                     }
                     
                     // Simpan metadata ke dokumen
@@ -429,7 +520,8 @@ class DocumentController extends Controller
                         'id' => $savedDocument->id,
                         'metadata' => $savedDocument->metadata,
                         'has_media_link' => isset($savedDocument->metadata['media_link']),
-                        'has_screenshot' => isset($savedDocument->metadata['screenshot_path'])
+                        'has_screenshot' => isset($savedDocument->metadata['screenshot_path']),
+                        'has_screenshot_media' => isset($savedDocument->metadata['screenshot_media_path'])
                     ]);
                     
                     return $document;
@@ -483,6 +575,8 @@ class DocumentController extends Controller
             $successMessage = 'Dokumen berhasil diunggah! Terima kasih atas pengiriman Anda.';
             if ($request->template_type === 'article') {
                 $successMessage = 'Artikel dan screenshot media berhasil diunggah! Terima kasih atas kontribusi Anda.';
+            } else if ($request->template_type === 'multiple_article') {
+                $successMessage = 'Artikel dan kedua screenshot berhasil diunggah! Terima kasih atas kontribusi Anda.';
             }
 
             // Redirect dengan pesan sukses
